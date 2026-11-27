@@ -162,7 +162,15 @@ export async function buildCoachToday(me: string): Promise<CoachToday> {
     inbox.push({ id: `goal:${g.id}`, user: rowById.get(rel.id)!.counterpart, reason: { kind: "goal_done", mentorshipId: rel.id, goalId: g.id, title: g.title }, priority: PRIORITY.goal_done, at: (g.completedAt ?? g.endDate).toISOString() });
   }
   inbox.sort((a, b) => b.priority - a.priority || b.at.localeCompare(a.at));
-  const top = inbox.slice(0, MAX_INBOX);
+  // برای هر شاگرد فقط پراولویت‌ترین مورد (درخواست‌ها به‌ازای هر رابطه جدان)
+  const seenStudent = new Set<string>();
+  const deduped = inbox.filter((it) => {
+    if (it.reason.kind === "request") return true;
+    if (seenStudent.has(it.user.id)) return false;
+    seenStudent.add(it.user.id);
+    return true;
+  });
+  const top = deduped.slice(0, MAX_INBOX);
 
   const availability = computeAvailability(
     { acceptingStudents: profile.acceptingStudents, maxActiveStudents: profile.maxActiveStudents, awayUntil: profile.awayUntil, awayPausesRequests: profile.awayPausesRequests },
@@ -172,7 +180,7 @@ export async function buildCoachToday(me: string): Promise<CoachToday> {
 
   return {
     profile: { published: profile.published, accepting: profile.acceptingStudents, availability, suspended: !!profile.suspendedAt, username: profile.user.username },
-    counts: { students: rels.length, doneToday: Array.from(todayRate.values()).filter((v) => v !== null && v >= 100).length, waiting: inbox.length },
+    counts: { students: rels.length, doneToday: Array.from(todayRate.values()).filter((v) => v !== null && v >= 100).length, waiting: deduped.length },
     hint: hintFor(top[0]),
     inbox: top,
     students: rels.map((r) => ({ mentorshipId: r.id, user: rowById.get(r.id)!.counterpart, todayRate: todayRate.get(r.studentId) ?? null })),

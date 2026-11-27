@@ -465,6 +465,18 @@ describe("mentor today inbox and students", () => {
     expect(row2.weekRate).toBeNull();
   });
 
+  it("inbox keeps only the highest-priority item per student", async () => {
+    const f = await mkRel();
+    await prisma.mentorship.update({ where: { id: f.mid }, data: { startedAt: new Date(Date.now() - 6 * 86_400_000) } });
+    await prisma.mentorMessage.create({ data: { mentorshipId: f.mid, senderId: f.student, legacyBody: "hi" } });
+    as(f.mentor);
+    const t = await j(await getToday());
+    const mine = t.inbox.filter((i: any) => i.reason.mentorshipId === f.mid);
+    expect(mine).toHaveLength(1);
+    expect(mine[0].reason.kind).toBe("unread");
+    expect(t.counts.waiting).toBe(1);
+  });
+
   it("students route: idle student needs help; paused is not flagged", async () => {
     const f = await mkRel();
     await prisma.mentorship.update({ where: { id: f.mid }, data: { startedAt: new Date(Date.now() - 6 * 86_400_000) } });
