@@ -218,3 +218,6 @@ body[data-theme="light"] .ch-nav{ box-shadow:0 10px 28px rgba(60,40,10,.14); }
   .ch-row, .ch-nav-item, .ch-bar-fill{ transition:none; }
   .ch-row:active{ transform:none; }
 }
+
+/* فیلد چندخطی: گردی چندخطی استاندارد (پیل روی متن چندخطی گوشه‌ها رو می‌بره) */
+textarea.wsearch-newform-name.trade-glass-field, textarea.wsearch-newform-name.cs-input{ border-radius:var(--field-radius-multi, 18px); resize:none; }

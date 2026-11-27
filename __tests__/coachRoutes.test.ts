@@ -644,8 +644,12 @@ describe("coach nomo", () => {
     expect((await nomoWeek(req("POST", "x", { mentorshipId: f.mid, weekStart: "bad" }))).status).toBe(400);
     expect((await nomoWeek(req("POST", "x", { mentorshipId: f.mid, weekStart: addDaysIso(today(), 14) }))).status).toBe(400);
 
-    await prisma.mentorWeekSnapshot.create({
-      data: { mentorshipId: f.mid, weekStart: dateFromIso(ws), data: { weekIndex: 1, complete: true, routineRate: 60, days: [], grade: "good" } },
+    // روز هفته‌ی اجرا تعیین می‌کنه که درخواست 409 بالا خودش هفته‌ی خالی رو کش کرده یا نه
+    const snapData = { weekIndex: 1, complete: true, routineRate: 60, days: [], grade: "good" };
+    await prisma.mentorWeekSnapshot.upsert({
+      where: { mentorshipId_weekStart: { mentorshipId: f.mid, weekStart: dateFromIso(ws) } },
+      create: { mentorshipId: f.mid, weekStart: dateFromIso(ws), data: snapData },
+      update: { data: snapData },
     });
     aiImpl = () => reply({ lines: ["یک", "دو", "سه", "چهار"] });
     const res = await nomoWeek(req("POST", "x", { mentorshipId: f.mid, weekStart: ws }));
