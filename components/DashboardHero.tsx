@@ -131,8 +131,15 @@ export function DashboardHero({
         el.style.setProperty("--my", `${e.clientY - r.top}px`);
       });
     };
+    // ورود: مختصات همان لحظه (بدون rAF) تا نور از جای پیش‌فرض شروع نشه
+    const onEnter = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    };
+    el.addEventListener("pointerenter", onEnter, { passive: true });
     el.addEventListener("pointermove", onMove, { passive: true });
-    return () => { el.removeEventListener("pointermove", onMove); if (raf) cancelAnimationFrame(raf); };
+    return () => { el.removeEventListener("pointerenter", onEnter); el.removeEventListener("pointermove", onMove); if (raf) cancelAnimationFrame(raf); };
   }, []);
   const phase = now ? dayPhase(now) : "day";
   const firstName = data?.user.name.split(" ")[0] ?? "";
