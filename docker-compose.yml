@@ -37,6 +37,8 @@ services:
         NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
         # زیردامنه‌های بخش‌ها (routine./trade./workout.) — خالی = خاموش؛ docs/sections.md
         NEXT_PUBLIC_SECTION_BASE_DOMAIN: ${NEXT_PUBLIC_SECTION_BASE_DOMAIN:-}
+        # آینه‌ی دانلود موتور Prisma اگه binaries.prisma.sh از سرور در دسترس نبود
+        PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-}
     restart: unless-stopped
     depends_on:
       db:
@@ -89,6 +91,8 @@ services:
     build:
       context: .
       target: builder
+      args:
+        PRISMA_ENGINES_MIRROR: ${PRISMA_ENGINES_MIRROR:-}
     profiles: ["tools"]
     # بدون این خط، `docker compose --profile tools up migrate` کانتینر را با
     # CMD پیش‌فرض node:20-alpine (یعنی خود `node`) بالا می‌آورد: بدون TTY
