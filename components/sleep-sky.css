@@ -141,3 +141,7 @@ html[data-perf-weak] .sleep-scope.slp-page *, html[data-perf="low"] .sleep-scope
 @media (prefers-reduced-motion:reduce){
   .slsky *{ animation:none !important; } .slsky .slsky-shoot{ display:none; }
 }
+
+/* رنگ پایه‌ی خود html تا اولین فریم (قبل از هر چیز دیگه) آسمان باشه، نه پس‌زمینه‌ی پیش‌فرض سایت */
+html:has(.slsky){ background-color:#0b0a1f; }
+html[data-theme="light"]:has(.slsky){ background-color:#f6e4f1; }

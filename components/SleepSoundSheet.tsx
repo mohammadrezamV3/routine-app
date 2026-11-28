@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-log.css";
 import "./sleep-sound.css";
 import { useEffect, useRef, useState } from "react";
@@ -70,7 +71,7 @@ function SheetBody({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-overlay open sleep-ov" onClick={onClose} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel sns-panel" role="dialog" aria-modal="true" aria-label={tr("صداهای خواب", "Sleep sounds")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("صداهای خواب", "Sleep sounds")}</div>

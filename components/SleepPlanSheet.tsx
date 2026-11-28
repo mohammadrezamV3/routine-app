@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-cycle.css";
 import "./sleep-log.css";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -167,7 +168,7 @@ function Body({
 
   return (
     <>
-      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-overlay open sleep-ov" onClick={onClose} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel slc-panel" role="dialog" aria-modal="true" aria-label={tr("برنامه خواب", "Sleep plan")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("برنامه خواب", "Sleep plan")}</div>
