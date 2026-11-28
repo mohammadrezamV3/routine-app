@@ -5,6 +5,7 @@ import { WEEK_ORDER, sameWeekIso } from "@/lib/schedule";
 import { normalizeTimeToFa } from "@/lib/timeUtils";
 import { timeStartMinutes } from "@/lib/schedule";
 import { findScheduleConflict, rangesOverlap } from "@/lib/conflict";
+import { rowTimeErrors } from "@/lib/programForm";
 import { TimeInput } from "./TimeInput";
 import { CustomOccurrence, Importance, IMPORTANCE_LABELS, setCustomOccurrences, setRemovedOccurrences } from "@/lib/storage";
 import { isoLocal, weekdayShort } from "@/lib/jalali";
@@ -50,6 +51,7 @@ export function EditOccurrenceForm({
   const [rows, setRows] = useState<EditRow[]>([
     { jsDays: [occ.jsDay], start: (parts[0] || "").trim(), end: (parts[1] || "").trim() },
   ]);
+  const [noTime, setNoTime] = useState(!String(occ.time ?? "").trim());
   const [importance, setImportance] = useState<Importance>(occ.importance ?? "low");
   const [tag, setTag] = useState(occ.tag ?? "");
   // آیتم‌های برنامه‌ی لیستی — از خود occurrence  ذخیره‌شده (ویرایش نباید پاکشون کنه)
@@ -82,6 +84,24 @@ export function EditOccurrenceForm({
     );
   }
 
+  // هشدار زنده‌ی تداخل (غیرمسدودکننده)
+  const conflictWarning = (() => {
+    if (noTime) return null;
+    const seen: { jsDay: number; startMin: number; endMin: number | null }[] = [];
+    for (const r of rows) {
+      const startMin = timeStartMinutes(normalizeTimeToFa(r.start));
+      const endMin = timeStartMinutes(normalizeTimeToFa(r.end));
+      if (startMin === null || (endMin !== null && endMin <= startMin)) continue;
+      for (const jsDay of r.jsDays) {
+        const c = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
+        if (c) return c.name;
+        if (seen.some((o) => o.jsDay === jsDay && rangesOverlap(startMin, endMin, o.startMin, o.endMin))) return name;
+        seen.push({ jsDay, startMin, endMin });
+      }
+    }
+    return null;
+  })();
+
   async function submit() {
     if (status !== "idle") return;
     let hasError = false;
@@ -89,14 +109,12 @@ export function EditOccurrenceForm({
     rows.forEach((r, i) => {
       const e: { start?: boolean; end?: boolean; days?: boolean; order?: boolean } = {};
       if (!r.jsDays.length) { e.days = true; hasError = true; }
-      if (!r.start.trim()) { e.start = true; hasError = true; }
-      if (!r.end.trim()) { e.end = true; hasError = true; }
-      // ساعت پایان هیچ‌وقت نباید زودتر (یا برابر) ساعت شروع باشه
-      if (!e.start && !e.end) {
-        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
-        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
-        if (sMin !== null && eMin !== null && eMin <= sMin) { e.order = true; hasError = true; }
-      }
+      // «بدون ساعت» یعنی time خالی؛ وگرنه شروع و پایان لازمه و پایان بعد از شروع
+      const te = rowTimeErrors(r, noTime);
+      if (te.start) e.start = true;
+      if (te.end) e.end = true;
+      if (te.order) e.order = true;
+      if (te.start || te.end || te.order) hasError = true;
       if (e.start || e.end || e.days || e.order) rErrs[i] = e;
     });
     setRowErrors(rErrs);
@@ -105,38 +123,14 @@ export function EditOccurrenceForm({
       return;
     }
 
-    const normalizedRows: { jsDay: number; start: string; end: string; startMin: number | null; endMin: number | null }[] = [];
-    let conflictMsg: string | null = null;
-    outer: for (const r of rows) {
-      const startFa = normalizeTimeToFa(r.start);
-      const endFa = normalizeTimeToFa(r.end);
-      const startMin = timeStartMinutes(startFa);
-      const endMin = timeStartMinutes(endFa);
-
+    const normalizedRows: { jsDay: number; start: string; end: string }[] = [];
+    for (const r of rows) {
+      const startFa = noTime ? "" : normalizeTimeToFa(r.start);
+      const endFa = noTime ? "" : normalizeTimeToFa(r.end);
       for (const jsDay of r.jsDays) {
-        // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواست صریح کاربر.
-        // occ.id excluded تا خود همون occurrence‌ای که داریم ویرایشش می‌کنیم
-        // با خودش تداخل حساب نشه.
-        let conflict = findScheduleConflict(jsDay, startMin, endMin, now, scheduleOpts, occ.id);
-        if (!conflict) {
-          for (const other of normalizedRows) {
-            if (other.jsDay === jsDay && rangesOverlap(startMin!, endMin, other.startMin!, other.endMin)) {
-              conflict = { id: "self", name } as any;
-              break;
-            }
-          }
-        }
-        if (conflict) { conflictMsg = tr(`تداخل زمانی با «${conflict.name}» — ذخیره نشد`, `Time conflict with "${iso(conflict.name)}" — not saved`); break outer; }
-        normalizedRows.push({ jsDay, start: startFa, end: endFa, startMin, endMin });
+        // تداخل زمانی فقط هشدار زنده‌ست (conflictWarning) و جلوی ذخیره رو نمی‌گیره
+        normalizedRows.push({ jsDay, start: startFa, end: endFa });
       }
-    }
-
-    if (conflictMsg) {
-      setFormError(null);
-      setStatus("error");
-      setFormError(conflictMsg);
-      setTimeout(() => setStatus("idle"), 900);
-      return;
     }
 
     setFormError(null);
@@ -175,7 +169,7 @@ export function EditOccurrenceForm({
       id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
       name,
       jsDay: r.jsDay,
-      time: r.end ? `${r.start} – ${r.end}` : r.start,
+      time: r.end ? `${r.start} – ${r.end}` : r.start, // بدون ساعت = رشته‌ی خالی
       ...datesFor(r.jsDay),
       importance,
       ...(trimmedTag ? { tag: trimmedTag } : {}),
@@ -220,6 +214,10 @@ export function EditOccurrenceForm({
             options={(Object.keys(IMPORTANCE_LABELS) as Importance[]).map((k) => ({ value: k, label: tr(IMPORTANCE_LABELS[k], IMPORTANCE_EN[k]) }))}
           />
 
+          <TickOption checked={noTime} onChange={setNoTime} className="mb-2">
+            {tr("بدون ساعت", "No set time")}
+          </TickOption>
+
           {rows.map((r, ri) => (
             <div key={ri} className="wsearch-newrow">
               <div className="wsearch-newrow-daywrap">
@@ -235,6 +233,7 @@ export function EditOccurrenceForm({
                   ))}
                 </div>
               </div>
+              {!noTime && (<>
               <div className={`time-field${rowErrors[ri]?.start || rowErrors[ri]?.order ? " field-error" : ""}`}>
                 <span className="time-field-label">{tr("ساعت شروع", "Start time")}</span>
                 <div className="field-error-wrap">
@@ -247,6 +246,7 @@ export function EditOccurrenceForm({
                   <TimeInput value={r.end} onChange={(v) => updateRow(ri, { end: v })} />
                 </div>
               </div>
+              </>)}
               {rows.length > 1 && (
                 <button type="button" className="wsearch-newrow-remove-text" onClick={() => removeRow(ri)}>
                   {tr("حذف این روز", "Remove this day")}
@@ -255,6 +255,9 @@ export function EditOccurrenceForm({
             </div>
           ))}
 
+          {conflictWarning && (
+            <div className="form-inline-error" role="status">{tr("با «" + conflictWarning + "» هم‌زمانه", "Overlaps with \"" + iso(conflictWarning) + "\"")}</div>
+          )}
           {formError && <div className="form-inline-error">{formError}</div>}
 
           <div className="wsearch-newform-addrow">

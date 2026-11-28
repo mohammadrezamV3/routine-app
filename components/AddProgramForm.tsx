@@ -22,6 +22,7 @@ import {
   describeSchedule,
   newTimeRow,
   type ProgramKind,
+  rowTimeErrors,
   type TimeRow,
 } from "@/lib/programForm";
 import { isEn, tr, iso } from "@/lib/i18n";
@@ -59,6 +60,7 @@ export function AddProgramForm({
   // اعلان: روشن = importance "high" (فقط فلگ داخلی اعلان)، خاموش = "medium"
   const [notify, setNotify] = useState(false);
   const [kind, setKind] = useState<ProgramKind>("weekly");
+  const [noTime, setNoTime] = useState(false);
   const [isList, setIsList] = useState(false);
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [itemsError, setItemsError] = useState(false);
@@ -96,7 +98,7 @@ export function AddProgramForm({
   const onceIso = kind === "once" ? jalaliToIso(...onceJalali) : null;
   const periodFromIso = kind === "period" && startJalali ? jalaliToIso(...startJalali) : null;
   const periodToIso = kind === "period" && endJalali ? jalaliToIso(...endJalali) : null;
-  const usedRows = kind === "once" ? rows.slice(0, 1) : rows;
+  const usedRows = kind === "once" || noTime ? rows.slice(0, 1) : rows;
 
   // تاریخ ثبت: یک روز → همان روز؛ دوره → بازه‌ی انتخاب‌شده؛ هفتگی → از امروز
   function computeDates(today: string): { startDate: string; endDate?: string } {
@@ -132,6 +134,7 @@ export function AddProgramForm({
     const daysOf = (r: TimeRow) => (onceIso ? [jsDayOfIso(onceIso)] : r.jsDays);
     for (const a of norm) {
       out[a.row.id] = null;
+      if (noTime) continue;
       if (a.startMin === null || a.endMin === null || a.endMin <= a.startMin) continue;
       // دوره بدون تاریخ کامل هنوز قابل سنجش نیست
       if (kind === "period" && !(periodFromIso && periodToIso)) continue;
@@ -158,14 +161,14 @@ export function AddProgramForm({
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [kind, rows, onceIso, periodFromIso, periodToIso, scheduleOpts]);
+  }, [kind, rows, noTime, onceIso, periodFromIso, periodToIso, scheduleOpts]);
 
   const conflicts = useMemo(computeConflicts, [computeConflicts]);
 
   const summary = useMemo(
-    () => describeSchedule(kind, usedRows, { onceIso, periodFromIso, periodToIso }),
+    () => describeSchedule(kind, usedRows, { onceIso, periodFromIso, periodToIso, noTime }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, rows, onceIso, periodFromIso, periodToIso]
+    [kind, rows, onceIso, periodFromIso, periodToIso, noTime]
   );
 
   const clearRowError = useCallback((rowId: string) => {
@@ -209,15 +212,8 @@ export function AddProgramForm({
     usedRows.forEach((r) => {
       const e: RowError = {};
       if (kind !== "once" && !r.jsDays.length) e.days = true;
-      if (!r.start.trim()) e.start = true;
-      if (!r.end.trim()) e.end = true;
-      // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه — بازه‌ی معکوس/صفر
-      // یعنی برنامه‌ای که هیچ‌وقت اتفاق نمی‌افته و محاسبه‌ی تداخل رو بهم می‌ریزه.
-      if (!e.start && !e.end) {
-        const sMin = timeStartMinutes(normalizeTimeToFa(r.start));
-        const eMin = timeStartMinutes(normalizeTimeToFa(r.end));
-        if (sMin !== null && eMin !== null && eMin <= sMin) e.order = true;
-      }
+      // ساعت پایان نمی‌تونه زودتر (یا برابر) ساعت شروع باشه؛ «بدون ساعت» همه رو رد می‌کنه
+      Object.assign(e, rowTimeErrors(r, noTime));
       if (e.days || e.start || e.end || e.order) rErrs[r.id] = e;
     });
     setRowErrors(rErrs);
@@ -247,16 +243,7 @@ export function AddProgramForm({
     const today = isoLocal(new Date());
     const dates = computeDates(today);
 
-    // تداخل: همون سنجش زنده، این‌بار مسدودکننده
-    const live = computeConflicts();
-    const hit = usedRows.map((r) => live[r.id]).find((c) => c);
-    if (hit) {
-      setFormError(tr(`تداخل زمانی با «${hit}» — این برنامه اضافه نشد`, `Time conflict with "${iso(hit)}" — this plan was not added`));
-      setStatus("error");
-      setTimeout(() => setStatus("idle"), 900);
-      return;
-    }
-
+    // تداخل زمانی فقط هشدار زنده‌ست (زیر ردیف) و جلوی ثبت رو نمی‌گیره
     setFormError(null);
     setStatus("loading");
 
@@ -265,8 +252,8 @@ export function AddProgramForm({
     const cleanItems = isList ? items.map((i) => ({ id: i.id, name: i.name.trim() })).filter((i) => i.name) : [];
     const additions: CustomOccurrence[] = [];
     for (const r of usedRows) {
-      const startFa = normalizeTimeToFa(r.start);
-      const endFa = normalizeTimeToFa(r.end);
+      const startFa = noTime ? "" : normalizeTimeToFa(r.start);
+      const endFa = noTime ? "" : normalizeTimeToFa(r.end);
       for (const jsDay of onceIso ? [jsDayOfIso(onceIso)] : r.jsDays) {
         additions.push({
           id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
@@ -378,6 +365,12 @@ export function AddProgramForm({
                   )}
                 </div>
 
+                <div className="apf-ticks">
+                  <TickOption checked={noTime} onChange={setNoTime}>
+                    {tr("بدون ساعت", "No set time")}
+                  </TickOption>
+                </div>
+
                 <div className="apf-rows" data-apf-field="rows">
                   <ProgramTimeRows
                     kind={kind}
@@ -385,6 +378,7 @@ export function AddProgramForm({
                     onChange={setRows}
                     errors={rowErrors}
                     conflicts={conflicts}
+                    noTime={noTime}
                     onClearError={clearRowError}
                   />
                 </div>

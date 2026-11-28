@@ -41,6 +41,8 @@ body button.fr-who:focus-visible{ outline:2px solid rgba(var(--accent-rgb),.5); 
 .fr-flame{ font-size:11px; flex-shrink:0; }
 .fr-flame .streak-flame{ width:13px; height:13px; }
 .fr-sub{ font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fr-side-ring{ flex-shrink:0; margin-inline-start:8px; }
+.fr-side-pct{ font-size:10px; font-weight:700; color:var(--text); line-height:1; }
 .fr-actions{ display:inline-flex; align-items:center; flex-shrink:0; }
 
 @media (min-width:640px){

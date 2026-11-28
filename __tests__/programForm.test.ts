@@ -344,3 +344,21 @@ describe("programForm", () => {
     });
   });
 });
+
+import { rowTimeErrors, describeSchedule as describeSchedule2, newTimeRow as newTimeRow2 } from "@/lib/programForm";
+
+describe("بدون ساعت و تداخل غیرمسدودکننده", () => {
+  it("noTime هیچ خطای ساعتی نمی‌ده", () => {
+    expect(rowTimeErrors({ start: "", end: "" }, true)).toEqual({});
+  });
+  it("بدون noTime ساعت خالی خطاست و بازه‌ی معکوس order", () => {
+    expect(rowTimeErrors({ start: "", end: "" })).toEqual({ start: true, end: true });
+    expect(rowTimeErrors({ start: "10:00", end: "09:00" })).toEqual({ order: true });
+    expect(rowTimeErrors({ start: "09:00", end: "10:00" })).toEqual({});
+  });
+  it("خلاصه‌ی بدون ساعت", () => {
+    const r = { ...newTimeRow2([6, 1]) };
+    expect(describeSchedule2("weekly", [r], { noTime: true })).toContain("بدون ساعت");
+    expect(describeSchedule2("weekly", [newTimeRow2([])], { noTime: true })).toBe("");
+  });
+});

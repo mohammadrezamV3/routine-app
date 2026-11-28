@@ -54,32 +54,35 @@ export function MoveOccurrenceModal({
   const [errors, setErrors] = useState<{ start?: boolean; end?: boolean }>({});
   const formRef = useRef<HTMLDivElement>(null);
 
+  // هشدار زنده‌ی تداخل (غیرمسدودکننده)
+  const conflictWarning = (() => {
+    if (!targetJalali || !start.trim() || !end.trim()) return null;
+    const jsDay = jalaliToGregorianApprox(targetJalali[0], targetJalali[1], targetJalali[2]).getDay();
+    const sMin = timeStartMinutes(normalizeTimeToFa(start));
+    const eMin = timeStartMinutes(normalizeTimeToFa(end));
+    return findScheduleConflict(jsDay, sMin, eMin, now, scheduleOpts, occ.id)?.name ?? null;
+  })();
+
   async function submit() {
     if (status !== "idle") return;
     const dErr = !targetJalali;
     setDayError(dErr);
     const nextErrors: typeof errors = {};
-    if (!start.trim()) nextErrors.start = true;
-    if (!end.trim()) nextErrors.end = true;
+    // هر دو خالی = بدون ساعت (مجازه)؛ فقط یکی خالی خطاست
+    if (start.trim() || end.trim()) {
+      if (!start.trim()) nextErrors.start = true;
+      if (!end.trim()) nextErrors.end = true;
+    }
     setErrors(nextErrors);
     if (dErr || nextErrors.start || nextErrors.end) return;
 
     const targetJsDay = jalaliToGregorianApprox(targetJalali![0], targetJalali![1], targetJalali![2]).getDay();
     const startFa = normalizeTimeToFa(start);
     const endFa = normalizeTimeToFa(end);
-    const startMin = timeStartMinutes(startFa);
-    const endMin = timeStartMinutes(endFa);
 
     // هیچ قفلی روی «این ساعت امروز گذشته» نیست — درخواست صریح کاربر.
-    const conflict = findScheduleConflict(targetJsDay, startMin, endMin, now, scheduleOpts, occ.id);
 
-    if (conflict) {
-      setFormError(null);
-      setStatus("error");
-      setFormError(tr(`تداخل زمانی با «${conflict.name}» — منتقل نشد`, `Time conflict with "${iso(conflict.name)}" — not moved`));
-      setTimeout(() => setStatus("idle"), 900);
-      return;
-    }
+    // تداخل زمانی فقط هشدار زنده‌ست و جلوی انتقال رو نمی‌گیره
 
     setFormError(null);
     setStatus("loading");
@@ -165,6 +168,9 @@ export function MoveOccurrenceModal({
             </div>
           </div>
 
+          {conflictWarning && (
+            <div className="form-inline-error" role="status">{tr("با «" + conflictWarning + "» هم‌زمانه", "Overlaps with \"" + iso(conflictWarning) + "\"")}</div>
+          )}
           {formError && <div className="form-inline-error">{formError}</div>}
 
           <div className="wsearch-newform-actions">
