@@ -948,13 +948,12 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 .db-space-tabs .auth-tabs{ margin-top:0; }
 
 /* ── trade-redesign start ── */
-/* هیرو: ناحیه‌ی KPI درشت وسط (دسکتاپ بخش ترید/ورزش)؛ موبایل همون لیجند کنار حلقه */
+/* هیرو: ناحیه‌ی KPI درشت وسط (دسکتاپ بخش ترید/ورزش/روتین)؛ بدون نوار روز (ترید) کف ارتفاع داره، با نوار روز به اندازه‌ی محتوا می‌مونه؛ موبایل همون لیجند کنار حلقه */
 .db-hero-kpis{ display:none; }
 @media (min-width:1024px){
   .db-page .db-hero.has-kpi{ grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) auto; grid-template-areas:"main kpi orbit" "ribbon ribbon ribbon"; }
   .db-page .db-hero.is-noribbon.has-kpi{ grid-template-areas:"main kpi orbit"; }
   .db-page .db-hero.has-kpi{ min-height:293px; align-content:center; }
-  .db-page .db-hero.has-kpi:not(.is-noribbon){ min-height:373px; align-content:start; }
   .db-hero-kpis{ grid-area:kpi; display:flex; align-items:stretch; align-self:center; list-style:none; min-width:0; }
   .db-hero-kpis li{ flex:1 1 0; min-width:0; }
   .db-hero-kpis li + li .db-kpi{ border-inline-start:1px solid var(--box-line); }
@@ -1071,19 +1070,19 @@ html[dir="ltr"] .db-cd-title, html[dir="ltr"] .db-ev-title{ text-align:left; }
 
 /* ── بخش روتین: هیرو فشرده، حلقه‌ی خواب، خواب یک‌ردیفه ─────────── */
 .db-hero-orbit .db-orbit-legend b{ font-family:var(--font-latin), var(--font-vazir), sans-serif; }
-.db-page .db-hero.is-routine .db-hero-orbit{ flex-direction:row; justify-content:flex-start; gap:16px; }
-.db-page .db-hero.is-routine .db-orbit-legend{ flex-direction:column; gap:8px; }
-.db-page .db-hero.is-routine .db-orbit-legend a{ flex-direction:row; gap:7px; text-align:start; font-size:12px; }
-.db-page .db-hero.is-routine .db-orbit-legend b{ margin-inline-start:2px; }
+/* موبایل: لیجند کنار حلقه‌ها (عین بخش ورزش)؛ از 640px به بالا همون چیدمان و آمار ورزش (زیر حلقه یا KPI دسکتاپ) */
+@media (max-width:639px){
+  .db-page .db-hero.is-routine .db-hero-orbit{ flex-direction:row; justify-content:flex-start; gap:8px; }
+  .db-page .db-hero.is-routine .db-orbit-legend{ flex-direction:column; gap:8px; }
+  .db-page .db-hero.is-routine .db-orbit-legend a{ flex-direction:row; gap:7px; text-align:start; font-size:12px; }
+  .db-page .db-hero.is-routine .db-orbit-legend b{ margin-inline-start:2px; }
+}
 /* دسکتاپ: حلقه‌ها اندازه‌ی کامل (176px) می‌مونن و نوار روز *زیر* اونا می‌افته، نه کنارشون */
 @media (min-width:1024px){
   .db-page .db-hero.is-routine{ padding:24px 30px 22px; gap:20px 34px; }
   .db-page .db-hero.is-routine .db-hero-main{ gap:8px; }
   .db-page .db-hero.is-routine .db-hero-title{ font-size:24px !important; }
   .db-page .db-hero.is-routine .db-hero-insight{ line-height:1.7; }
-}
-@media (max-width:639px){
-  .db-page .db-hero.is-routine .db-hero-orbit{ gap:8px; }
 }
 
 /* خواب: کارت عریض = یک ردیف فشرده (مدت و هدف کنار هفت شب) */

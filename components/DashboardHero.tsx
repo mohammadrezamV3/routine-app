@@ -164,8 +164,8 @@ export function DashboardHero({
   const legend: LegendItem[] = isTrade ? tradeLegend(tradeData) : shownRings;
   // وسط حلقه‌ها: استریک روتین؛ در بخش ورزش استریک جلسه‌های تمرین
   const centerStreak = isWorkout ? (data ? (ex?.streak ?? 0) : null) : routine.streak;
-  // دسکتاپ بخش ترید/ورزش: آمار لیجند به‌جای ردیف ریز زیر حلقه، ناحیه‌ی KPI درشت وسط هیرو می‌شه
-  const hasKpi = (isTrade || isWorkout) && legend.length >= 2;
+  // دسکتاپ بخش ترید/ورزش/روتین: آمار لیجند به‌جای ردیف ریز زیر حلقه، ناحیه‌ی KPI درشت وسط هیرو می‌شه
+  const hasKpi = (isTrade || isWorkout || section === "routine") && legend.length >= 2;
   const orbitReady = isTrade ? !!data : isWorkout ? !!data && routine.ready : routine.ready;
 
   // ── جمله‌ی خلاصه ──
