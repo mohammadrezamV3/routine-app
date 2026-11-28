@@ -5,8 +5,10 @@ import "./sleep-sound.css";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
-  AudioLines, Bell, Building2, Cloud, CloudDrizzle, CloudLightning, CloudRain, CloudRainWind, Coffee, Fan, Flame, HeartPulse,
-  House, Moon, Mountain, Pause, Play, Plane, Snowflake, TrainFront, Trees, Waves, Wind, Droplets, type LucideIcon,
+  Anchor, AudioLines, Bell, Bird, Bug, Building2, Car, CarFront, Cat, Clock, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain,
+  CloudRainWind, CloudSnow, Coffee, Droplet, Droplets, Eye, Fan, Fish, Flame, Headphones, Heater, HeartPulse, House, Leaf, Moon, Mountain,
+  Music, Music2, Pause, Play, Plane, Ship, Snowflake, Sprout, Sun, Tent, TrainFront, Trees, Waves, WashingMachine, Wind, Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -24,11 +26,14 @@ import {
 export type SleepSoundSheetProps = { open: boolean; onClose: () => void };
 
 const ICONS: Record<SleepSoundKind, LucideIcon> = {
-  white: Wind, pink: Cloud, brown: Mountain,
-  rain: CloudDrizzle, rainHeavy: CloudRain, rainRoof: House, storm: CloudLightning, ocean: Waves,
-  stream: Droplets, wind: CloudRainWind, forest: Trees, fire: Flame,
+  white: Wind, pink: Cloud, brown: Mountain, pinkSoft: CloudFog, brownDeep: Anchor,
+  rain: CloudDrizzle, rainHeavy: CloudRain, rainRoof: House, rainTent: Tent, rainLeaves: Leaf,
+  storm: CloudLightning, thunderFar: Zap, ocean: Waves, stream: Droplets, waterfall: Droplet, lake: Fish,
+  wind: CloudRainWind, forest: Trees, fire: Flame, frogs: Sprout, crickets: Bug, cicadas: Sun,
+  owls: Eye, dawnBirds: Bird, blizzard: CloudSnow,
   fan: Fan, ac: Snowflake, cabin: Plane, train: TrainFront, city: Building2, cafe: Coffee,
-  heartbeat: HeartPulse, bowl: Bell, drone: Moon, chimes: AudioLines,
+  fireplace: Heater, rainCar: Car, washer: WashingMachine, ship: Ship, traffic: CarFront, clock: Clock, purr: Cat,
+  heartbeat: HeartPulse, bowl: Bell, drone: Moon, chimes: AudioLines, padLullaby: Music2, binaural: Headphones, musicBox: Music,
 };
 
 export function SleepSoundSheet(props: SleepSoundSheetProps) {
