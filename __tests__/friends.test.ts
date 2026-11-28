@@ -7,7 +7,7 @@ vi.mock("next-auth", async (orig) => ({
     return id ? { user: { id, isSuperAdmin: false, name: "تست" } } : null;
   }),
 }));
-vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
+vi.mock("@/lib/webPush", () => ({ sendPushToUser: vi.fn(async () => ({ sent: 0, pruned: 0 })), sendPushToUserLocalized: vi.fn(async () => ({ sent: 0, pruned: 0 })) }));
 
 import { prisma } from "@/lib/prisma";
 import { isoLocal } from "@/lib/jalali";

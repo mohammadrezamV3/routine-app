@@ -65,16 +65,11 @@ describe("sectionAreas", () => {
     const a = sectionAreas(set("sleep", "road"), "routine");
     expect(a.lg).toBe('"sleep sleep road"');
   });
-  it("ورزش: فضای تمرین ردیف تمام‌عرض اول، بعد خواب؛ مربی و اعلان‌ها نه", () => {
-    const a = sectionAreas(set("inbox", "space", "sleep", "mentor"), "workout");
-    expect(a.lg).toBe('"space space space" "sleep sleep sleep"');
-    expect(a.md).toBe('"space space" "sleep sleep"');
-    expect(a.sm).toBe('"space" "sleep"');
-  });
-  it("ورزش بدون فضای تمرین: ex/cal دیگه چیده نمی‌شن", () => {
-    const b = sectionAreas(set("inbox", "ex", "cal", "sleep"), "workout");
-    expect(b.lg).not.toContain("ex");
-    expect(b.sm).toBe('"sleep"');
+  it("ورزش: تمرین، کالری، خواب و مربی‌ها؛ اعلان‌ها و فضای قدیمی نه", () => {
+    const a = sectionAreas(set("inbox", "space", "ex", "cal", "sleep", "mentor"), "workout");
+    expect(a.lg).toBe('"ex ex cal" "sleep sleep mentor"');
+    expect(a.lg).not.toContain("inbox");
+    expect(a.lg).not.toContain("space");
   });
   it("ترید: عملکرد و بازار اول، مربی و اعلان‌ها نه", () => {
     const a = sectionAreas(set("inbox", "trade", "market", "mentor"), "trade");

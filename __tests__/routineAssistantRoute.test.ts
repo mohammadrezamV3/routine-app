@@ -173,7 +173,7 @@ describe("POST /api/routine/assistant — سهمیه", () => {
     const data = await res.json();
     expect(res.status).toBe(403);
     expect(data.quotaExhausted).toBe(true);
-    expect(data.error).toContain("اشتراک");
+    expect(data.error).toContain("پلن");
     expect(data.quota.remaining).toBe(0);
   });
 
