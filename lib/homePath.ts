@@ -26,13 +26,14 @@ export function currentSectionFromDom(): SectionKey | null {
 type FeatureMap = Partial<Record<string, boolean>> | null | undefined;
 
 /**
- * مقصد بعد از ورود به‌ازای بخش و فلگ‌ها (خالص، تست‌دار). بخش ورزش داشبورد نداره:
- * برنامه تمرینی، اگه خاموشه کالری‌شمار، و اگه هر دو خاموشن پنل کاربری.
+ * مقصد بعد از ورود به‌ازای بخش و فلگ‌ها (خالص، تست‌دار). هر سه بخش داشبورد دارن؛
+ * فقط با فلگ خاموش بخش ورزش به برنامه تمرینی، کالری‌شمار یا پنل کاربری می‌ره.
  */
 export function homePathFor(section: SectionKey | null, m: FeatureMap): string {
-  if (section === "workout") {
-    if (m?.exercise !== false) return "/exercise";
-    return m?.calorie !== false ? "/calorie" : ACCOUNT_HOME;
+  // داشبورد ورزش خاموش (ادمین): برنامه تمرینی، بعد کالری‌شمار، وگرنه پنل کاربری
+  if (section === "workout" && m && m.dashboard === false) {
+    if (m.exercise !== false) return "/exercise";
+    return m.calorie !== false ? "/calorie" : ACCOUNT_HOME;
   }
   return m && m.dashboard === false ? (m.routine === false ? ACCOUNT_HOME : FALLBACK_HOME) : DASHBOARD_HOME;
 }

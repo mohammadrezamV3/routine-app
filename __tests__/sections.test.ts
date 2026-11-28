@@ -311,8 +311,8 @@ describe("cookieDomainForHost", () => {
 });
 
 describe("sectionHomePath", () => {
-  it("workout has no dashboard, every other section lands on it", () => {
-    expect(sectionHomePath("workout")).toBe("/exercise");
+  it("every section lands on the dashboard", () => {
+    expect(sectionHomePath("workout")).toBe("/dashboard");
     expect(sectionHomePath("routine")).toBe("/dashboard");
     expect(sectionHomePath("trade")).toBe("/dashboard");
     expect(sectionHomePath(null)).toBe("/dashboard");

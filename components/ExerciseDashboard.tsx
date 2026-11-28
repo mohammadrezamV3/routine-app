@@ -2,7 +2,6 @@
 
 import { useOnlineOnly } from "@/components/OnlineOnly";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Calendar, History } from "lucide-react";
 import { useLiveRefresh } from "@/lib/liveSync";
 import { FA_WEEKDAY, CAL_WEEK_ORDER, faNum, isoLocal } from "@/lib/jalali";
 import { startOfWeek } from "@/lib/schedule";
@@ -12,13 +11,13 @@ import {
   weekProgressPct, todayProgressPct, ExerciseLogRange,
 } from "@/lib/exerciseStats";
 import { DashDateSelector } from "./DashDateSelector";
-import { DashFilterButton } from "./DashFilterButton";
 import { DashFriendsCard } from "./DashFriendsCard";
 import { ExerciseStatsCard } from "./ExerciseStatsCard";
 import { ExerciseCatalogCard } from "./ExerciseCatalogCard";
 import { ExerciseTaskList } from "./ExerciseTaskList";
 import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
+import { SegmentedTabs } from "./SegmentedTabs";
 import { HistoryCalendar } from "./HistoryCalendar";
 import { ExerciseSubstitutePicker } from "./ExerciseSubstitutePicker";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
@@ -32,7 +31,6 @@ import {
 import { tr } from "@/lib/i18n";
 import { SessionEntry } from "@/lib/exerciseSessions";
 import { dayNameDisplay } from "@/lib/exerciseDay";
-import { clearWorkoutRing, publishWorkoutRing } from "@/lib/workoutRing";
 
 // پاسخ قدیمی (کش آفلاین بدون sessions) = یک جلسه‌ی 1
 function legacySessions(res: { completed?: boolean; completedItems?: string[]; started?: boolean }): SessionEntry[] {
@@ -199,7 +197,7 @@ export function ExerciseDashboard({
   }, [logs, plan.planData, missedPref.mode, progressCtx, planDays]);
   const todayPct = todayProgressPct(todayPlanForStats?.items.length ?? 0, todayLog);
 
-  // حلقه‌ی بالای صفحه (WorkoutRingHero): تیک‌های زنده‌ی امروز؛ روز استراحت = حلقه‌ی کامل
+  // تیک‌های زنده‌ی امروز
   const [todayLive, setTodayLive] = useState<{ done: number; completed: boolean } | null>(null);
   const onTaskProgress = useCallback((done: number, completed: boolean, iso: string) => {
     if (iso !== todayIso) return;
@@ -208,15 +206,6 @@ export function ExerciseDashboard({
   const todayTotal = todayPlanForStats?.items.length ?? 0;
   const liveDone = todayLive ? todayLive.done : todayLog?.completed ? todayTotal : 0;
   const liveCompleted = todayLive ? todayLive.completed : !!todayLog?.completed;
-  useEffect(() => {
-    if (todayTotal === 0) {
-      publishWorkoutRing({ kind: "exercise", value: 1, display: tr("استراحت", "Rest"), label: tr("امروز", "Today") });
-      return;
-    }
-    const done = liveCompleted ? todayTotal : Math.min(liveDone, todayTotal);
-    publishWorkoutRing({ kind: "exercise", value: done / todayTotal, display: `${faNum(done)}/${faNum(todayTotal)}`, label: tr("تمرین امروز", "Today's workout") });
-  }, [todayTotal, liveDone, liveCompleted]);
-  useEffect(() => () => clearWorkoutRing("exercise"), []);
 
   // «این تجهیزات رو ندارم» — اول سه‌تا پیشنهاد آماده می‌گیریم (بدون سویچ
   // خودکار)، بعد خود کاربر از پاپ‌آپ یکیشون رو انتخاب می‌کنه.
@@ -265,17 +254,12 @@ export function ExerciseDashboard({
         />
 
         <div className="flex flex-wrap items-center gap-2 lg:order-1 lg:shrink-0 lg:flex-nowrap">
-          <DashFilterButton
-            label={tr("تاریخچه", "History")}
-            icon={<History size={15} />}
-            active={!isSelectedToday}
-            onClick={() => setHistoryPickerOpen(true)}
-          />
-          <DashFilterButton
-            label={tr("امروز", "Today")}
-            icon={<Calendar size={15} />}
-            active={isSelectedToday}
-            onClick={() => { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); }}
+          <SegmentedTabs
+            className="!mt-0 min-w-[200px]"
+            ariaLabel={tr("روز", "Day")}
+            active={isSelectedToday ? "today" : "history"}
+            options={[{ value: "today", label: tr("امروز", "Today") }, { value: "history", label: tr("تاریخچه", "History") }]}
+            onChange={(v) => { if (v === "history") setHistoryPickerOpen(true); else { setSelectedIso(todayIso); setRecenterKey((k) => k + 1); } }}
           />
         </div>
       </div>
@@ -297,10 +281,10 @@ export function ExerciseDashboard({
           inSpace && sessionActive
             ? "db-sp-stack flex flex-col"
             : inSpace
-            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch"
+            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch"
             : sessionActive
             ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-start lg:gap-6"
-            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
+            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
         }
       >
         <ExerciseTaskList
@@ -324,17 +308,18 @@ export function ExerciseDashboard({
           delay={0.05}
         />
 
-        {/* «مشاهده حرکات» طبق درخواست صریح کاربر، وقتی تمرین شروع می‌شه هم
-            باید بمونه (نه فقط قبل از شروع) — فقط آمار/دوستان و برنامه‌ی هفتگی
-            پایین صفحه‌ان که توی حالت تمرکز روی جلسه مخفی می‌شن. */}
-        <div className="order-3 lg:order-2">
-          <ExerciseCatalogCard delay={0.1} compact={inSpace && sessionActive} />
-        </div>
+        {/* «مشاهده حرکات» وقتی تمرین شروع می‌شه هم می‌مونه؛ در حالت عادی زیر آمار می‌شینه */}
+        {sessionActive && (
+          <div className="order-3 lg:order-2">
+            <ExerciseCatalogCard delay={0.1} compact={inSpace} />
+          </div>
+        )}
 
         {!sessionActive && (
-          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-3" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
+          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-2" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
             {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
             <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
+            <ExerciseCatalogCard delay={0.25} />
           </div>
         )}
       </div>

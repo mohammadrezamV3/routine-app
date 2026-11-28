@@ -126,7 +126,7 @@ function matchesPrefix(pathname: string, prefix: string): boolean {
  * و «برنامه تمرینی» (/exercise) صفحه‌ی اصلیشه. null (دامنه‌ی اصلی بدون بخش) = داشبورد.
  */
 export function sectionHomePath(section: SectionKey | null | undefined): string {
-  return section === "workout" ? "/exercise" : "/dashboard";
+  return "/dashboard";
 }
 
 /** بخش‌هایی که این مسیر مال اوناست؛ خالی = مشترک */

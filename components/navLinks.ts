@@ -26,7 +26,7 @@ export function isGroup(item: NavItem): item is NavGroup {
 // «صفحه اصلی» قدیمی (/) دیگه توی منو نیست — کاربر لاگین‌کرده مستقیم به داشبورد می‌ره.
 export const getLinks = (): NavItem[] => [
   // داشبورد — نمای کلی همه‌ی بخش‌ها و صفحه‌ی اصلی بعد از ورود؛ پشت فلگ `dashboard` (پیش‌فرض روشن برای همه)
-  { href: "/dashboard", label: tr("داشبورد", "Dashboard"), icon: "dashboard", feature: "dashboard", sections: ["routine", "trade"] },
+  { href: "/dashboard", label: tr("داشبورد", "Dashboard"), icon: "dashboard", feature: "dashboard", sections: ["routine", "trade", "workout"] },
   { href: "/weekly", label: tr("برنامه روزانه", "Daily plan"), icon: "weekly", feature: "routine", sections: ["routine"] },
   { href: "/sleep", label: tr("خواب", "Sleep"), icon: "sleep", module: "SLEEP", feature: "sleep", sections: ["routine", "workout"] },
   { href: "/roadmaps", label: tr("رودمپ‌ها", "Roadmaps"), icon: "roadmaps", feature: "roadmaps", sections: ["routine"] },
@@ -64,7 +64,7 @@ type Features = Parameters<typeof featureVisible>[0];
 // getLinks رو نگه می‌داره. گروهی که به یک لینک تبدیل می‌شه (مثلا مربی‌ها) همون جای گروه می‌مونه.
 export const SECTION_ORDER: Record<SectionKey, string[]> = {
   routine: ["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/roadmaps", "mentors", "more"],
-  workout: ["/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"],
+  workout: ["/dashboard", "/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"],
   trade: ["/dashboard", "/trade", "/analysis/weekly", "mentors", "more"],
 };
 
