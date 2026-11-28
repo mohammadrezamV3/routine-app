@@ -9,6 +9,7 @@ import { TREATS } from "./treats";
 import { SNACKS } from "./snacks";
 import { DRINKS } from "./drinks";
 import { EXTRAS } from "./extras";
+import { WORLD } from "./world";
 
 export type CatalogItem = {
   name: string;
@@ -41,7 +42,7 @@ function parse(block: string): CatalogItem[] {
   return out;
 }
 
-export const CATALOG_ITEMS: CatalogItem[] = [STAPLES, IRANIAN, FRESH, TREATS, SNACKS, DRINKS, EXTRAS].flatMap(parse);
+export const CATALOG_ITEMS: CatalogItem[] = [STAPLES, IRANIAN, FRESH, TREATS, SNACKS, DRINKS, EXTRAS, WORLD].flatMap(parse);
 
 /** مترادف/املای جایگزین آیتم‌های قدیمی کاتالوگ (کلید = نام دقیق قدیمی). */
 export const LEGACY_ALIASES: Record<string, string[]> = {
