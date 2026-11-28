@@ -166,26 +166,6 @@ html[data-perf-weak] .slg-quality[data-active] .auth-tab-indicator, html[data-pe
 .slg-actions > .btn.slg-save{ flex:1 1 auto; }
 .slg-danger.btn{ --btn-fg:var(--slp-poor); --btn-hover-fg:var(--slp-poor); --btn-hover-bd:var(--slp-poor); }
 
-/* ── هدف خواب (SleepGoalCard داخل SleepGoalSheet) ── */
-.slg-goal-sum{ display:flex; align-items:baseline; gap:8px; }
-.slg-goal-sum b{ font-size:20px; font-weight:900; }
-.slg-sugs{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; padding-top:6px; }
-.btn.slg-sug{
-  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:2px; width:100%; min-width:0; height:auto; padding:8px 6px; text-align:center; border-radius:16px;
-}
-.slg-sug b{ font-size:20px; font-weight:900; font-variant-numeric:tabular-nums; }
-.slg-sug-meta{ display:flex; flex-direction:column; align-items:center; line-height:1.4; min-width:0; font-size:12px; font-weight:800; }
-.slg-sug-meta small{ font-size:11px; color:var(--muted); font-weight:600; }
-.btn.slg-sug.is-best, .btn.slg-sug.is-sel{ border-color:var(--slp-ink); }
-.btn.slg-sug.is-sel b{ color:var(--slp-ink); }
-.slg-sug-badge{
-  position:absolute; inset-block-start:-9px; inset-inline:0; margin-inline:auto; width:max-content; white-space:nowrap; padding:0 8px; font-style:normal;
-  font-size:10.5px; font-weight:800; line-height:18px; color:var(--slp-ink); border-radius:9px;
-  border:1px solid color-mix(in srgb, var(--slp-ink) 60%, transparent);
-}
-
-
 /* ── کارت‌های داخل پنجره‌ها (آمار): جمع‌وجورتر تا بدون اسکرول جا بشن ── */
 .slg-body .sl-card{ padding:12px; gap:10px; border-radius:20px; }
 .slg-body .sli-grid{ gap:8px; }

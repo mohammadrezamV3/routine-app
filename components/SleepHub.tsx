@@ -8,8 +8,8 @@ import { RoutineTrialBanner } from "./RoutineTrialBanner";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { SleepDial } from "./SleepDial";
 import { SleepWeek } from "./SleepWeek";
-import { SleepGoalSheet } from "./SleepGoalSheet";
 import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
+import type { PlanTab } from "./SleepPlanSheet";
 import { getSleepRange, saveSleep, SleepSaveError } from "@/lib/storage";
 import { DEFAULT_SLEEP, DEFAULT_WAKE } from "@/lib/wakeSleep";
 import { getSleepGoal } from "@/lib/sleepGoal";
@@ -33,9 +33,9 @@ import { getTracking, stopTracking, draftFromTracking, TRACKER_EVENT, type Sleep
 /** چند شب به عقب خونده می‌شه (تحلیل‌ها و تقویم ماهانه) */
 export const SLEEP_LOAD_DAYS = 120;
 
-// پنجره‌ی چرخه‌های خواب فقط بعد از hover/لمس/زدن باکس چرخه‌ها روی صفحه‌ی ساعت لود می‌شه
-const loadCycleSheet = () => import("./SleepCycleSheet");
-const SleepCycleSheet = dynamic(loadCycleSheet, { ssr: false });
+// پنجره‌ی برنامه خواب (چرخه‌ها + هدف) فقط بعد از hover/لمس/زدن یکی از دو باکس روی صفحه‌ی ساعت لود می‌شه
+const loadPlanSheet = () => import("./SleepPlanSheet");
+const SleepPlanSheet = dynamic(loadPlanSheet, { ssr: false });
 // ردیف ابزارها (صدا، تنفس، چرت، آمار) جدا از اولین رندر لود می‌شه؛ تایمر چرت اونجا mount می‌مونه
 const SleepToolsPanels = dynamic(() => import("./SleepToolsPanels").then((m) => m.SleepToolsPanels), {
   ssr: false,
@@ -49,11 +49,9 @@ export function SleepHub() {
   const [entries, setEntries] = useState<SleepRecord[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [target, setTarget] = useState({ wake: DEFAULT_WAKE, sleep: DEFAULT_SLEEP });
-  const [goalCustom, setGoalCustom] = useState(false);
   const [tracking, setTracking] = useState<SleepTracking | null>(null);
   const [sheet, setSheet] = useState<SheetState>(null);
-  const [goalOpen, setGoalOpen] = useState(false);
-  const [cyclesOpen, setCyclesOpen] = useState(false);
+  const [planTab, setPlanTab] = useState<PlanTab | null>(null);
   const [latency, setLatency] = useState<number>(DEFAULT_LATENCY);
   const [quickBusy, setQuickBusy] = useState(false);
   const [quickError, setQuickError] = useState<string | null>(null);
@@ -75,7 +73,6 @@ export function SleepHub() {
     setLatency(lat);
     setEntries(list.filter((e) => sleepMinutes(e) > 0).sort((a, b) => a.date.localeCompare(b.date)));
     setTarget(g.goal);
-    setGoalCustom(g.custom);
     setLoaded(true);
   }, []);
 
@@ -94,9 +91,9 @@ export function SleepHub() {
     setLatency(min);
     setSleepLatency(min).catch(() => {});
   }, []);
-  const openCycles = useCallback(() => setCyclesOpen(true), []);
-  const closeCycles = useCallback(() => setCyclesOpen(false), []);
-  const preloadCycles = useCallback(() => { loadCycleSheet(); }, []);
+  const openCycles = useCallback(() => setPlanTab("now"), []);
+  const closePlan = useCallback(() => setPlanTab(null), []);
+  const preloadCycles = useCallback(() => { loadPlanSheet(); }, []);
 
   const insights = useMemo(() => sleepInsights(entries, target, todayIso || isoLocal(new Date())), [entries, target, todayIso]);
   const byDate = useMemo(() => new Map(entries.map((e) => [e.date, e])), [entries]);
@@ -169,7 +166,7 @@ export function SleepHub() {
           tracking={tracking}
           onLog={() => openDate(todayIso || isoLocal(new Date()))}
           onWakeUp={wakeUp}
-          onEditGoal={() => setGoalOpen(true)}
+          onEditGoal={() => setPlanTab("goal")}
           latency={latency}
           onOpenCycles={openCycles}
           onPreloadCycles={preloadCycles}
@@ -188,26 +185,19 @@ export function SleepHub() {
         </div>
       </div>
 
-      {cyclesOpen && (
-        <SleepCycleSheet
+      {planTab && (
+        <SleepPlanSheet
           open
-          onClose={closeCycles}
+          onClose={closePlan}
+          initialTab={planTab}
           target={target}
           goalMin={insights.goalMin}
           latency={latency}
           onLatencyChange={changeLatency}
           lastNight={lastNight}
+          onGoalSaved={load}
         />
       )}
-
-      <SleepGoalSheet
-        open={goalOpen}
-        goal={target}
-        custom={goalCustom}
-        goalMin={insights.goalMin}
-        onClose={() => setGoalOpen(false)}
-        onSaved={load}
-      />
 
       <SleepLogSheet
         open={!!sheet}

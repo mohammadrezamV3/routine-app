@@ -6,7 +6,7 @@ import { tr } from "@/lib/i18n";
 import type { CycleTile } from "@/lib/sleepDialHints";
 
 // باکس هوشمند «چرخه‌های خواب» زیر ساعت هدف (کنار باکس هدف خواب): ساعت بیداری
-// پیشنهادی رو زنده نشون می‌ده و با زدنش پنجره‌ی SleepCycleSheet باز می‌شه. خود
+// پیشنهادی رو زنده نشون می‌ده و با زدنش پنجره‌ی SleepPlanSheet باز می‌شه. خود
 // پنجره با next/dynamic فقط بعد از اولین hover/فوکوس/لمس (onPreload) یا کلیک لود می‌شه.
 // استایل باکس‌ها در components/sleep-dial.css (.sld-tile).
 export const SleepCycleButton = memo(function SleepCycleButton({
