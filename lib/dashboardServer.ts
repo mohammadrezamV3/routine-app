@@ -35,6 +35,7 @@ import { tr } from "@/lib/i18n";
 import { planDisplayName } from "@/lib/subscriptionI18n";
 import { clampDisplay, isInLimit } from "./numberLimits";
 import { safeDailyKcal } from "./foodLogSanitize";
+import { calorieDayPct, exerciseDayPct, heatDays, WORKOUT_HEAT_DAYS } from "./workoutHeat";
 
 // ── تاریخ ────────────────────────────────────────────────────
 const DAY = 86_400_000;
@@ -77,7 +78,7 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
   const plan = await prisma.exercisePlan.findFirst({
     where: { userId, isActive: true },
     orderBy: { startDate: "desc" },
-    select: { id: true, gymDays: true, planData: true },
+    select: { id: true, gymDays: true, planData: true, startDate: true },
   });
   if (!plan) {
     return {
@@ -85,6 +86,7 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
       today: { dayName, isGymDay: false, focus: null, itemCount: 0, doneItems: 0, started: false, done: false, items: [] },
       week: { done: 0, target: 0 }, streak: 0,
       last14: last14Days.map((iso) => ({ iso, planned: false, done: false, rest: false })),
+      heat: heatDays(date, WORKOUT_HEAT_DAYS, () => null, isoAdd),
     };
   }
   const gymDays = Array.isArray(plan.gymDays) ? (plan.gymDays as unknown[]).filter((d): d is string => typeof d === "string") : [];
@@ -141,6 +143,16 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
     week: { done: weekDone, target: gymDays.length },
     streak,
     // روز استراحت از خود پلن مشتق و خودکار «انجام‌شده» حساب می‌شه (بدون لاگ).
+    heat: heatDays(date, WORKOUT_HEAT_DAYS, (iso) => {
+      const name = FA_WEEKDAY[jsDayOf(iso)];
+      const planned = (days.find((d) => d?.day === name)?.items ?? []).filter((n): n is string => typeof n === "string").length;
+      const log = logs[iso];
+      return exerciseDayPct({
+        isGymDay: gymDays.includes(name), isRest: isRestDay(gymDays, name), hasPlan: true,
+        beforePlan: !!plan.startDate && iso < dbIso(plan.startDate),
+        completed: !!log?.completed, doneItems: log?.completedItems.length ?? 0, plannedItems: planned,
+      });
+    }, isoAdd),
     last14: last14Days.map((iso) => {
       const name = FA_WEEKDAY[jsDayOf(iso)];
       return { iso, planned: gymDays.includes(name), rest: isRestDay(gymDays, name), done: exerciseDayDone(gymDays, name, iso, date, logs[iso]) };
@@ -150,12 +162,13 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
 
 // ── کالری ────────────────────────────────────────────────────
 export async function buildCalorie({ userId, date }: Ctx): Promise<DashCalorie> {
-  const from = isoAdd(date, -6);
+  const from = isoAdd(date, -(WORKOUT_HEAT_DAYS - 1));
+  const weekFrom = isoAdd(date, -6);
   const [target, groups] = await Promise.all([
     prisma.calorieTarget.findFirst({
       where: { userId, effectiveTo: null },
       orderBy: { effectiveFrom: "desc" },
-      select: { dailyTargetKcal: true, proteinTargetG: true, carbsTargetG: true, fatTargetG: true },
+      select: { dailyTargetKcal: true, proteinTargetG: true, carbsTargetG: true, fatTargetG: true, effectiveFrom: true },
     }),
     prisma.foodLogEntry.groupBy({
       by: ["date"],
@@ -166,6 +179,10 @@ export async function buildCalorie({ userId, date }: Ctx): Promise<DashCalorie> 
   ]);
   const byIso = new Map(groups.map((g) => [dbIso(g.date), g]));
   const t = byIso.get(date);
+  const targetKcal = target ? clampDisplay(target.dailyTargetKcal, "dailyTargetKcal") : null;
+  const firstLog = [...byIso.keys()].sort()[0] ?? null;
+  const targetIso = target ? dbIso(target.effectiveFrom) : null;
+  const startIso = [firstLog, targetIso].filter((x): x is string => !!x).sort()[0] ?? null;
   return {
     target: target ? { kcal: clampDisplay(target.dailyTargetKcal, "dailyTargetKcal"), protein: target.proteinTargetG == null ? null : clampDisplay(target.proteinTargetG, "macroTargetG"), carbs: target.carbsTargetG == null ? null : clampDisplay(target.carbsTargetG, "macroTargetG"), fat: target.fatTargetG == null ? null : clampDisplay(target.fatTargetG, "macroTargetG") } : null,
     today: {
@@ -177,9 +194,15 @@ export async function buildCalorie({ userId, date }: Ctx): Promise<DashCalorie> 
       entries: t?._count._all ?? 0,
     },
     week: Array.from({ length: 7 }, (_, i) => {
-      const iso = isoAdd(from, i);
+      const iso = isoAdd(weekFrom, i);
       return { iso, kcal: Math.round(safeDailyKcal(byIso.get(iso)?._sum.customCalories ?? 0)) };
     }),
+    // روز قبل از اولین ثبت یا هدف = خنثی (null)، نه «شکست»
+    heat: heatDays(date, WORKOUT_HEAT_DAYS, (iso) => {
+      if (!startIso || iso < startIso) return null;
+      const g = byIso.get(iso);
+      return calorieDayPct(safeDailyKcal(g?._sum.customCalories ?? 0), targetKcal, (g?._count._all ?? 0) > 0);
+    }, isoAdd),
   };
 }
 

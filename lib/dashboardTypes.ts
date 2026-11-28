@@ -12,6 +12,9 @@ import type { HubChecklists, HubNote } from "./tradeHubTypes";
 
 export type DashImpact = "LOW" | "MEDIUM" | "HIGH";
 
+/** یک روز نقشه‌ی ثبات ورزش (lib/workoutHeat.ts): pct 0..100 یا null = بی‌برنامه/قبل از شروع */
+export type DashHeatDay = { iso: string; pct: number | null };
+
 export type DashExercise = {
   hasPlan: boolean;
   planId: string | null;
@@ -34,6 +37,8 @@ export type DashExercise = {
   streak: number;
   /** ۱۴ روز اخیر تا امروز (قدیمی → جدید). روز استراحت (rest) خودکار done ـه. */
   last14: { iso: string; planned: boolean; done: boolean; rest: boolean }[];
+  /** ۹۰ روز اخیر برای نقشه‌ی ثبات (قدیمی → جدید)؛ اختیاری چون کش آفلاین قدیمی ندارد */
+  heat?: DashHeatDay[];
 };
 
 export type DashCalorie = {
@@ -41,6 +46,8 @@ export type DashCalorie = {
   today: { kcal: number; protein: number; carbs: number; fat: number; entries: number };
   /** ۷ روز اخیر تا امروز (قدیمی → جدید) */
   week: { iso: string; kcal: number }[];
+  /** ۹۰ روز اخیر برای نقشه‌ی ثبات (قدیمی → جدید)؛ pct = نزدیکی به هدف کالری */
+  heat?: DashHeatDay[];
 };
 
 export type DashTradeAccount = {

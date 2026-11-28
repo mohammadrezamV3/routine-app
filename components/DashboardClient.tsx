@@ -27,6 +27,7 @@ import type { SectionKey } from "@/lib/sections";
 import { DashboardHero } from "./DashboardHero";
 import { DashboardToday } from "./DashboardToday";
 import { DashboardHeatmap } from "./DashboardHeatmap";
+import { WorkoutHeatBento } from "./WorkoutHeatCard";
 import { DashboardRoutineLock } from "./DashboardRoutineLock";
 import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardSleep } from "./DashboardSleep";
@@ -177,6 +178,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     if (blocks.fitness) {
       paid("ex", "EXERCISE", "exercise");
       paid("cal", "CALORIE", "calorie");
+      // نقشه‌ی ثبات ورزش: فقط وقتی حداقل یکی از دو ماژول واقعا در دسترسه (کارت قفل ندارد)
+      if (section === "workout" && ((owns("EXERCISE") && on("exercise")) || (owns("CALORIE") && on("calorie")))) set.add("wheat");
     }
     if (blocks.trade) {
       paid("trade", "TRADE", "tradeJournal");
@@ -225,6 +228,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
             <DashboardHeatmap heat={routine.heat} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} memberSince={data?.user.memberSince} />
           </>
         )}
+        {has.has("wheat") && <WorkoutHeatBento exercise={data?.exercise?.heat ?? null} calorie={data?.calorie?.heat ?? null} loading={loading} />}
         {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} onChanged={refreshNow} />}
         {has.has("meds") && <DashboardMedication />}
         {has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}

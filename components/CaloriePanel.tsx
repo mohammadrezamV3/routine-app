@@ -26,6 +26,7 @@ import { readTyped, type LimitKey } from "@/lib/numberLimits";
 import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
 import { tr } from "@/lib/i18n";
+import { WorkoutHeatPanel } from "./WorkoutHeatCard";
 import dynamic from "next/dynamic";
 // تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
 const CalorieTutorial = dynamic(() => import("./CalorieTutorial").then((m) => m.CalorieTutorial), { ssr: false });
@@ -419,6 +420,8 @@ export function CaloriePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
                 </>
               )}
             </div>
+
+            <WorkoutHeatPanel kind="calorie" delay={0.3} />
           </div>
 
           <div className="disclaimer-note">

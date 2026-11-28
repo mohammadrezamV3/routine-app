@@ -68,6 +68,8 @@ describe("sectionAreas", () => {
   it("ورزش: تمرین، کالری، خواب و مربی‌ها؛ اعلان‌ها و فضای قدیمی نه", () => {
     const a = sectionAreas(set("inbox", "space", "ex", "cal", "sleep", "mentor"), "workout");
     expect(a.lg).toBe('"ex ex cal" "sleep sleep mentor"');
+    const w = sectionAreas(set("ex", "cal", "wheat", "sleep", "mentor"), "workout");
+    expect(w.lg).toBe('"ex cal wheat" "sleep sleep mentor"');
     expect(a.lg).not.toContain("inbox");
     expect(a.lg).not.toContain("space");
   });
