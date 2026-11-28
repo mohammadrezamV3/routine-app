@@ -349,6 +349,7 @@ function reduceCalorie(m: Mutation, parsed: Parsed[], out: Out, real: any): Redu
       : {
           id: tmp, userId: "", foodItemId: null,
           customName: typeof b.customName === "string" ? b.customName.slice(0, 80) : "",
+          ...(typeof b.nameEn === "string" && b.nameEn ? { nameEn: b.nameEn.slice(0, 120) } : {}),
           customCalories: num(b.customCalories),
           date: `${b.date}T00:00:00.000Z`,
           grams: num(b.grams) ?? 0,

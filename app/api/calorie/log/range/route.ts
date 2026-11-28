@@ -5,6 +5,7 @@ import { ModuleKey } from "@prisma/client";
 import { parseDateRange } from "@/lib/validate";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { sanitizeFoodRow } from "@/lib/foodLogSanitize";
+import { withFoodNameEn } from "@/lib/foodCatalogServer";
 
 // سقف سطر برگشتی — بدونش یه بازه‌ی پرداده می‌تونست کل تاریخچه رو یکجا بکشه
 const MAX_ROWS = 2000;
@@ -24,5 +25,5 @@ export async function GET(req: NextRequest) {
     orderBy: { date: "desc" },
     take: MAX_ROWS,
   });
-  return NextResponse.json({ entries: entries.map(sanitizeFoodRow) });
+  return NextResponse.json({ entries: withFoodNameEn(entries.map(sanitizeFoodRow)) });
 }

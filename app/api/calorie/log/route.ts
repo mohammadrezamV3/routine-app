@@ -9,6 +9,7 @@ import { parseIsoDate, readJsonBody } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { sanitizeFoodRow } from "@/lib/foodLogSanitize";
+import { withFoodNameEn } from "@/lib/foodCatalogServer";
 
 // GET /api/calorie/log?date=2026-07-25
 export async function GET(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
     where: { userId, date },
     orderBy: { createdAt: "asc" },
   });
-  return NextResponse.json({ entries: entries.map(sanitizeFoodRow) });
+  return NextResponse.json({ entries: withFoodNameEn(entries.map(sanitizeFoodRow)) });
 }
 
 // POST /api/calorie/log  { date, customName, customCalories, grams, mealType }
@@ -43,7 +44,7 @@ async function handlePOST(req: NextRequest) {
 
   return withIdempotency(req, userId, "calorie.log", async () => {
     const entry = await createFoodLog(userId, data);
-    return NextResponse.json({ ok: true, entry });
+    return NextResponse.json({ ok: true, entry: withFoodNameEn([entry])[0] });
   });
 }
 

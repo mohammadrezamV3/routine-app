@@ -96,3 +96,34 @@ describe("food search", () => {
     expect(searchFoodNamesEn("whey").length).toBeGreaterThan(0);
   });
 });
+
+describe("food catalog server helpers", () => {
+  it("searches Latin queries server-side and attaches nameEn", async () => {
+    const { searchFoods } = await import("@/lib/foodCatalogServer");
+    const r = searchFoods("grilled chicken");
+    expect(r.length).toBeGreaterThan(0);
+    for (const f of r) {
+      expect(f.nameEn, f.name).toBeTruthy();
+      expect(f.nameEn!.toLowerCase()).toContain("grilled chicken");
+    }
+  });
+
+  it("searches Persian queries and attaches nameEn when known", async () => {
+    const { searchFoods } = await import("@/lib/foodCatalogServer");
+    const r = searchFoods("جوجه‌کباب");
+    expect(r[0].name).toBe("جوجه‌کباب");
+    expect(r[0].nameEn).toBe("Chicken kebab (joojeh)");
+  });
+
+  it("attaches nameEn to log rows by stored Persian name", async () => {
+    const { withFoodNameEn } = await import("@/lib/foodCatalogServer");
+    const rows = withFoodNameEn([{ customName: "ماست یونانی" }, { customName: "غذای ناشناخته xyz" }]);
+    expect(rows[0].nameEn).toBe("Greek yogurt");
+    expect("nameEn" in rows[1]).toBe(false);
+  });
+
+  it("foodNameDisplay uses only the provided nameEn", async () => {
+    const { foodNameDisplay } = await import("@/lib/foodNameDisplay");
+    expect(foodNameDisplay("ماست", "Yogurt")).toBe("ماست"); // default locale is Persian
+  });
+});

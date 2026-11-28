@@ -1,6 +1,5 @@
-// نام انگلیسی غذاهای کاتالوگ داخلی (lib/foodSeed.ts) — فقط برای نمایش و جستجو.
+// نام انگلیسی غذاهای کاتالوگ داخلی (lib/foodSeed.ts) — فقط سمت سرور (هیچ‌وقت وارد باندل کلاینت نشه).
 // کلید = همون نام فارسی؛ نام فارسی ذخیره‌شده در ثبت‌های کاربر (customName) عوض نمی‌شه.
-import { isEn } from "./i18n";
 import { CATALOG_ITEMS } from "./foodCatalog";
 
 const LEGACY_FOOD_NAME_EN: Record<string, string> = {
@@ -276,22 +275,24 @@ export const FOOD_NAME_EN: Record<string, string> = {
   ...LEGACY_FOOD_NAME_EN,
 };
 
-/** نام غذا برای نمایش: در انگلیسی نام انگلیسی کاتالوگ (اگه بود)، وگرنه همون نام ذخیره‌شده. */
-export function foodNameDisplay(nameFa: string, nameEn?: string | null): string {
-  if (!isEn()) return nameFa;
-  return nameEn || FOOD_NAME_EN[nameFa] || nameFa;
+/** نام انگلیسی یک غذا با کلید نام فارسی (O(1)؛ فقط سمت سرور، جدول بزرگه و به کلاینت نمیره). */
+export function foodNameEnOf(nameFa: string): string | undefined {
+  return FOOD_NAME_EN[nameFa];
 }
 
-/** جستجوی انگلیسی در نام غذاها (سمت کلاینت)؛ خروجی نام‌های فارسی کلید، شروع‌شونده‌ها اول. */
+type EnRow = { fa: string; lower: string };
+let enRows: EnRow[] | null = null;
+
+/** جستجوی انگلیسی در نام غذاها (سمت سرور)؛ خروجی نام‌های فارسی کلید، شروع‌شونده‌ها اول. */
 export function searchFoodNamesEn(query: string, limit = 10): string[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
+  enRows ||= Object.keys(FOOD_NAME_EN).map((fa) => ({ fa, lower: FOOD_NAME_EN[fa].toLowerCase() }));
   const starts: string[] = [];
   const rest: string[] = [];
-  for (const fa of Object.keys(FOOD_NAME_EN)) {
-    const en = FOOD_NAME_EN[fa].toLowerCase();
-    if (en.startsWith(q)) starts.push(fa);
-    else if (en.includes(q)) rest.push(fa);
+  for (const r of enRows) {
+    if (r.lower.startsWith(q)) starts.push(r.fa);
+    else if (r.lower.includes(q)) rest.push(r.fa);
   }
   return [...starts, ...rest].slice(0, limit);
 }
