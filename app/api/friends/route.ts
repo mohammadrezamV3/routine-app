@@ -27,8 +27,14 @@ async function statsForUserExercise(userId: string) {
     where: { userId, planId: plan.id, date: { gte: start, lte: now } },
   });
   const logs: ExerciseLogRange = {};
+  // چند جلسه در روز: روز انجام‌شده = حداقل یک جلسه پایان خورده
   rows.forEach((r) => {
-    logs[isoLocal(r.date)] = { completed: r.completed, completedItems: (r.completedItems as string[] | null) ?? [] };
+    const iso = isoLocal(r.date);
+    const prev = logs[iso];
+    logs[iso] = {
+      completed: !!prev?.completed || r.completed,
+      completedItems: [...(prev?.completedItems ?? []), ...((r.completedItems as string[] | null) ?? [])],
+    };
   });
 
   const streak = computeExerciseStreak(gymDays, (d) => FA_WEEKDAY[d.getDay()], logs, now);
