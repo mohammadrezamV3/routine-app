@@ -11,6 +11,7 @@ import { DRINKS } from "./drinks";
 import { EXTRAS } from "./extras";
 import { BRANDS_IR } from "./brandsIr";
 import { FASTFOOD2 } from "./fastfood2";
+import { INGREDIENTS } from "./ingredients";
 import { WORLD } from "./world";
 import { SWEETS2 } from "./sweets2";
 import { IRANIAN2 } from "./iranian2";
@@ -46,7 +47,7 @@ function parse(block: string): CatalogItem[] {
   return out;
 }
 
-export const CATALOG_ITEMS: CatalogItem[] = [STAPLES, IRANIAN, FRESH, TREATS, SNACKS, DRINKS, EXTRAS, BRANDS_IR, FASTFOOD2, IRANIAN2, SWEETS2, WORLD].flatMap(parse);
+export const CATALOG_ITEMS: CatalogItem[] = [STAPLES, IRANIAN, FRESH, TREATS, SNACKS, DRINKS, EXTRAS, BRANDS_IR, FASTFOOD2, IRANIAN2, SWEETS2, WORLD, INGREDIENTS].flatMap(parse);
 
 /** مترادف/املای جایگزین آیتم‌های قدیمی کاتالوگ (کلید = نام دقیق قدیمی). */
 export const LEGACY_ALIASES: Record<string, string[]> = {
