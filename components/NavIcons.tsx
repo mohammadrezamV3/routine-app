@@ -67,6 +67,28 @@ export const ICONS: Record<string, JSX.Element> = {
   blog: (
     <svg viewBox="0 0 24 24" fill="none"><path d="M12 6.5C10.3 5.3 8 4.8 4 4.8v13.4c4 0 6.3.5 8 1.7 1.7-1.2 4-1.7 8-1.7V4.8c-4 0-6.3.5-8 1.7Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M12 6.5v13.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
   ),
+  // زیرمنوی ترید — چارت شمعی، یادداشت، ریسک (ترازو)، مدیریت سرمایه (کیف)، متاتریدر (پلاگ)، ابزار (آچار)، ساعت
+  chart: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M4 4v16h16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 16v-4M12 16V8M16 16v-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+  ),
+  notes: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M5 4.5h14v11l-4.5 4.5H5z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M9 9h6M9 12.5h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M14.5 20v-4.5H19" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>
+  ),
+  risk: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 4v16M6 20h12M5 7h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="m5 7-2.5 6h5zM19 7l-2.5 6h5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+  ),
+  money: (
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="6.5" width="17" height="13" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M3.5 10.5h17" stroke="currentColor" strokeWidth="1.7"/><circle cx="16" cy="14.5" r="1.3" fill="currentColor"/><path d="M8 4.5h8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  metatrader: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M9 3.5v4M15 3.5v4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><rect x="5.5" y="7.5" width="13" height="8" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 15.5V20.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M8.5 20.5h7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  tools: (
+    <svg viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a4 4 0 0 0 5 5L12 19l-3-3 7.7-7.7Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M5 19l3-3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>
+  ),
+  clock: (
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.7"/><path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  ),
   // «بیشتر» — سه نقطه
   more: (
     <svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="18" cy="12" r="1.6" fill="currentColor"/></svg>

@@ -33,6 +33,20 @@ export const getLinks = (): NavItem[] => [
   { href: "/exercise", label: tr("برنامه تمرینی", "Workout plan"), icon: "exercise", module: "EXERCISE", feature: "exercise", sections: ["workout"] },
   { href: "/calorie", label: tr("کالری‌شمار", "Calorie tracker"), icon: "food", module: "CALORIE", feature: "calorie", sections: ["workout"] },
   { href: "/trade", label: tr("ترید", "Trading"), icon: "trade", module: "TRADE", feature: "trade", sections: ["trade"] },
+  // منوی بخش ترید (درخواست صریح): داشبورد، چارت، ژورنال، چک‌لیست، یادداشت‌ها، گروه «ابزار».
+  // هر کدوم feature خودش رو دارن (lib/featureFlags.ts) تا خاموش‌کردن از پنل ادمین همون آیتم رو مخفی کنه.
+  { href: "/trade/chart", label: tr("چارت", "Chart"), icon: "chart", module: "TRADE", feature: "tradeChart", sections: ["trade"] },
+  { href: "/trade/journal", label: tr("ژورنال", "Journal"), icon: "journal", module: "TRADE", feature: "tradeJournal", sections: ["trade"] },
+  { href: "/trade/checklists", label: tr("چک‌لیست", "Checklist"), icon: "checklist", module: "TRADE", feature: "tradeChecklists", sections: ["trade"] },
+  { href: "/trade/notes", label: tr("یادداشت‌ها", "Notes"), icon: "notes", module: "TRADE", feature: "tradeNotes", sections: ["trade"] },
+  {
+    label: tr("ابزار", "Tools"), icon: "tools", sections: ["trade"],
+    children: [
+      { href: "/trade/risk", label: tr("ریسک و سود", "Risk & reward"), icon: "risk", module: "TRADE", feature: "tradeRisk", sections: ["trade"] },
+      { href: "/trade/money", label: tr("مدیریت سرمایه", "Money management"), icon: "money", module: "TRADE", feature: "tradeMoneyMgmt", sections: ["trade"] },
+      { href: "/trade/metatrader", label: tr("اتصال متاتریدر", "MetaTrader connection"), icon: "metatrader", module: "TRADE", feature: "metatrader", sections: ["trade"] },
+    ],
+  },
   { href: "/analysis/weekly", label: tr("آنالیز هفتگی", "Weekly review"), icon: "weeklyReport", module: "AI_INSIGHT", feature: "weeklyAnalysis" },
   // گروه مربی‌ها: فقط صفحه‌های سمت شاگرد؛ «پنل منتور» در پاپ‌آپ پروفایل است.
   // آیکون زیرمجموعه‌ها در داده هست ولی زیرمجموعه‌های منو آیکون رندر نمی‌کنند (globals.css → .nav-link-sub-item).
@@ -46,6 +60,9 @@ export const getLinks = (): NavItem[] => [
   {
     label: tr("بیشتر", "More"), icon: "more",
     children: [
+      // ابزارهای ترید که در منوی اصلی جا نشدن — فقط در بخش ترید (زیر «بیشتر»)
+      { href: "/trade/calendar", label: tr("تقویم اقتصادی", "Economic calendar"), icon: "weekly", module: "TRADE", feature: "economicCalendar", sections: ["trade"] },
+      { href: "/trade/clock", label: tr("ساعت فارکس", "Forex clock"), icon: "clock", module: "TRADE", feature: "forexClock", sections: ["trade"] },
       { href: "/blog", label: tr("مقاله‌ها", "Articles"), icon: "blog", feature: "blog" },
       { href: "/about", label: tr("درباره ما", "About us"), icon: "about", feature: "about" },
     ],
@@ -65,7 +82,10 @@ type Features = Parameters<typeof featureVisible>[0];
 export const SECTION_ORDER: Record<SectionKey, string[]> = {
   routine: ["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/roadmaps", "mentors", "more"],
   workout: ["/dashboard", "/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"],
-  trade: ["/dashboard", "/trade", "/analysis/weekly", "mentors", "more"],
+  // ترتیب بخش ترید (درخواست صریح): داشبورد، چارت، ژورنال، چک‌لیست، یادداشت‌ها، ابزار.
+  // «/trade» (هاب قدیمی) فقط وقتی فلگ داشبورد خاموشه دیده می‌شه و همون جای اول می‌مونه.
+  // آنالیز، مربی‌ها و بیشتر بعد از این شش آیتم میان.
+  trade: ["/dashboard", "/trade", "/trade/chart", "/trade/journal", "/trade/checklists", "/trade/notes", "tools", "/analysis/weekly", "mentors", "more"],
 };
 
 export function getVisibleLinks(features: Features, section: SectionKey | null = null): NavItem[] {

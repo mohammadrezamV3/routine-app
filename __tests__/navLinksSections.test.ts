@@ -45,8 +45,38 @@ describe("getVisibleLinks per section", () => {
   });
 
   it("header priority: trade order, with and without the dashboard", () => {
-    expect(topHrefs(getVisibleLinks(null, "trade"))).toEqual(["/dashboard", "/analysis/weekly", "mentors", "more"]);
-    expect(topHrefs(rawVisible({ ...ALL_ON, dashboard: false }, "trade"))).toEqual(["/trade", "/analysis/weekly", "mentors", "more"]);
+    expect(topHrefs(getVisibleLinks(null, "trade"))).toEqual([
+      "/dashboard", "/trade/chart", "/trade/journal", "/trade/checklists", "/trade/notes", "tools", "/analysis/weekly", "mentors", "more",
+    ]);
+    expect(topHrefs(rawVisible({ ...ALL_ON, dashboard: false }, "trade"))).toEqual([
+      "/trade", "/trade/chart", "/trade/journal", "/trade/checklists", "/trade/notes", "tools", "/analysis/weekly", "mentors", "more",
+    ]);
+  });
+
+  it("trade tools group holds risk, money management and MetaTrader, in that order", () => {
+    const tools = getVisibleLinks(null, "trade").find((i) => isGroup(i) && i.icon === "tools");
+    expect(tools && isGroup(tools) ? tools.children.map((c) => c.href) : []).toEqual(["/trade/risk", "/trade/money", "/trade/metatrader"]);
+  });
+
+  it("trade tools group hides money management when its flag is off", () => {
+    const noMoney = rawVisible({ ...ALL_ON, tradeMoneyMgmt: false }, "trade").find((i) => isGroup(i) && i.icon === "tools");
+    expect(noMoney && isGroup(noMoney) ? noMoney.children.map((c) => c.href) : []).toEqual(["/trade/risk", "/trade/metatrader"]);
+  });
+
+  it("a tools group with one visible tool collapses to a plain top-level link", () => {
+    const items = rawVisible({ ...ALL_ON, tradeMoneyMgmt: false, metatrader: false }, "trade");
+    expect(items.some((i) => isGroup(i) && i.icon === "tools")).toBe(false);
+    expect(topHrefs(items)).toContain("/trade/risk");
+  });
+
+  it("trade items disappear with their own flag", () => {
+    expect(hrefs(rawVisible({ ...ALL_ON, tradeChart: false }, "trade"))).not.toContain("/trade/chart");
+    expect(hrefs(rawVisible({ ...ALL_ON, tradeJournal: false }, "trade"))).not.toContain("/trade/journal");
+  });
+
+  it("no page is listed twice in the trade menu", () => {
+    const all = hrefs(getVisibleLinks(null, "trade"));
+    expect(new Set(all).size).toBe(all.length);
   });
 
   it("a group that collapses to one link keeps its position", () => {
@@ -74,9 +104,13 @@ describe("getVisibleLinks per section", () => {
     expect(all).toContain("/calorie");
   });
 
-  it("trade shows only the dashboard (the old /trade hub is merged into it) plus shared items", () => {
+  it("trade shows the dashboard (the old /trade hub is merged into it) plus its own pages and shared items", () => {
     const all = hrefs(getVisibleLinks(null, "trade"));
-    expect(all).toEqual(["/dashboard", "/analysis/weekly", "/mentors", "/mentorship", "/blog", "/about"]);
+    expect(all).toEqual([
+      "/dashboard", "/trade/chart", "/trade/journal", "/trade/checklists", "/trade/notes",
+      "/trade/risk", "/trade/money", "/trade/metatrader",
+      "/analysis/weekly", "/mentors", "/mentorship", "/trade/calendar", "/trade/clock", "/blog", "/about",
+    ]);
   });
 
   it("trade keeps the /trade entry as a fallback when the dashboard flag is off", () => {
