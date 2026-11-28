@@ -12,6 +12,9 @@
 import { SmartLink as Link } from "@/components/SmartLink";
 import { TickButton } from "./TickButton";
 import { Fragment, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { createPortal } from "react-dom";
+import { Plus } from "lucide-react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { faNum, weekdayShort, CAL_WEEK_ORDER } from "@/lib/jalali";
 import { timeEndMinutes, toEnDigits } from "@/lib/schedule";
@@ -20,6 +23,11 @@ import type { HeatCell } from "@/lib/dashboardCompute";
 import { BentoCard, CardHead, CountUp, D_EASE, EmptyState, Skel } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
 import { tr, isEn, dirSign } from "@/lib/i18n";
+import { useTodayDoses } from "@/lib/useTodayDoses";
+import { mergeTodayItems, doseState } from "@/lib/todayMerge";
+import { MAX_MEDICATIONS } from "@/lib/medications";
+
+const MedicationForm = dynamic(() => import("./MedicationForm").then((m) => m.MedicationForm), { ssr: false });
 
 const MAX_ROWS = 7;
 const WEEK_SHORT = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
@@ -27,6 +35,7 @@ const WEEK_SHORT = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
 const DEFAULT_SPAN = 45;
 
 type State = "done" | "active" | "next" | "missed" | "upcoming" | "untimed";
+const DOSE_STATE: Record<string, State> = { done: "done", missed: "missed", upcoming: "upcoming" };
 
 const stateLabel = (): Record<State, string> => ({
   done: tr("انجام شد", "Done"),
@@ -48,7 +57,7 @@ function hhmm(min: number) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready: boolean; tasks: TodayTask[]; stats: { completed: number; total: number; pct: number }; week: HeatCell[] | null; onToggle: (id: string, itemId?: string) => void }) {
+export function DashboardToday({ ready, tasks, stats, week, onToggle, showMeds = false }: { showMeds?: boolean; ready: boolean; tasks: TodayTask[]; stats: { completed: number; total: number; pct: number }; week: HeatCell[] | null; onToggle: (id: string, itemId?: string) => void }) {
   const [nowMin, setNowMin] = useState<number | null>(null);
   useEffect(() => {
     const f = () => { const d = new Date(); setNowMin(d.getHours() * 60 + d.getMinutes()); };
@@ -62,7 +71,10 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
   const [open, setOpen] = useState<Set<string>>(new Set());
   const flip = (id: string) => setOpen((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
-  const rows = useMemo(() => {
+  const meds = useTodayDoses(showMeds);
+  const [formOpen, setFormOpen] = useState(false);
+
+  const progRows = useMemo(() => {
     const nm = nowMin ?? -1;
     let nextAssigned = false;
     return tasks.map((t) => {
@@ -80,6 +92,18 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
     });
   }, [tasks, nowMin]);
 
+  // نوبت‌های دارو بین برنامه‌ها به ترتیب ساعت می‌شینن؛ تیک‌شون جدا از روتینه (medicationDoses)
+  const rows = useMemo(() => mergeTodayItems(progRows, meds.slots).map((it) => {
+    if (it.kind === "program") return { ...it.program, kind: "program" as const, dose: null };
+    const d = it.dose;
+    const done = meds.taken.includes(d.key);
+    const state = DOSE_STATE[doseState(d.minutes, done, nowMin)];
+    return {
+      kind: "dose" as const, dose: d, id: `dose:${d.key}`, name: d.name, time: d.time, startMin: d.minutes, done, state, end: null, progress: 0,
+      importance: undefined, tag: undefined, href: undefined, items: undefined, startLabel: d.time, endLabel: null,
+    };
+  }), [progRows, meds.slots, meds.taken, nowMin]);
+
   // پنجره‌ای حول «الان» وقتی برنامه‌ها زیادن (نه فقط صبح زود)
   const visible = useMemo(() => {
     if (rows.length <= MAX_ROWS) return rows;
@@ -90,19 +114,24 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
 
   // «الان» قبل از اولین برنامه‌ای که شروعش نرسیده
   const nowIndex = nowMin === null ? -1 : visible.findIndex((r) => r.startMin !== null && r.startMin > nowMin);
-  const next = rows.find((r) => r.state === "next");
-  const active = rows.find((r) => r.state === "active");
-  const missed = rows.filter((r) => r.state === "missed").length;
+  const next = progRows.find((r) => r.state === "next");
+  const active = progRows.find((r) => r.state === "active");
+  const missed = progRows.filter((r) => r.state === "missed").length;
   const allDone = stats.total > 0 && stats.completed === stats.total;
 
   function toggle(id: string, wasDone: boolean) {
     if (!wasDone) setBurst({ id, k: Date.now() });
-    onToggle(id);
+    if (id.startsWith("dose:")) meds.toggle(id.slice(5));
+    else onToggle(id);
   }
 
   return (
     <BentoCard area="today" className="db-today" label={tr("برنامه‌های امروز", "Today's programs")}>
-      <CardHead icon="routine" title={tr("برنامه‌های امروز", "Today's programs")} href="/weekly" hrefLabel={tr("روتین", "Routine")} />
+      <CardHead icon="routine" title={tr("برنامه‌های امروز", "Today's programs")} href="/weekly" hrefLabel={tr("روتین", "Routine")} extra={showMeds && meds.ready && meds.count < MAX_MEDICATIONS ? (
+        <button type="button" className="btn btn-ghost btn-icon btn-sm db-tl-add" onClick={() => setFormOpen(true)} aria-label={tr("افزودن دارو", "Add medication")} title={tr("افزودن دارو", "Add medication")}>
+          <Plus aria-hidden width={16} height={16} />
+        </button>
+      ) : undefined} />
 
       {ready && stats.total > 0 && (
         <div className="db-tl-summary">
@@ -139,7 +168,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
 
       {!ready ? (
         <div className="db-tl">{Array.from({ length: 4 }, (_, i) => <div key={i} className="db-tl-skel"><Skel w={40} h={12} /><Skel w={26} h={26} r={20} /><Skel w="60%" h={40} r={14} /></div>)}</div>
-      ) : tasks.length === 0 ? (
+      ) : rows.length === 0 ? (
         <EmptyState icon="routine" text={tr("امروز برنامه‌ای نداری. یه برنامه اضافه کن تا روزت شکل بگیره.", "You have no programs today. Add one to shape your day.")} href="/weekly?add=1" cta={tr("افزودن برنامه", "Add program")} action="program" />
       ) : (
         <ol className="db-tl">
@@ -149,7 +178,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
               <Fragment key={r.id}>
               {i === nowIndex && nowMin !== null && <li className="db-tl-item is-now"><NowMarker min={nowMin} /></li>}
               <motion.li
-                className={`db-tl-item is-${r.state}${passed ? " is-passed" : ""}${i === visible.length - 1 ? " is-last" : ""}`}
+                className={`db-tl-item is-${r.state}${r.kind === "dose" ? " is-dose" : ""}${passed ? " is-passed" : ""}${i === visible.length - 1 ? " is-last" : ""}`}
                 initial={{ opacity: 0, x: -dirSign() * 14 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.12 + i * 0.05, duration: 0.45, ease: D_EASE }}
@@ -167,7 +196,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                       onClick={() => toggle(r.id, r.done)}
                       whileTap={{ scale: 0.8 }}
                       aria-pressed={r.done}
-                      aria-label={`${r.done ? tr("برداشتن تیک", "Untick") : tr("تیک‌زدن", "Tick")} ${r.name}`}
+                      aria-label={`${r.done ? tr("برداشتن تیک", "Untick") : r.kind === "dose" ? tr("خوردم", "Mark taken") : tr("تیک‌زدن", "Tick")} ${r.name}`}
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <motion.path d="m7 12.5 3.3 3.2L17 9" fill="none" stroke="currentColor" strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" initial={false} animate={{ pathLength: r.done ? 1 : 0, opacity: r.done ? 1 : 0 }} transition={{ duration: 0.35, ease: D_EASE }} />
@@ -185,6 +214,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
 
                   <div className="db-tl-card">
                     <div className="db-tl-card-top">
+                      {r.kind === "dose" && <span className="db-tl-pill"><DashIcon name="pill" /></span>}
                       {r.href ? <Link href={r.href} prefetch className="db-tl-name">{r.name}</Link> : r.items?.length ? (
                         <button type="button" className="db-tl-name db-tl-name-btn" onClick={() => flip(r.id)} aria-expanded={open.has(r.id)}>{r.name}</button>
                       ) : <span className="db-tl-name">{r.name}</span>}
@@ -199,6 +229,7 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
                     </div>
                     <div className="db-tl-meta">
                       <span className="db-tl-state"><i />{stateLabel()[r.state]}</span>
+                      {r.kind === "dose" && r.dose?.note ? <span className="db-tl-note">{r.dose.note}</span> : null}
                       {r.state === "next" && nowMin !== null && r.startMin !== null && <span className="db-tl-in">{fmtIn(r.startMin - nowMin)}</span>}
                     </div>
                     <AnimatePresence initial={false}>
@@ -229,8 +260,12 @@ export function DashboardToday({ ready, tasks, stats, week, onToggle }: { ready:
           )}
         </ol>
       )}
-      {ready && tasks.length > visible.length && (
-        <Link href="/weekly" prefetch className="db-today-more">{tr(`+${faNum(tasks.length - visible.length)} برنامه‌ی دیگه`, `+${tasks.length - visible.length} more`)}</Link>
+      {ready && rows.length > visible.length && (
+        <Link href="/weekly" prefetch className="db-today-more">{tr(`+${faNum(rows.length - visible.length)} مورد دیگه`, `+${rows.length - visible.length} more`)}</Link>
+      )}
+      {formOpen && createPortal(
+        <MedicationForm initial={null} onClose={() => setFormOpen(false)} onSave={meds.saveMedication} />,
+        document.body,
       )}
       {ready && week && week.length === 7 && <WeekBars week={week} />}
     </BentoCard>
