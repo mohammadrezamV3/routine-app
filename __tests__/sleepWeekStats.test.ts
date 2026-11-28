@@ -44,3 +44,13 @@ describe("sleepWeekStats", () => {
     expect(goalDiffKind(45)).toBe("over");
   });
 });
+
+import { sparkPoints } from "@/lib/sleepWeekStats";
+describe("sparkPoints", () => {
+  it("کمتر از دو مقدار null", () => { expect(sparkPoints([5], 50, 30)).toBeNull(); });
+  it("کمینه پایین و بیشینه بالا", () => {
+    const p = sparkPoints([1, 3, 2], 56, 34)!;
+    expect(p[0].x).toBe(3); expect(p[2].x).toBe(53);
+    expect(p[1].y).toBe(3); expect(p[0].y).toBe(31);
+  });
+});

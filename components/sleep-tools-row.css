@@ -1,44 +1,78 @@
-/* ── ابزارهای خواب (SleepToolsPanels): شبکه‌ی 2x2 کاشی‌های بزرگ با آیکون تصویرگونه ──
-   کاشی‌ها همون سطح واحد باکس‌ها (--box-bg / --box-line)؛ هنر آیکون‌ها SVG (stroke) و
-   رنگ تاکید هر ابزار از --t. هیچ بک‌گراند تازه‌ای نیست. */
+/* ── ابزارهای خواب (SleepToolsPanels): شبکه‌ی 2x2 کاشی با تصویرگری زنده ──
+   سطح کاشی‌ها همون سطح واحد باکس‌ها (--box-bg / --box-line). تصویرگری‌ها SVG/CSS ان
+   و حرکتشون فقط transform/opacity (خاموش با reduced-motion و data-perf-weak). */
 .slt-row{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; min-width:0; }
 @media (min-width:1024px){ .slt-row{ gap:20px; } }
-/* کاشی آرام: همان سطح باکس‌ها، آیکون تک‌رنگ با تاکید سایت، متن کنارش؛ بدون رنگ جدا برای هر ابزار */
+.sleep-scope .slt-row{
+  --slt-a:#8b7bff; --slt-b:#7ee0b0; --slt-sound-a:#7ee0b0; --slt-sound-b:#3aa6ff; --slt-breath:#4fb8ff; --slt-nap:#ffd27a;
+}
+body[data-theme="light"] .sleep-scope .slt-row{
+  --slt-a:#5b49d8; --slt-b:#0a9a70; --slt-sound-a:#12b384; --slt-sound-b:#2f7bf0; --slt-breath:#2f7fd6; --slt-nap:#d98a0b;
+}
 body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{
   --t:var(--accent);
-  position:relative; width:100%; min-height:0; padding:14px; border-radius:20px;
-  background:var(--box-bg); border:1px solid var(--box-line); box-shadow:none;
-  display:flex; flex-direction:row; align-items:center; justify-content:flex-start; gap:12px;
+  position:relative; overflow:hidden; width:100%; min-height:132px; padding:14px; border-radius:20px;
+  background:var(--box-bg); border:1px solid var(--box-line); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:12px;
   color:var(--text); font-family:inherit; min-width:0; text-align:start;
-  transition:border-color .2s ease, transform .15s ease;
+  transition:border-color .25s ease, transform .25s cubic-bezier(.2,.8,.2,1);
 }
+.sleep-scope .slt-tile.is-sound{ --t:var(--slt-sound-a); }
+.sleep-scope .slt-tile.is-breath{ --t:var(--slt-breath); }
+.sleep-scope .slt-tile.is-nap{ --t:var(--slt-nap); }
+.sleep-scope .slt-tile.is-stats{ --t:var(--slt-a); }
 @media (min-width:1024px){
-  body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{ padding:16px 18px; }
+  body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{ padding:18px; min-height:150px; border-radius:22px; }
 }
-body[data-theme="light"] .sleep-scope .slt-tile{ --t:var(--accent-deep, var(--accent)); }
-.slt-art{ display:block; width:32px; height:32px; flex:none; color:var(--t); }
-.slt-art svg{ display:block; width:100%; height:100%; }
-.slt-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 auto; }
-.slt-label{ font-size:14.5px; font-weight:800; line-height:1.4; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.slt-sub{ font-size:12px; font-weight:600; line-height:1.5; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; }
+.slt-art{ display:flex; align-items:center; width:100%; height:38px; flex:none; color:var(--t); }
+.slt-art svg{ display:block; height:100%; width:auto; max-width:100%; overflow:visible; }
+.slt-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; max-width:100%; }
+.slt-label{ font-size:15px; font-weight:800; line-height:1.4; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.slt-sub{ font-size:12px; font-weight:600; line-height:1.5; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; max-width:100%; }
 body[data-theme] .sleep-scope button.slt-tile.is-live{ border-color:var(--t); }
 body[data-theme] .sleep-scope button.slt-tile.is-live .slt-sub{ color:var(--t); font-weight:700; }
-.slt-eq{ position:absolute; inset-block-start:50%; margin-block-start:-9px; inset-inline-end:14px; display:inline-flex; align-items:flex-end; gap:2px; height:18px; color:var(--t); }
-.slt-eq i{ display:block; width:3px; height:100%; border-radius:2px; background:currentColor; transform:scaleY(.3); transform-origin:bottom; animation:slt-eq 1.1s ease-in-out infinite; }
-.slt-eq i:nth-child(2){ animation-delay:-.3s; animation-duration:.9s; }
-.slt-eq i:nth-child(3){ animation-delay:-.6s; animation-duration:1.3s; }
-.slt-eq i:nth-child(4){ animation-delay:-.15s; animation-duration:1s; }
-@keyframes slt-eq{ 0%,100%{ transform:scaleY(.25); } 50%{ transform:scaleY(1); } }
+body[data-theme="light"] .sleep-scope button.slt-tile.is-live .slt-sub{ color:color-mix(in srgb, var(--t) 80%, #1a0f00); }
+
+/* اکولایزر: هفت میله؛ فقط وقتی صدا پخشه تند و پررنگ، در حالت عادی آرام و کم‌رنگ */
+.slt-bars{ display:flex; align-items:center; gap:4px; height:34px; opacity:.55; }
+.slt-bars i{
+  display:block; width:4px; height:100%; border-radius:2px; transform-origin:center; transform:scaleY(var(--v,.6));
+  background:linear-gradient(180deg, var(--slt-sound-a), var(--slt-sound-b));
+  animation:sltEq 2.6s ease-in-out infinite; animation-delay:calc(var(--i,0) * -.37s);
+}
+.slt-bars.is-playing{ opacity:1; }
+.slt-bars.is-playing i{ animation-duration:calc(.8s + var(--v,.6) * .7s); animation-delay:calc(var(--i,0) * -.13s); }
+@keyframes sltEq{ 0%,100%{ transform:scaleY(.3); } 50%{ transform:scaleY(1); } }
+
+/* تنفس: حلقه‌ی بیرونی + هسته‌ی پر، هر دو با scale */
+.slt-breath{ position:relative; display:block; width:34px; height:34px; margin-inline-start:0; }
+.slt-breath i{ position:absolute; border-radius:50%; transform:scale(.72); animation:sltBreathe 8s ease-in-out infinite; }
+.slt-breath i:nth-child(1){ inset:0; border:1.5px solid color-mix(in srgb, var(--slt-breath) 55%, transparent); }
+.slt-breath i:nth-child(2){ inset:5px; border:1.5px solid color-mix(in srgb, var(--slt-breath) 80%, transparent); animation-delay:-.4s; }
+.slt-breath i:nth-child(3){ inset:11px; background:var(--slt-breath); opacity:.85; animation-delay:-.8s; }
+@keyframes sltBreathe{ 0%,100%{ transform:scale(.72); } 50%{ transform:scale(1); } }
+
+/* چرت: حلقه‌ی پیشرفت با z */
+.slt-art svg:has(.slt-ring-arc){ width:36px; height:36px; }
+.slt-ring-track{ stroke:color-mix(in srgb, var(--slt-nap) 26%, transparent); }
+.slt-ring-arc{ stroke:var(--slt-nap); transition:stroke-dasharray .5s linear; }
+.slt-z{ fill:var(--slt-nap); font-size:11px; font-weight:800; font-family:var(--font-latin), sans-serif; }
+.slt-spark{ width:64px; height:36px; }
 .slt-pulse{ animation:slt-pulse 1.4s ease-in-out infinite; }
 @keyframes slt-pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.08); opacity:.75; } }
 .sleep-scope button.slt-tile:active{ transform:scale(.97); }
 .sleep-scope button.slt-tile:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 @media (hover:hover){
-  body[data-theme] .sleep-scope button.slt-tile:hover:not(.is-live){ border-color:color-mix(in srgb, var(--t) 40%, var(--box-line)); }
+  body[data-theme] .sleep-scope button.slt-tile:hover{ transform:translateY(-3px); }
+  body[data-theme] .sleep-scope button.slt-tile:hover:not(.is-live){ border-color:color-mix(in srgb, var(--t) 45%, var(--box-line)); }
 }
 @media (prefers-reduced-motion:reduce){
-  .sleep-scope button.slt-tile{ transition:none; } .sleep-scope button.slt-tile:active{ transform:none; }
-  .slt-eq i{ animation:none; transform:scaleY(.65); } .slt-pulse{ animation:none; }
+  .sleep-scope button.slt-tile{ transition:none; transform:none !important; }
+  .slt-bars i, .slt-breath i{ animation:none; }
+  .slt-ring-arc{ transition:none; }
+  .slt-breath i{ transform:scale(.86); }
 }
-html[data-perf-weak] .slt-eq i, html[data-perf="low"] .slt-eq i{ animation:none; transform:scaleY(.65); }
-html[data-perf-weak] .slt-pulse, html[data-perf="low"] .slt-pulse{ animation:none; }
+html[data-perf-weak] .slt-bars i, html[data-perf="low"] .slt-bars i,
+html[data-perf-weak] .slt-breath i, html[data-perf="low"] .slt-breath i{ animation:none; }
+html[data-perf-weak] .slt-breath i, html[data-perf="low"] .slt-breath i{ transform:scale(.86); }
+html[data-perf-weak] .sleep-scope button.slt-tile{ transition:none; transform:none !important; }

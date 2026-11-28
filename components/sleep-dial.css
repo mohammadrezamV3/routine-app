@@ -2,12 +2,10 @@
    هیچ بک‌گراندی به عنصری اضافه نشده: قوس‌ها و ستون‌ها SVG‌ان (stroke/fill)،
    دکمه‌های بی‌بک‌گراند با دو سلکتور تم قانون سراسری button{} رو خنثی می‌کنن. */
 
-body[data-theme="light"] .sld-tile, body:not([data-theme="light"]) .sld-tile,
 body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
   background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 @media (hover:hover){
-  body[data-theme="light"] .sld-tile:hover, body:not([data-theme="light"]) .sld-tile:hover,
   body[data-theme="light"] .slw-col:hover, body:not([data-theme="light"]) .slw-col:hover{
     background:none; box-shadow:none;
   }
@@ -16,13 +14,66 @@ body[data-theme="light"] .slw-col, body:not([data-theme="light"]) .slw-col{
 /* ── صفحه‌ی ساعت (هیرو): «ابزار آسمان شب» ───────────────────────
    بافت و رنگ‌ها فقط داخل هنر SVG (گرادیان صفحه، ستاره‌ها، قوس‌ها)؛ بقیه‌ی کارت
    همان سطح واحد باکس‌ها (.sl-card) و بوردرهاست. */
-.sld{ align-items:stretch; gap:18px; }
-.sld-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; min-height:48px; }
-.sld-greet{ display:flex; flex-direction:column; gap:3px; min-width:0; }
-.sld-greet-k{ display:inline-flex; align-items:center; gap:6px; min-height:20px; font-size:13px; font-weight:700; color:var(--slp-sub); }
-.sld-greet-k svg{ width:16px; height:16px; flex:none; color:var(--slp-fair); }
-.sld-greet b{ font-size:20px; font-weight:800; line-height:1.4; min-height:28px; color:var(--text); }
-.sld .slp-stats-link{ margin-inline-start:0; flex:none; padding-top:2px; }
+/* کارت هیرو = رصدخانه‌ی آسمان شب (سطح خود کارت: گرادیان نیلی شب / سحر در تم روز).
+   رنگ‌ها توکن‌های --sh-* ان؛ لایه‌ی شفق و ستاره‌ها فقط CSS و فقط transform/opacity. */
+.sleep-scope .sld{
+  --sh-bg:linear-gradient(180deg,#120f2b 0%,#0b0a1a 70%,#0a0914 100%);
+  --sh-line:rgba(169,155,255,.18);
+  --sh-ink:#eceaf6; --sh-sub:#a6a2c4;
+  --sh-glass:rgba(255,255,255,.045); --sh-glass-line:rgba(255,255,255,.1); --sh-glass-hover:rgba(169,155,255,.5);
+  --sh-score-a:#ffffff; --sh-score-b:#b9b0ff;
+  --sh-star:#fff; --sh-link:#b7acff;
+  --sh-aur-a:rgba(124,92,255,.38); --sh-aur-b:rgba(64,180,255,.14); --sh-aur-c:rgba(126,224,176,.14);
+  --sh-cta-a:#7b6bff; --sh-cta-b:#4fa8ff; --sh-cta-fg:#0b0a1a;
+  --sh-ico-a:#a99bff; --sh-ico-b:#4fb8ff;
+  --text:var(--sh-ink); --slp-sub:var(--sh-sub);
+  position:relative; overflow:hidden; isolation:isolate; align-items:stretch; gap:18px;
+  background:var(--sh-bg); border-color:var(--sh-line); border-radius:28px;
+}
+body[data-theme="light"] .sleep-scope .sld{
+  --sh-bg:linear-gradient(180deg,#ece4ff 0%,#f6e6f4 55%,#ffe9dc 100%);
+  --sh-line:rgba(99,82,200,.22);
+  --sh-ink:#241a4a; --sh-sub:#51467a;
+  --sh-glass:rgba(255,255,255,.58); --sh-glass-line:rgba(99,82,200,.18); --sh-glass-hover:rgba(99,82,200,.5);
+  --sh-score-a:#3a2c8f; --sh-score-b:#7a52e6;
+  --sh-star:#7a62d8; --sh-link:#4a3fc4;
+  --sh-aur-a:rgba(150,120,255,.34); --sh-aur-b:rgba(255,170,140,.3); --sh-aur-c:rgba(255,210,150,.3);
+  --sh-cta-a:#6a55f0; --sh-cta-b:#3f8fe8; --sh-cta-fg:#fff;
+  --sh-ico-a:#5b49d8; --sh-ico-b:#2f7fd6;
+}
+.sld > :not(.sld-aurora):not(.sld-sky){ position:relative; z-index:1; }
+.sld-aurora, .sld-sky{ position:absolute; inset:0; pointer-events:none; z-index:0; }
+.sld-aurora{
+  inset:-28% -24% auto; height:300px; will-change:transform;
+  background:
+    radial-gradient(closest-side at 32% 50%, var(--sh-aur-a), transparent 72%),
+    radial-gradient(closest-side at 70% 42%, var(--sh-aur-b), transparent 72%),
+    radial-gradient(closest-side at 52% 78%, var(--sh-aur-c), transparent 70%);
+  animation:sldDrift 24s ease-in-out infinite;
+}
+@keyframes sldDrift{
+  0%,100%{ transform:translate3d(-7%,0,0) rotate(-5deg); }
+  50%{ transform:translate3d(7%,4%,0) rotate(4deg); }
+}
+.sld-sky span{ position:absolute; border-radius:50%; background:var(--sh-star); opacity:.3; animation:sldTw var(--d,4s) ease-in-out infinite; animation-delay:var(--dl,0s); }
+body[data-theme="light"] .sld-sky span{ opacity:.18; }
+@keyframes sldTw{ 0%,100%{ opacity:.2; } 50%{ opacity:.95; } }
+body[data-theme="light"] .sld-sky span{ animation-name:sldTwL; }
+@keyframes sldTwL{ 0%,100%{ opacity:.1; } 50%{ opacity:.5; } }
+
+.sld-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:44px; }
+.sld-greet{ display:flex; align-items:center; gap:10px; min-width:0; }
+.sld-moon{ width:34px; height:34px; flex:none; overflow:visible; }
+.sld-moon-dark{ fill:color-mix(in srgb, var(--sh-ink) 14%, transparent); }
+.sld-moon-lit{ fill:#efe9ff; }
+body[data-theme="light"] .sld-moon-lit{ fill:#e8a62c; }
+.sld-greet-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.sld-greet-k{ font-size:12.5px; font-weight:700; line-height:1.4; min-height:17px; color:var(--sh-sub); }
+.sld-greet b{ font-size:15px; font-weight:800; line-height:1.4; min-height:21px; color:var(--sh-ink); }
+.sld-moon-name{ font-weight:600; color:var(--sh-sub); }
+.sld .slp-stats-link{ margin-inline-start:0; flex:none; color:var(--sh-link); font-size:13px; padding:8px 2px; }
+.sld .slp-stats-link svg{ width:16px; height:16px; }
+@media (min-width:1024px){ .sld-greet b{ font-size:16px; } }
 
 /* صفحه‌ی ساعت یک مربع واقعیه: عرض مشخص و ارتفاع از خود SVG (viewBox) میاد؛ هیچ
    لایه‌ی HTML جدا، container-type یا درصد-روی-aspect-ratio نیست (وب‌کیت اون ترکیب رو
@@ -36,8 +87,9 @@ body[data-theme="light"] .sld-stars{ opacity:.2; }
 .sld-bezel{ fill:none; stroke:var(--sld-rim); stroke-width:1; stroke-dasharray:.6 4; stroke-linecap:round; }
 .sld-track{ fill:none; stroke:var(--sld-rim); stroke-width:15; opacity:.38; }
 .sld-lane{ fill:none; stroke:var(--sld-rim); stroke-width:8; opacity:.28; }
-.sld-tick{ stroke:var(--slp-sub); stroke-width:1.2; stroke-linecap:round; opacity:.4; }
-.sld-tick.is-major{ stroke-width:2; opacity:.85; }
+.sld-tick{ stroke:var(--slp-sub); stroke-width:1.2; stroke-linecap:round; opacity:.42; }
+.sld-tick.is-half{ stroke-width:1; opacity:.2; }
+.sld-tick.is-major{ stroke-width:2; opacity:.85; stroke:var(--sh-ink); }
 .sld-hour{ fill:var(--slp-sub); font-size:10px; font-weight:700; font-variant-numeric:tabular-nums; }
 .sld-hour.is-major{ fill:var(--text); font-size:11px; font-weight:800; }
 .sld-goal, .sld-goal-glow{ fill:none; stroke-width:15; stroke-linecap:round; }
@@ -52,10 +104,11 @@ body[data-theme="light"] .sld-stars{ opacity:.2; }
 }
 .sld-cyc{ fill:var(--sld-face-b); stroke:color-mix(in srgb, #fff 75%, transparent); stroke-width:1.2; }
 body[data-theme="light"] .sld-cyc{ fill:var(--sld-face-a); stroke:color-mix(in srgb, #fff 90%, transparent); }
-.sld-hand{ stroke:var(--text); stroke-width:1.4; stroke-linecap:round; opacity:.5; }
-.sld-now{ fill:var(--text); stroke:var(--sld-face-b); stroke-width:1.5; }
-.sld-now-halo{ fill:none; stroke:var(--text); stroke-width:1.4; opacity:.3; transform-box:fill-box; transform-origin:center; animation:sldPulse 2.4s ease-out infinite; }
-@keyframes sldPulse{ 0%{ transform:scale(.6); opacity:.45; } 100%{ transform:scale(1.5); opacity:0; } }
+.sld-hand{ stroke:var(--sh-ink); stroke-width:1.6; stroke-linecap:round; opacity:.55; }
+.sld-now{ fill:#ffc27a; stroke:var(--sld-face-b); stroke-width:1.5; }
+body[data-theme="light"] .sld-now{ fill:#e0700f; }
+.sld-now-halo{ fill:#ffd27a; stroke:none; opacity:.3; transform-box:fill-box; transform-origin:center; animation:sldPulse 2.4s ease-out infinite; }
+@keyframes sldPulse{ 0%,100%{ transform:scale(.8); opacity:.5; } 60%{ transform:scale(1.9); opacity:0; } }
 
 /* دیسک ماه/خورشید روی دو سر قوس هدف (داخل SVG، واحدهای viewBox) */
 .sld-disc{ stroke:var(--sld-face-b); stroke-width:2; }
@@ -87,83 +140,81 @@ body[data-theme="light"] .sld-caption.is-band.slp-c-fair{ color:color-mix(in srg
 body[data-theme="light"] .sld-caption.is-band.slp-c-poor{ color:color-mix(in srgb, var(--slp-poor) 78%, #1A0F00); }
 .sld-big{ color:var(--text); font-weight:800; font-variant-numeric:tabular-nums; }
 .sld-big.is-clock{ direction:ltr; unicode-bidi:isolate; }
-
-/* سه‌ستون: ساعت خواب · مدت هدف · ساعت بیداری */
-.sld-times{ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:10px; color:var(--text); }
-.sld-time{ display:flex; align-items:center; gap:10px; min-width:0; }
-.sld-time.is-wake{ justify-self:end; }
-.sld-time-ico{
-  width:38px; height:38px; flex:none; border-radius:50%; display:grid; place-items:center;
-  border:1px solid var(--box-line); color:var(--accent);
-}
-body[data-theme="light"] .sld-time-ico{ color:var(--accent-deep, var(--accent)); }
-.sld-time-ico svg{ width:18px; height:18px; }
-.sld-time-txt{ display:flex; flex-direction:column; line-height:1.25; text-align:start; min-width:0; }
-.sld-time-txt small{ font-size:11.5px; color:var(--slp-sub); font-weight:700; }
-.sld-time-txt b{ font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; unicode-bidi:isolate; direction:ltr; text-align:start; }
-.sld-span{ display:flex; align-items:center; gap:6px; }
-.sld-span i{ display:block; width:12px; height:0; border-top:1.5px dashed var(--box-line); }
-.sld-span em{
-  font-style:normal; font-size:12.5px; font-weight:800; padding:5px 12px; border-radius:999px; white-space:nowrap;
-  border:1px solid var(--box-line); color:var(--text); font-variant-numeric:tabular-nums;
+.sleep-scope .sld .sld-big.is-score[class]{
+  background:linear-gradient(180deg, var(--sh-score-a), var(--sh-score-b)); -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent;
 }
 
-/* دو باکس هوشمند: چرخه‌های خواب و هدف خواب (هم‌خانواده‌ی کاشی‌های ابزار) */
-.sld-tiles{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+/* پایین کارت: دو باکس شیشه‌ای + نکته + دکمه‌ی اصلی. موبایل: باکس‌ها، نکته، دکمه؛ دسکتاپ: نکته بالا، باکس‌ها (دو ستون) و دکمه (یک ستون) هم‌ردیف */
+.sld-foot{ display:grid; gap:14px; grid-template-areas:"tiles" "ins" "act"; margin-top:auto; }
+.sld-tiles{ grid-area:tiles; display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; }
 .sld-tiles > :only-child{ grid-column:1 / -1; }
-.sld-tile{
-  position:relative; display:grid; align-items:center; column-gap:12px; row-gap:10px;
-  grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"ico txt go";
-  padding:14px; border-radius:20px; border:1px solid var(--box-line); color:var(--text);
-  text-align:start; cursor:pointer; min-width:0; font-family:var(--font-latin), var(--font-vazir), sans-serif;
-  transition:border-color .18s ease, transform .15s ease;
+.sld-foot .sld-actions{ grid-area:act; }
+body[data-theme="light"] .sleep-scope .sld-tile, body:not([data-theme="light"]) .sleep-scope .sld-tile{
+  position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:5px; min-width:0;
+  padding:12px 14px; border-radius:16px; text-align:start; cursor:pointer; color:var(--sh-ink);
+  background:var(--sh-glass); border:1px solid var(--sh-glass-line); box-shadow:none;
+  backdrop-filter:none; -webkit-backdrop-filter:none;
+  font-family:var(--font-latin), var(--font-vazir), sans-serif;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1), border-color .25s ease;
 }
-@media (max-width:479px){
-  .sld-tile{ grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"ico go" "txt txt"; align-items:start; }
-  .sld-tile-go{ align-self:center; }
+@media (hover:hover){
+  body[data-theme="light"] .sleep-scope .sld-tile:hover, body:not([data-theme="light"]) .sleep-scope .sld-tile:hover{
+    background:var(--sh-glass); box-shadow:none; transform:translateY(-3px); border-color:var(--sh-glass-hover);
+  }
 }
-@media (hover:hover){ .sld-tile:hover{ border-color:color-mix(in srgb, var(--accent) 40%, var(--box-line)); } }
-.sld-tile:active{ transform:scale(.98); }
-.sld-tile:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
-.sld-tile-ico{
-  grid-area:ico; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; flex:none;
-  color:var(--accent); border:1px solid var(--box-line);
+.sleep-scope .sld-tile:active{ transform:scale(.98); }
+.sleep-scope .sld-tile:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.sld-tile-k{ display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--sh-sub); line-height:1.4; max-width:100%; }
+.sld-tile-k svg{ width:16px; height:16px; flex:none; }
+.sld-tile.is-cycles .sld-tile-k svg{ color:var(--sh-ico-a); }
+.sld-tile.is-goal .sld-tile-k svg{ color:var(--sh-ico-b); }
+.sld-tile b{ font-size:22px; font-weight:800; line-height:1.3; font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:isolate; }
+.sld-tile em{ font-style:normal; font-size:12px; font-weight:600; line-height:1.5; color:var(--sh-sub); max-width:100%; }
+.sld-foot .sld-insight{
+  grid-area:ins; margin:0 2px; display:flex; align-items:flex-start; justify-content:flex-start; gap:8px;
+  font-size:13px; font-weight:600; line-height:1.8; color:var(--sh-ink);
 }
-body[data-theme="light"] .sld-tile-ico{ color:var(--accent-deep, var(--accent)); }
-.sld-tile-ico svg{ width:19px; height:19px; }
-.sld-tile-txt{ grid-area:txt; display:flex; flex-direction:column; line-height:1.35; min-width:0; max-width:100%; }
-.sld-tile-txt small{ font-size:12px; color:var(--slp-sub); font-weight:700; }
-.sld-tile-txt b{ font-size:21px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.4; unicode-bidi:isolate; }
-.sld-tile-txt em{ font-style:normal; font-size:12px; color:var(--slp-sub); font-weight:600; line-height:1.6; }
-.sld-tile.is-goal .sld-tile-txt em{ color:var(--accent); font-weight:700; }
-body[data-theme="light"] .sld-tile.is-goal .sld-tile-txt em{ color:var(--accent-deep); }
-.sld-tile-go{ grid-area:go; width:18px; height:18px; color:var(--slp-sub); opacity:.85; }
-
-/* نکته‌ی شخصی تک‌خطی */
-.sld-insight{
-  margin:0 auto; width:fit-content; max-width:100%; display:flex; align-items:flex-start; justify-content:center; gap:8px;
-  text-align:center; font-size:13px; font-weight:700; line-height:1.8; color:var(--slp-sub);
-}
-.sld-insight svg{ width:16px; height:16px; flex:none; margin-top:4px; }
+.sld-insight svg{ width:18px; height:18px; flex:none; margin-top:4px; color:#ffd27a; fill:currentColor; }
+body[data-theme="light"] .sld-insight svg{ color:#e0900f; }
 .sld-insight span{ text-wrap:balance; }
-.sld-insight.is-good{ color:var(--slp-great); }
-.sld-insight.is-warn{ color:var(--slp-fair); }
-.sld-insight.is-info{ color:var(--slp-ink); }
-body[data-theme="light"] .sld-insight.is-good{ color:#067A58; }
-body[data-theme="light"] .sld-insight.is-warn{ color:#9A5A00; }
-body[data-theme="light"] .sld-insight.is-info{ color:#3F4EC8; }
+.sld-insight.is-good svg{ color:var(--slp-great); }
 
 .sld-actions{ display:flex; gap:10px; }
 .sld-actions > *{ flex:1 1 0; min-width:0; }
 .sld-actions > .btn{ padding-inline:10px; }
-.sld-actions > .btn-primary:first-child:not(:last-child){ flex:1.4 1 0; }
+.sld-actions > .btn.sld-cta:first-child:not(:last-child){ flex:1.5 1 0; }
 .sld-actions > .btn.sld-cancel{ flex:0 0 auto; padding-inline:18px; }
+html body .sleep-scope .btn.sld-cta{
+  --btn-bg:linear-gradient(90deg, var(--sh-cta-a), var(--sh-cta-b)); --btn-bd:transparent; --btn-fg:var(--sh-cta-fg);
+  --btn-h:54px; --btn-fs:16px; font-weight:800;
+  box-shadow:0 10px 26px -12px color-mix(in srgb, var(--sh-cta-a) 80%, transparent);
+}
+html body .sleep-scope .btn.sld-cta svg{ width:18px; height:18px; fill:currentColor; }
+html body .sleep-scope .btn.sld-secondary{ --btn-h:54px; --btn-bd:var(--sh-glass-line); --btn-fg:var(--sh-ink); --btn-hover-bd:var(--sh-glass-hover); --btn-hover-fg:var(--sh-ink); }
 .sleep-scope .sld-quick{ align-self:center; max-width:100%; white-space:normal; height:auto; min-height:34px; padding-block:8px; line-height:1.5; text-align:center; }
 .sld-quick svg{ width:15px; height:15px; color:var(--slp-great); }
 .sld-quick-err{ margin:0; text-align:center; line-height:1.8; }
+@media (min-width:1024px){
+  .sld-foot{ grid-template-columns:repeat(3, minmax(0,1fr)); grid-template-areas:"ins ins ins" "tiles tiles act"; gap:14px 10px; }
+  .sld-tiles{ grid-column:1 / 3; }
+  .sld-dial{ margin-block:auto; }
+  .sld-actions{ flex-direction:column; }
+  html body .sleep-scope .sld-actions > .btn{ --btn-r:16px; }
+  .sld-actions > *, .sld-actions > .btn.sld-cta:first-child:not(:last-child){ flex:1 1 auto; }
+  html body .sleep-scope .sld-actions > .btn{ --btn-h:auto; min-height:48px; }
+  html body .sleep-scope .sld-actions > .btn.sld-cancel{ flex:0 0 auto; }
+}
 
 /* ── هفت شب اخیر ───────────────────────────────────────── */
-.slw{ gap:16px; }
+.slw{
+  --slw-a:#a99bff; --slw-b:#5b4ce0; --slw-ok-a:#7ee0b0; --slw-ok-b:#2fae85; --slw-mid-a:#7aa8ff; --slw-mid-b:#3b5fd0; --slw-low-a:#ffb38a; --slw-low-b:#d0663b;
+  --slw-warm:#ffb38a; --slw-green:#7ee0b0; gap:16px;
+}
+body[data-theme="light"] .slw{
+  --slw-a:#8d7cf5; --slw-b:#5240d4; --slw-ok-a:#3fcf9b; --slw-ok-b:#0a9a70; --slw-mid-a:#6f9bf6; --slw-mid-b:#2f5bd0; --slw-low-a:#f6a071; --slw-low-b:#d2602f;
+  --slw-warm:#c2571f; --slw-green:#067a58;
+}
 .slw-grid{ --slw-top:28px; position:relative; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:2px; padding-inline-start:40px; }
 .slw-goal{
   position:absolute; inset-inline:0; height:0; pointer-events:none; z-index:1;
@@ -182,16 +233,19 @@ body[data-theme="light"] .sld-insight.is-info{ color:#3F4EC8; }
 .slw-col.is-empty .slw-val{ opacity:.7; display:flex; align-items:center; justify-content:center; }
 .slw-col.is-empty .slw-val svg{ width:15px; height:15px; stroke-width:2.2; }
 .slw-val{ direction:ltr; unicode-bidi:isolate; }
-.slw-bar{ display:block; overflow:visible; }
-.slw-slot{ fill:color-mix(in srgb, var(--text) 8%, transparent); }
-.slw-fill{ fill:currentColor; }
-.slw-fill:not([class*="slp-c-"]){ color:var(--slp-good); }
-.slw-cap{ fill:var(--accent); }
-.slw-day{ font-size:12px; font-weight:700; color:var(--slp-sub); }
-.slw-defs{ position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
-.slw-day{ padding:1px 7px 2px; border:1px solid transparent; border-radius:999px; line-height:1.3; min-width:24px; text-align:center; }
+/* ستون: شیار کم‌رنگ + میله‌ی گرادیانی با سر گرد که از پایین رشد می‌کنه (یک بار، پله‌ای) */
+.slw-plot{ position:relative; display:block; width:100%; max-width:30px; height:124px; border-radius:11px; background:color-mix(in srgb, var(--text) 6%, transparent); }
+.slw-fill{
+  position:absolute; inset-inline:0; bottom:0; display:block; border-radius:11px 11px 5px 5px; color:inherit;
+  background:linear-gradient(180deg, var(--slw-a), var(--slw-b));
+}
+.slw-fill.slp-c-great{ background:linear-gradient(180deg, var(--slw-ok-a), var(--slw-ok-b)); }
+.slw-fill.slp-c-good{ background:linear-gradient(180deg, var(--slw-a), var(--slw-b)); }
+.slw-fill.slp-c-fair{ background:linear-gradient(180deg, var(--slw-mid-a), var(--slw-mid-b)); }
+.slw-fill.slp-c-poor{ background:linear-gradient(180deg, var(--slw-low-a), var(--slw-low-b)); }
+.slw-day{ font-size:12px; font-weight:700; color:var(--slp-sub); padding:1px 7px 2px; border:1px solid transparent; border-radius:999px; line-height:1.3; min-width:24px; text-align:center; }
+.slw-col.is-today .slw-plot{ outline:2px solid color-mix(in srgb, var(--text) 55%, transparent); outline-offset:2px; }
 .slw-col.is-today .slw-day{ color:var(--accent); border-color:var(--accent); font-weight:800; }
-.slw-col.is-today .slw-slot{ fill:color-mix(in srgb, var(--accent) 16%, transparent); }
 .slw-col:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
 .slw-col:active:not(:disabled){ transform:scale(.96); }
 .slw-col{ transition:transform .15s ease; }
@@ -199,36 +253,36 @@ body[data-theme="light"] .sld-insight.is-info{ color:#3F4EC8; }
   margin:0; display:flex; flex-wrap:wrap; justify-content:center; gap:4px 14px;
   font-size:12px; color:var(--slp-sub); line-height:1.8;
 }
-.slw-foot b{ color:var(--text); font-weight:800; font-variant-numeric:tabular-nums; }
-.slw-foot .is-debt b{ color:var(--slp-fair); }
-.slw-foot .is-ok{ color:var(--slp-great); font-weight:700; }
 .slw-foot.is-empty{ text-align:center; }
 @media (hover:hover){
   .slw-col:hover .slw-val{ color:var(--text); }
+  .slw-col:hover .slw-fill{ filter:brightness(1.12); }
   .slw-col.is-empty:hover .slw-val{ opacity:1; color:var(--accent); }
+}
+@media (min-width:1024px){
+  .slw-plot{ height:150px; max-width:36px; border-radius:12px; }
+  .slw-fill{ border-radius:12px 12px 6px 6px; }
 }
 
 html[data-perf-weak] .sld-now-halo, html[data-perf-weak] .sld-head-halo{ animation:none; opacity:.3; }
+html[data-perf-weak] .sld-aurora, html[data-perf-weak] .sld-sky span, html[data-perf="low"] .sld-aurora, html[data-perf="low"] .sld-sky span{ animation:none; }
+html[data-perf-weak] .sleep-scope .sld-tile{ transition:none; transform:none !important; }
 html[data-perf-weak] .sld-goal-glow, html[data-perf="low"] .sld-goal-glow{ display:none; }
 @media (prefers-reduced-motion: reduce){
   .sld-now-halo, .sld-head-halo{ animation:none; opacity:.3; }
-  .sld-tile{ transition:none; }
-  .sld-tile:active{ transform:none; }
+  .sld-aurora, .sld-sky span{ animation:none; }
+  .sleep-scope .sld-tile{ transition:none; transform:none !important; }
   .slw-col{ transition:none; }
   .slw-col:active:not(:disabled){ transform:none; }
 }
 
 @media (max-width:400px){
   .sld{ padding-inline:14px; gap:16px; }
-  .sld-tile{ padding:12px; }
-  .sld-tile-txt b{ font-size:19px; }
-  .sld-time-ico{ width:34px; height:34px; }
-  .sld-time-txt b{ font-size:18px; }
+  .sleep-scope .sld-tile{ padding:11px 12px; }
+  .sld-tile b{ font-size:20px; }
 }
 
 /* کنتراست AA متن‌های کوچک روی سطح باکس */
-.sld .slp-stats-link{ color:color-mix(in srgb, var(--slp-ink) 82%, var(--text)); }
 .slw-goal em{ color:color-mix(in srgb, var(--slp-ink) 82%, var(--text)); }
 body[data-theme="light"] .slw-col.is-today .slw-day{ color:var(--accent-deep); }
-body[data-theme="light"] .sld-greet-k svg{ color:#B35F00; }
 .sld-head-end{ display:flex; align-items:center; gap:4px; }
