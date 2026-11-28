@@ -80,7 +80,8 @@ type Features = Parameters<typeof featureVisible>[0];
 // icon گروه. آیتمی که اینجا نیست آخر می‌ره؛ دامنه‌ی اصلی بدون بخش (null) ترتیب اصلی
 // getLinks رو نگه می‌داره. گروهی که به یک لینک تبدیل می‌شه (مثلا مربی‌ها) همون جای گروه می‌مونه.
 export const SECTION_ORDER: Record<SectionKey, string[]> = {
-  routine: ["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/roadmaps", "mentors", "more"],
+  // ترتیب بخش روتین (درخواست صریح مالک): داشبورد، برنامه روزانه، خواب، رودمپ، مربی‌ها، آنالیز، بیشتر.
+  routine: ["/dashboard", "/weekly", "/sleep", "/roadmaps", "mentors", "/analysis/weekly", "more"],
   workout: ["/dashboard", "/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"],
   // ترتیب بخش ترید (درخواست صریح): داشبورد، چارت، ژورنال، چک‌لیست، یادداشت‌ها، ابزار.
   // «/trade» (هاب قدیمی) فقط وقتی فلگ داشبورد خاموشه دیده می‌شه و همون جای اول می‌مونه.

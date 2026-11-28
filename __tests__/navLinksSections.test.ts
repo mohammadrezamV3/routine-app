@@ -40,8 +40,14 @@ describe("getVisibleLinks per section", () => {
     expect(hrefs(items).some((h) => h.includes("?tab="))).toBe(false);
   });
 
-  it("header priority: routine order", () => {
-    expect(topHrefs(getVisibleLinks(null, "routine"))).toEqual(["/dashboard", "/weekly", "/sleep", "/analysis/weekly", "/roadmaps", "mentors", "more"]);
+  it("header priority: routine order (dashboard, daily plan, sleep, roadmaps, mentors, analysis, more)", () => {
+    expect(topHrefs(getVisibleLinks(null, "routine"))).toEqual(["/dashboard", "/weekly", "/sleep", "/roadmaps", "mentors", "/analysis/weekly", "more"]);
+  });
+
+  it("routine menu lists no page twice", () => {
+    const all = hrefs(getVisibleLinks(null, "routine"));
+    expect(new Set(all).size).toBe(all.length);
+    expect(all.filter((h) => h === "/roadmaps")).toHaveLength(1);
   });
 
   it("header priority: trade order, with and without the dashboard", () => {
@@ -83,7 +89,7 @@ describe("getVisibleLinks per section", () => {
     const items = rawVisible({ ...ALL_ON, blog: false }, "workout");
     expect(topHrefs(items)).toEqual(["/dashboard", "/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "/about"]);
     const noMentorsKid = rawVisible(ALL_ON, "routine");
-    expect(noMentorsKid.findIndex((i) => isGroup(i) && i.icon === "mentors")).toBe(5);
+    expect(noMentorsKid.findIndex((i) => isGroup(i) && i.icon === "mentors")).toBe(4);
   });
 
   it("apex keeps the original order", () => {
