@@ -6,11 +6,12 @@ import { addDaysIso, isoDate, todayIsoForUser } from "@/lib/mentorServer";
 import { requireMentorTools, validId } from "@/lib/mentorToolsGuard";
 import { EXPORT_MAX_DAYS, buildProgressCsv } from "@/lib/mentorReports";
 import { tr } from "@/lib/i18n";
+import { withGuard } from "@/lib/requestGuard";
 
 // GET /api/mentor/export?studentId=&from=YYYY-MM-DD&to=YYYY-MM-DD → CSV پیشرفت یک شاگرد.
 // پیش‌فرض ۳۰ روز اخیر؛ حداکثر ۱۲۰ روز. فقط رابطه‌ی ACTIVE همین منتور
 // (شاگرد دیگر یا رابطه‌ی بسته → ۴۰۴) و روتین شاگرد فقط تا حد تنظیمات حریم خصوصی.
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const g = await requireMentorTools();
   if (!g.ok) return g.response;
   if (g.profile.suspendedAt) return forbidden(tr(tr("حساب مربی‌گری تو تعلیق شده", "Your mentor account is suspended"), "Your mentor account is suspended"));
@@ -50,3 +51,5 @@ export async function GET(req: NextRequest) {
     },
   });
 }
+
+export const GET = withGuard({ policy: "export", scope: "mentorExport", gate: "export" }, handleGET);

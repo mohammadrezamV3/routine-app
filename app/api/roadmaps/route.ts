@@ -10,6 +10,7 @@ import { countRowProgress, parseHours, parseLevel } from "@/lib/roadmapPlan";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { clampText } from "@/lib/validate";
 import { withLiveSync } from "@/lib/realtime";
+import { withGuard } from "@/lib/requestGuard";
 
 // تولید حالا در پس‌زمینه است و خود POST فورا برمی‌گردد؛ این مقدار فقط برای
 // اطمینان باقی مانده. توضیح قبلی: تولید تا ۵۵ ثانیه طول می‌کشید — بدون این،
@@ -106,4 +107,4 @@ async function handlePOST(req: NextRequest) {
 }
 
 // بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
-export const POST = withLiveSync(["roadmaps"], handlePOST);
+export const POST = withLiveSync(["roadmaps"], withGuard({ policy: "ai", scope: "roadmap", gate: "ai" }, handlePOST));

@@ -6,10 +6,11 @@ import { Market } from "@prisma/client";
 import { provisionTrialAccess } from "@/lib/trialAccess";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone, isValidPersianName, isValidUsername, validatePassword, clampText } from "@/lib/validate";
+import { withGuard } from "@/lib/requestGuard";
 
 // ثبت‌نام با نام + شماره موبایل + یوزرنیم + رمز انجام می‌شه — این چهارتا
 // الزامی‌ان. بعد از این، ورود هم با یوزرنیم و هم با شماره موبایل ممکنه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   // حداکثر ۵ تلاش ثبت‌نام در ۱۰ دقیقه به‌ازای هر IP — جلوگیری از ساخت
   // انبوه حساب یا سوءاستفاده خودکار از این فرم.
   const ip = getClientIp(req.headers);
@@ -108,3 +109,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, userId: user.id });
 }
+
+export const POST = withGuard({ policy: "auth", scope: "signup" }, handlePOST);

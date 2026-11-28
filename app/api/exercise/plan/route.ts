@@ -13,6 +13,7 @@ import { validateUserSplit, type UserSplitDay } from "@/lib/exerciseSplit";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 import { checkOptionalNumber } from "@/lib/numberLimits";
 import { readJsonBody } from "@/lib/validate";
+import { withGuard } from "@/lib/requestGuard";
 
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 const MAX_DESCRIPTION_LEN = 500;
@@ -176,7 +177,7 @@ async function handlePOST(req: NextRequest) {
 }
 
 // بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
-export const POST = withLiveSync(["exercise"], handlePOST);
+export const POST = withLiveSync(["exercise"], withGuard({ policy: "ai", scope: "exercisePlan", gate: "ai" }, handlePOST));
 
 // حذف برنامه‌ی فعال: غیرفعال می‌شه (نه پاک‌کردن)، تا تاریخچه‌ی تمرین‌ها بمونه — همون کاری که ساخت برنامه‌ی جدید با قبلی می‌کنه
 async function handleDELETE() {

@@ -5993,3 +5993,6 @@ html[dir="ltr"] .mm-menu, html[dir="ltr"] .notif-panel{ transform-origin:var(--m
   border:1px dashed var(--surface-line); color:var(--muted); font-size:13px; line-height:1.6;
 }
 .online-only-note svg{ flex:none; }
+
+/* پیام انتظار کادرهای جستجو وقتی سرور 429/503 می‌ده (lib/useSearchQuery.ts) */
+.search-notice{ font-size:12px; color:var(--muted); padding:8px 2px 2px; }

@@ -9,6 +9,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { withLiveSync } from "@/lib/realtime";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { withGuard } from "@/lib/requestGuard";
 
 // PATCH /api/exercise/plan/substitute { planId, day, oldItem, newItem? }
 // جایگزینی یک حرکت — چون تجهیزاتش توی باشگاه کاربر نیست. این «برنامه‌ی جدید»
@@ -62,4 +63,4 @@ async function handlePATCH(req: NextRequest) {
 }
 
 // بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
-export const PATCH = withLiveSync(["exercise"], handlePATCH);
+export const PATCH = withLiveSync(["exercise"], withGuard({ policy: "ai", scope: "exerciseSub", gate: "ai" }, handlePATCH));

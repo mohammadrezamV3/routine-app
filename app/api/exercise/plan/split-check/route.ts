@@ -8,6 +8,7 @@ import { FA_WEEKDAY } from "@/lib/jalali";
 import type { ExerciseLevel } from "@/lib/exercisePlans";
 import { splitRuleIssues, validateUserSplit } from "@/lib/exerciseSplit";
 import { suggestSplitFix } from "@/lib/aiClient";
+import { withGuard } from "@/lib/requestGuard";
 
 // «تنظیمات پیشرفته»ی ساخت برنامه با AI: قبل از ساخت، تقسیم هفتگی‌ای که خود
 // کاربر چیده بررسی می‌شه. ایرادها با قواعد ثابت سمت سرور پیدا می‌شن
@@ -18,7 +19,7 @@ import { suggestSplitFix } from "@/lib/aiClient";
 const VALID_LEVELS: ExerciseLevel[] = ["beginner", "intermediate", "advanced"];
 export const maxDuration = 30;
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.EXERCISE);
   if (!guard.ok) return guard.response;
 
@@ -48,3 +49,5 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({ ok: true, issues, suggestion });
 }
+
+export const POST = withGuard({ policy: "ai", scope: "splitCheck", gate: "ai" }, handlePOST);

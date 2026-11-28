@@ -6,8 +6,10 @@ import { DISCOVERABLE_PROFILE_WHERE, blockedUserIds } from "@/lib/mentorServer";
 import { filtersFromParams } from "@/lib/mentorSearch";
 import { searchMentors } from "@/lib/mentorSearchServer";
 import { tr } from "@/lib/i18n";
+import { normalizeQuery } from "@/lib/guard/queryNormalize";
 import { getSection } from "@/lib/sectionServer";
 import { SECTION_META } from "@/lib/sections";
+import { withGuard } from "@/lib/requestGuard";
 
 const PAGE_SIZE = 20;
 const MAX_PAGE = 50;
@@ -23,7 +25,7 @@ const MAX_PAGE = 50;
 //   page
 // با عبارت جستجو، فقط منتورهای مرتبط میان و شایستگی فقط ترتیب همون‌ها رو تنظیم
 // می‌کنه. فقط منتورهای قابل کشف (منتشرشده، غیرمعلق، هویت تاییدشده).
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   if (!(await checkRateLimit(`mentors:discover:${g.userId}`, 60, 60_000))) {
@@ -32,6 +34,11 @@ export async function GET(req: NextRequest) {
 
   const sp = req.nextUrl.searchParams;
   const filters = filtersFromParams(sp, isMentorCategory);
+  if (filters.q) {
+    const nq = normalizeQuery(filters.q, { min: 1, max: 80 });
+    if (!nq.ok) return NextResponse.json({ mentors: [], hasMore: false });
+    filters.q = nq.q;
+  }
   // روی زیردامنه‌ی یک بخش فقط منتورهای حوزه‌های همون بخش (سمت سرور؛ کلاینت قابل دور زدنه)
   const section = getSection();
   const allowed = section ? SECTION_META[section].mentorCategories : null;
@@ -46,3 +53,5 @@ export async function GET(req: NextRequest) {
   const { cards, hasMore } = await searchMentors(filters, base, page, PAGE_SIZE, allowed);
   return NextResponse.json({ mentors: cards, hasMore });
 }
+
+export const GET = withGuard({ policy: "search", scope: "mentors" }, handleGET);

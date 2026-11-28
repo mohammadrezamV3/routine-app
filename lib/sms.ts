@@ -10,6 +10,7 @@
 // اگه اطلاعات پنل (یوزرنیم/رمز/کد الگو) تنظیم نشده باشه، به‌جای شکست
 // خوردن یا وانمود کردن ارسال موفق، کد رو توی لاگ سرور می‌نویسه — تا جریان
 // OTP قابل تست باشه بدون این‌که رفتارش دروغ باشه.
+import { guardedFetch } from "@/lib/guard/fetchGuard";
 import { logError } from "./errorLog";
 
 /** شماره را برای لاگ ماسک می‌کند — نباید شماره‌ی کامل کاربر در جدول خطا بنشیند */
@@ -48,14 +49,14 @@ export async function sendOtpSms(phone: string, code: string): Promise<{ ok: boo
     // دیده نمی‌شد و از بیرون فقط «پیامک نمی‌آید» به‌نظر می‌رسید.
     // مرجع: SDK رسمی خود ملی‌پیامک (melipayamak-python/sms/rest.py) که
     // send_by_base_number را روی همین مسیر می‌زند.
-    const res = await fetch("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
+    const res = await guardedFetch("sms", "https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
       // تنها فراخوانی خروجی اپ که سقف زمان نداشت. چون ارسال
       // fire-and-forget است، یک ملی‌پیامک بی‌جواب یعنی یک Promise معلق که
       // تا تایم‌اوت TCP سیستم‌عامل (چند دقیقه) حافظه و سوکت نگه می‌دارد.
-      signal: AbortSignal.timeout(15_000),
+      timeoutMs: 15_000,
     });
     if (!res.ok) {
       console.error(`[sms] خطا در ارسال پیامک به ${phone}: HTTP ${res.status}`);

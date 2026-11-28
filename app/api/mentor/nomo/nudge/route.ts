@@ -5,11 +5,12 @@ import { currentGoal } from "@/lib/coachGoalServer";
 import { getWeekReport } from "@/lib/coachWeekServer";
 import { isRealIso, lastFinishedWeekStart, weekStartOf } from "@/lib/coachWeek";
 import { isEn } from "@/lib/i18n";
+import { withGuard } from "@/lib/requestGuard";
 
 export const dynamic = "force-dynamic";
 
 // POST { mentorshipId, weekStart? } → { suggestions, quota } (2 تا 3 پیام کوتاه از روی گزارش هفته؛ پیش‌فرض هفته‌ی جاری)
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const guard = await guardNomo(req);
   if (!guard.ok) return guard.response;
   const { userId, unlimited, used, ctx, body } = guard.a;
@@ -24,3 +25,5 @@ export async function POST(req: Request) {
   if (!suggestions) return nomoUnavailable();
   return NextResponse.json({ suggestions, quota: quotaOf(unlimited, used + 1) });
 }
+
+export const POST = withGuard({ policy: "ai", scope: "coachNomo", gate: "ai" }, handlePOST);

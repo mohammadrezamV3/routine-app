@@ -7,11 +7,12 @@ import { currentGoal } from "@/lib/coachGoalServer";
 import { getWeekReport } from "@/lib/coachWeekServer";
 import { weekStartOf } from "@/lib/coachWeek";
 import { tr, isEn } from "@/lib/i18n";
+import { withGuard } from "@/lib/requestGuard";
 
 export const dynamic = "force-dynamic";
 
 // POST { mentorshipId, prompt, type } → { draft, quota }
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const guard = await guardNomo(req);
   if (!guard.ok) return guard.response;
   const { userId, unlimited, used, ctx, body } = guard.a;
@@ -40,3 +41,5 @@ export async function POST(req: Request) {
   if (!draft) return nomoUnavailable();
   return NextResponse.json({ draft, quota: quotaOf(unlimited, used + 1) });
 }
+
+export const POST = withGuard({ policy: "ai", scope: "coachNomo", gate: "ai" }, handlePOST);

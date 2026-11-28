@@ -1930,6 +1930,21 @@ model AppSetting {
   updatedAt DateTime @updatedAt
 }
 
+// شمارنده‌ی مشترک بین workerها برای محدودکننده‌ی درخواست (lib/requestGuard.ts) —
+// فقط برای سیاست‌های گران (ai/export/auth). یک ردیف به‌ازای هر (کلید، پنجره‌ی ثابت)؛
+// افزایش اتمی با upsert و پاک‌سازی ردیف‌های منقضی. هیچ متن جستجو یا پیامی اینجا نیست.
+model RateCounter {
+  key       String
+  bucket    BigInt   // شروع پنجره (میلی‌ثانیه‌ی epoch)
+  policy    String
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@id([key, bucket])
+  @@index([expiresAt])
+  @@index([policy, bucket])
+}
+
 // ── چت گروهی هر نماد ───────────────────────────────────────────────────
 //
 // یک اتاق عمومی به‌ازای هر نماد (EURUSD، XAUUSD، …) که همه‌ی کاربران

@@ -5,13 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "@/lib/nameStyle";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
-import { clampQuery } from "@/lib/validate";
+import { normalizeQuery } from "@/lib/guard/queryNormalize";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { withGuard } from "@/lib/requestGuard";
 
 // GET /api/friends/search?q=...  → جستجوی زنده‌ی کاربر با یوزرنیم/اسم، برای
 // تایپ‌آهد «افزودن دوست». برای هر نتیجه وضعیت فعلی رابطه رو هم برمی‌گردونه
 // تا سمت کلاینت بشه به‌جای دکمه‌ی ارسال، وضعیت «قبلا دوستید»/«در انتظار» رو نشون داد.
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   { const off = await sessionFeatureBlocked("friends"); if (off) return off; }
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id;
@@ -23,8 +24,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: tr("درخواست‌های زیاد — کمی بعد دوباره امتحان کن", "Too many requests — try again shortly") }, { status: 429 });
   }
 
-  const q = clampQuery(req.nextUrl.searchParams.get("q"), 60);
-  if (q.length < 2) return NextResponse.json({ users: [] });
+  const nq = normalizeQuery(req.nextUrl.searchParams.get("q"), { min: 2, max: 60 });
+  if (!nq.ok) return NextResponse.json({ users: [] });
+  const q = nq.q;
 
   const users = await prisma.user.findMany({
     where: {
@@ -79,3 +81,5 @@ export async function GET(req: NextRequest) {
     })),
   });
 }
+
+export const GET = withGuard({ policy: "search", scope: "friends" }, handleGET);
