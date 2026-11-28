@@ -16,6 +16,7 @@ import type { SectionKey } from "@/lib/sections";
 import type { TodayTask } from "@/lib/useDashboardRoutine";
 import { DashIcon, type DashIconName } from "./DashboardIcons";
 import { GoldenName } from "./GoldenName";
+import { LiquidGlass } from "./LiquidGlass";
 import { Spinner } from "./Spinner";
 import { TradeShareButton } from "./TradeShareButton";
 import { useLogTrade } from "./TradeHubLog";
@@ -214,7 +215,7 @@ export function DashboardHero({
   // ورود هیرو با CSS (m-rise)، نه framer: هیرو عنصر LCP داشبورده؛ با initial:{opacity:0} فریمر تا رسیدن
   // chunk انیمیشن نامرئی می‌موند و LCP عقب می‌افتاد. CSS از همون اولین پینت کار می‌کنه.
   return (
-    <section ref={heroRef as any} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}${hasKpi ? " has-kpi" : ""}${section === "routine" ? " is-routine" : ""}`}>
+    <LiquidGlass as="section" radius={26} intensity="subtle" ref={heroRef} className={`db-hero m-rise${isTrade ? " is-noribbon" : ""}${hasKpi ? " has-kpi" : ""}${section === "routine" ? " is-routine" : ""}`}>
       {/* اشتراک کارنامه‌ی ترید — خود دکمه گیت ماژول و فلگ tradeShare رو داره؛ ?share=1 پنجره رو باز می‌کنه */}
       {isTrade && <TradeShareButton deepLink className="db-hero-share" size={20} />}
       {!isTrade && onShare && (
@@ -329,7 +330,7 @@ export function DashboardHero({
 
       {log.modal}
       {!isTrade && <DayRibbon now={now} tasks={routine.tasks} wake={routine.wakeSleep.wake} sleep={routine.wakeSleep.sleep} configured={routine.hasWakeSleep} setHref={section && section !== "routine" ? "/sleep" : "/weekly"} />}
-    </section>
+    </LiquidGlass>
   );
 }
 

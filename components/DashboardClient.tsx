@@ -10,6 +10,7 @@
 //   • چیدمان بنتو با grid-template-areas در app/dashboard/dashboard.css.
 
 import "@/app/dashboard/dashboard.css";
+import "./dashboard-glass.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { preloadWhenIdle } from "@/lib/preloadIdle";
@@ -43,6 +44,7 @@ import { DashboardInbox, DashboardMentors, DashboardRoadmaps } from "./Dashboard
 import { DashboardActionsProvider } from "./DashboardActions";
 import { V_GRID } from "./DashboardKit";
 import { DashIcon } from "./DashboardIcons";
+import { demoteGlassTier, useGlassTier } from "./LiquidGlass";
 import { tr, isEn } from "@/lib/i18n";
 
 export type DashboardGate = "guest" | "off" | "on";
@@ -53,6 +55,32 @@ export type DashboardGate = "guest" | "off" | "on";
  * enforcement واقعی همچنان روی روت API هم هست (featureBlocked).
  */
 export function DashboardClient({ gate, initial }: { gate: DashboardGate; initial: { key: string; data: DashboardData } | null }) {
+  // ردیف شیشه‌ی داشبورد (موبایل lite، دسکتاپ کرومیومی full روی همه‌ی کارت‌ها)؛ سرور static، پس هیدریشن بدون اختلاف
+  const glass = useGlassTier();
+  // اسکرول فعال: انیمیشن‌های تزئینی (بک‌دراپ، بوردر چرخان هیرو) متوقف می‌شن تا کامپوننت سبک بمونه. روی ردیف full
+  // یک نگهبان فریم‌ها رو حین اسکرول می‌شمره؛ اگه این دستگاه (مثلا بدون GPU) زیر بار شکست SVG نمی‌کشه،
+  // همه‌ی شیشه‌ها برای همیشه به lite می‌رن (demoteGlassTier). قفل: localStorage arion:glassGuard=off
+  useEffect(() => {
+    const root = document.documentElement;
+    let t: ReturnType<typeof setTimeout> | undefined, on = false, last = 0, seen = 0, bad = 0;
+    let guard = glass === "full";
+    try { if (localStorage.getItem("arion:glassGuard") === "off") guard = false; } catch {}
+    const onScroll = () => {
+      if (!on) { on = true; root.setAttribute("data-scrolling", ""); }
+      clearTimeout(t);
+      t = setTimeout(() => { on = false; root.removeAttribute("data-scrolling"); }, 160);
+      if (!guard) return;
+      // رویداد scroll تقریبا یک بار در هر فریم می‌آد؛ فاصله‌ی دو رویداد پشت‌هم ≈ زمان فریم
+      const now = performance.now();
+      if (last && now - last < 1000) {
+        seen++; if (now - last > 45) bad++;
+        if (seen >= 40) { if (bad >= 14) { guard = false; demoteGlassTier(); } else { seen = 0; bad = 0; } }
+      }
+      last = now;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); clearTimeout(t); root.removeAttribute("data-scrolling"); };
+  }, [glass]);
   if (gate === "guest") {
     return <section className="db-page"><AuthGate message={tr("برای دیدن داشبورد وارد شوید", "Sign in to view the dashboard")} /></section>;
   }
@@ -60,7 +88,7 @@ export function DashboardClient({ gate, initial }: { gate: DashboardGate; initia
     return <section className="db-page dash-scope"><SuperAdminGate forceLocked><DashboardShellSkeleton /></SuperAdminGate></section>;
   }
   return (
-    <section className="db-page dash-scope">
+    <section className="db-page dash-scope" data-lg-tier={glass}>
       <DashboardBody initial={initial} />
     </section>
   );

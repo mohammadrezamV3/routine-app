@@ -1,0 +1,95 @@
+/* شیشه‌ی مایع داشبورد (فقط وقتی DashboardClient صفحه رو با data-lg-tier بسازه؛ صفحه‌ی استریک و
+   دیگر مصرف‌کننده‌های .db-page دست نمی‌خورن).
+   • کارت‌ها (.db-card): همان ردیف‌های lib/liquidGlassTier.ts روی خود عنصر، با سقف lite
+     (data-lg-tier="lite|static" روی .db-page؛ هیچ‌وقت full).
+   • هیرو (.db-hero): خودش <LiquidGlass maxTier="full"> است؛ تنها عنصر با شکست واقعی.
+     این‌جا فقط سطح (پر کردن/لبه) رو برای هیرو هم‌سبک کارت‌ها می‌کنیم؛ backdrop-filter هیرو از .lg می‌آد.
+   • نور هاور بوردر (::before/::after کارت و هیرو) دست‌نخورده می‌مونه، پس حالت موس دو بار نیست.
+   • پس‌زمینه‌ی محیطی (::before/::after خود .db-page): چند میدان رنگی بزرگ از توکن‌های تم/بخش/مناسبت
+     (--accent-rgb و --secondary-rgb)؛ استاتیک، و یک میدان با رانش بسیار کند (فقط transform). */
+.db-page[data-lg-tier]{
+  --gl-tint-a:.50; --gl-tint-b:.34;
+  --gl-hi:255,255,255; --gl-rim:.20;
+}
+body[data-theme="light"] .db-page[data-lg-tier]{ --gl-tint-a:.66; --gl-tint-b:.50; --gl-hi:255,255,255; --gl-rim:.9; }
+
+.db-page[data-lg-tier] :is(.db-card, .db-hero){
+  background:
+    linear-gradient(135deg, rgba(var(--gl-hi), calc(var(--gl-rim) * .10)) 0%, rgba(var(--gl-hi), 0) 42%),
+    linear-gradient(160deg, color-mix(in srgb, var(--box-bg) calc(var(--gl-tint-a) * 100%), transparent), color-mix(in srgb, var(--box-bg) calc(var(--gl-tint-b) * 100%), transparent));
+  border-color:rgba(var(--gl-hi), calc(var(--gl-rim) * .55));
+  box-shadow:
+    inset 0 1px 1px rgba(var(--gl-hi), var(--gl-rim)),
+    inset 0 -1px 1px rgba(var(--gl-hi), calc(var(--gl-rim) * .35)),
+    0 10px 28px -14px rgba(0,0,0,.45);
+}
+body[data-theme="light"] .db-page[data-lg-tier] :is(.db-card, .db-hero){
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.95),
+    inset 0 -1px 1px rgba(60,50,30,.07),
+    0 10px 26px -14px rgba(70,55,30,.30);
+}
+/* کارت‌ها: lite و full اول با بلور سبک شروع می‌کنن؛ full وقتی فیلتر مشترک هم‌اندازه‌شون (data-lg-ready،
+   lib/useGlassFilter.ts) آماده شد، شکست SVG رو پشت بلور کوچک می‌گیره. هیرو بلور خودش رو از .lg می‌گیره. */
+.db-page:is([data-lg-tier="lite"], [data-lg-tier="full"]) .db-card{
+  -webkit-backdrop-filter:blur(12px) saturate(1.45); backdrop-filter:blur(12px) saturate(1.45);
+}
+.db-page[data-lg-tier="full"] .db-card[data-lg-ready]{
+  -webkit-backdrop-filter:blur(4px) var(--lg-filter) saturate(1.45); backdrop-filter:blur(4px) var(--lg-filter) saturate(1.45);
+}
+/* شیشه‌ی تودرتو (شیشه داخل شیشه) فقط پر کردن ساده می‌گیره، نه بلور دوباره */
+.db-page[data-lg-tier] .db-card :is(.db-card, .lg){ -webkit-backdrop-filter:none; backdrop-filter:none; }
+/* static: بدون بلور، پر کردن غلیظ‌تر تا کنتراست متن مستقل از پس‌زمینه بمونه */
+.db-page[data-lg-tier="static"] :is(.db-card, .db-hero){
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+  background:
+    linear-gradient(135deg, rgba(var(--gl-hi), calc(var(--gl-rim) * .08)) 0%, rgba(var(--gl-hi), 0) 42%),
+    color-mix(in srgb, var(--box-bg) 88%, transparent);
+}
+/* دستگاه ضعیف: ارزان‌ترین lite (بلور کوچک، بدون شکست و بدون بک‌دراپ متحرک) */
+html[data-perf-weak] .db-page[data-lg-tier] .db-card{ -webkit-backdrop-filter:blur(6px) saturate(1.2); backdrop-filter:blur(6px) saturate(1.2); }
+@media (prefers-reduced-transparency:reduce){
+  .db-page[data-lg-tier] :is(.db-card, .db-hero){ -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--box-bg); }
+}
+/* هیرو: خود .lg یک ::before رم داره که با .db-hero::before (بوردر چرخان) یکی شده؛ لبه‌ی محتوا رو نبر */
+.db-page[data-lg-tier] .db-hero.lg{ overflow:hidden; }
+/* موبایل/lite: کارت بیرون از نما رندر نمی‌شه (پس بلورش هم حساب نمی‌شه). اندازه‌ی اولیه‌ی تخمینی با auto
+   بعد از اولین رندر یادش می‌مونه، پس پرش نمی‌ده */
+@media (hover:none), (pointer:coarse){
+  .db-page[data-lg-tier="lite"] .db-card{ content-visibility:auto; contain-intrinsic-size:auto 300px; }
+}
+
+/* ── پس‌زمینه‌ی محیطی: فقط پشت شیشه، ثابت به viewport ───────────────── */
+.db-page[data-lg-tier]::before,
+.db-page[data-lg-tier]::after{
+  content:""; position:fixed; inset:-10vmax; z-index:-1; pointer-events:none;
+}
+.db-page[data-lg-tier]::before{
+  background:
+    radial-gradient(38vmax 34vmax at 14% 8%, rgba(var(--accent-rgb), .50), transparent 70%),
+    radial-gradient(42vmax 36vmax at 92% 42%, rgba(var(--secondary-rgb), .44), transparent 70%),
+    radial-gradient(34vmax 30vmax at 30% 96%, rgba(var(--accent-rgb), .34), transparent 70%);
+}
+.db-page[data-lg-tier]::after{
+  background:
+    radial-gradient(26vmax 22vmax at 62% 18%, rgba(var(--secondary-rgb), .40), transparent 70%),
+    radial-gradient(24vmax 20vmax at 8% 58%, rgba(var(--accent-rgb), .36), transparent 70%);
+}
+/* بک‌دراپ متحرک فقط روی دسکتاپ full؛ محتوای متحرک پشت backdrop-filter هر فریم دوباره بلور می‌شه، پس روی lite ثابته */
+.db-page[data-lg-tier="full"]::after{ animation:dbg-drift 90s ease-in-out infinite alternate; will-change:transform; }
+html[data-scrolling] .db-page[data-lg-tier]::after, html[data-scrolling] .db-page .db-hero::before{ animation-play-state:paused; }
+body[data-theme="light"] .db-page[data-lg-tier]::before{
+  background:
+    radial-gradient(38vmax 34vmax at 14% 8%, rgba(var(--accent-rgb), .36), transparent 70%),
+    radial-gradient(42vmax 36vmax at 92% 42%, rgba(var(--secondary-rgb), .32), transparent 70%),
+    radial-gradient(34vmax 30vmax at 30% 96%, rgba(var(--accent-rgb), .24), transparent 70%);
+}
+body[data-theme="light"] .db-page[data-lg-tier]::after{
+  background:
+    radial-gradient(26vmax 22vmax at 62% 18%, rgba(var(--secondary-rgb), .30), transparent 70%),
+    radial-gradient(24vmax 20vmax at 8% 58%, rgba(var(--accent-rgb), .28), transparent 70%);
+}
+@keyframes dbg-drift{ to{ transform:translate3d(5vmax, 3vmax, 0) scale(1.06); } }
+@media (prefers-reduced-motion:reduce){ .db-page[data-lg-tier]::after{ animation:none !important; will-change:auto; } }
+html[data-perf-weak] .db-page[data-lg-tier]::after, html[data-perf="low"] .db-page[data-lg-tier]::after{ animation:none !important; will-change:auto; }
+html[data-perf-weak] .db-page[data-lg-tier]::after{ display:none; }
