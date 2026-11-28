@@ -18,3 +18,7 @@
 .nomo-proposal-actions{ display:flex; gap:8px; justify-content:flex-start; }
 .nomo-proposal.is-cancelled{ opacity:.55; }
 .nomo-proposal.is-applied{ border-color:rgba(0,168,107,.45); }
+
+/* نوار نوشتن نومو: دکمه‌ی ارسال انتهای ورودی (inline-end): در rtl سمت چپ، در ltr سمت راست.
+   فقط ترتیب طبیعی flex (بدون row-reverse و بدون چپ/راست فیزیکی). */
+html[dir] .routine-ai-composer.nomo-composer{ flex-direction:row; }

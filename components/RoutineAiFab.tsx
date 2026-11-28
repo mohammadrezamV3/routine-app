@@ -400,7 +400,7 @@ export function RoutineAiFab({ onChanged }: { onChanged: () => void }) {
               </div>
             ) : (
               <form
-                className="routine-ai-composer"
+                className="routine-ai-composer nomo-composer"
                 onSubmit={(e) => { e.preventDefault(); send(input); }}
               >
                 <textarea
