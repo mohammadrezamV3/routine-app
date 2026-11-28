@@ -311,10 +311,17 @@ const LEGACY_SEED: FoodSeedItem[] = [
 
 // آیتم‌های قدیمی همیشه اول می‌مونن (ترتیب و نام ثابت)، کاتالوگ جدید بعدشون.
 // نام تکراری با آیتم قدیمی نادیده گرفته می‌شه تا ثبت‌های قبلی کاربر معتبر بمونن.
-const LEGACY_NAMES = new Set(LEGACY_SEED.map((f) => f.name));
+// فایل‌های کاتالوگ موازی ساخته می‌شن؛ تکراری (با نام نرمال‌شده) فقط اولین نسخه رو نگه می‌داره.
+const SEEN_NAMES = new Set(LEGACY_SEED.map((f) => normalizeFa(f.name)));
+const UNIQUE_CATALOG = CATALOG_ITEMS.filter((c) => {
+  const k = normalizeFa(c.name);
+  if (SEEN_NAMES.has(k)) return false;
+  SEEN_NAMES.add(k);
+  return true;
+});
 export const FOOD_SEED: FoodSeedItem[] = [
   ...LEGACY_SEED,
-  ...CATALOG_ITEMS.filter((c) => !LEGACY_NAMES.has(c.name)).map(
+  ...UNIQUE_CATALOG.map(
     (c): FoodSeedItem => ({
       name: c.name,
       caloriesPer100g: c.caloriesPer100g,
