@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { simplePipCalc, calcRisk, symbolSpec, pipValuePerLot, crossQuoteCurrency, yahooSymbolFor, type RiskResult } from "@/lib/riskCalc";
+import { positionSize, simplePipCalc, calcRisk, symbolSpec, pipValuePerLot, crossQuoteCurrency, yahooSymbolFor, type RiskResult } from "@/lib/riskCalc";
 
 const base = { balance: 10000, mode: "percent" as const, riskValue: 1 };
 
@@ -173,5 +173,66 @@ describe("simplePipCalc", () => {
   it("ورودی نامعتبر", () => {
     expect(simplePipCalc({ symbol: "EURUSD", pips: 0, lots: 1 }).ok).toBe(false);
     expect(simplePipCalc({ symbol: "EURUSD", pips: 5, lots: NaN }).ok).toBe(false);
+  });
+});
+
+describe("positionSize", () => {
+  const base = { balance: 10000, riskPercent: 1.5 };
+  it("EURUSD: 1.5 درصد از 10000 با 50 پیپ = 0.3 لات، ریسک 150 دلار", () => {
+    const r = positionSize({ ...base, symbol: "EURUSD", slPips: 50 });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.pipValue).toBe(10);
+    expect(r.lots).toBe(0.3);
+    expect(r.riskAmount).toBeCloseTo(150, 6);
+  });
+  it("لات به پایین گرد می‌شود", () => {
+    const r = positionSize({ balance: 10000, riskPercent: 1, symbol: "EURUSD", slPips: 30 });
+    if (!r.ok) throw new Error();
+    expect(r.lotsRaw).toBeCloseTo(0.3333, 3);
+    expect(r.lots).toBe(0.33);
+    expect(r.riskAmount).toBeLessThanOrEqual(100);
+  });
+  it("جفت ین: پیپ 0.01 و ارزش با قیمت ورود", () => {
+    const r = positionSize({ ...base, symbol: "USDJPY", slPips: 50, entry: 150 });
+    if (!r.ok) throw new Error();
+    expect(r.spec.pipSize).toBe(0.01);
+    expect(r.pipValue).toBeCloseTo(1000 / 150, 6);
+    expect(r.approx).toBe(false);
+  });
+  it("USDJPY بدون قیمت ورود تقریبی است", () => {
+    const r = positionSize({ ...base, symbol: "USDJPY", slPips: 50 });
+    if (!r.ok) throw new Error();
+    expect(r.approx).toBe(true);
+    expect(r.pipValue).toBeCloseTo(1000 * 0.0067, 6);
+  });
+  it("طلا: پیپ 0.1، قرارداد 100 اونس، 10 دلار برای هر پیپ", () => {
+    const r = positionSize({ balance: 10000, riskPercent: 1, symbol: "XAUUSD", entry: 2000, stopLoss: 1990 });
+    if (!r.ok) throw new Error();
+    expect(r.slPips).toBeCloseTo(100, 6);
+    expect(r.pipValue).toBe(10);
+    expect(r.lots).toBe(0.1);
+  });
+  it("هدف با نسبت ریسک به سود و قیمت (خرید و فروش)", () => {
+    const buy = positionSize({ ...base, symbol: "EURUSD", entry: 1.1, stopLoss: 1.095, rewardRatios: [1, 2] });
+    if (!buy.ok) throw new Error();
+    expect(buy.rewards[1].pips).toBeCloseTo(100, 6);
+    expect(buy.rewards[1].price).toBeCloseTo(1.11, 6);
+    expect(buy.rewards[1].profit).toBeCloseTo(buy.riskAmount * 2, 6);
+    const sell = positionSize({ ...base, symbol: "EURUSD", entry: 1.1, stopLoss: 1.105, rewardRatios: [1] });
+    if (!sell.ok) throw new Error();
+    expect(sell.rewards[0].price).toBeCloseTo(1.095, 6);
+  });
+  it("جایگزینی ارزش پیپ", () => {
+    const r = positionSize({ ...base, symbol: "EURGBP", slPips: 50, pipValueOverride: 12.5 });
+    if (!r.ok) throw new Error();
+    expect(r.approx).toBe(false);
+    expect(r.pipValue).toBe(12.5);
+  });
+  it("ورودی نامعتبر", () => {
+    expect(positionSize({ ...base, symbol: "EURUSD" }).ok).toBe(false);
+    expect(positionSize({ ...base, symbol: "EURUSD", entry: 1.1, stopLoss: 1.1 }).ok).toBe(false);
+    expect(positionSize({ balance: 0, riskPercent: 1, symbol: "EURUSD", slPips: 10 }).ok).toBe(false);
+    expect(positionSize({ balance: 1000, riskPercent: 0, symbol: "EURUSD", slPips: 10 }).ok).toBe(false);
   });
 });
