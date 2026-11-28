@@ -80,13 +80,6 @@ body[data-theme="light"] .sleep-scope{
 .slp-c-fair{ color:var(--slp-fair); }
 .slp-c-poor{ color:var(--slp-poor); }
 
-/* ── هدف خواب (components/SleepGoalCard.tsx) ─────────────── */
-.slp-goal-fields{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.slp-goal-field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
-.slp-goal-field span{ font-size:12px; font-weight:700; color:var(--muted); }
-.slp-goal-bare{ display:flex; flex-direction:column; gap:14px; }
-.slp-goal-panel{ max-width:420px; }
-.slp-goal-field input{ width:100%; text-align:center; direction:ltr; }
 
 /* دکمه‌ی خطی داخل هیرو/پنجره: .account-outline-btn فقط داخل پنل کاربری شکل کامل داره،
    این‌جا قالب دکمه‌ی خطی سایت (هم‌اندازه‌ی trade-primary-btn) صریح داده می‌شه؛ بی‌بک‌گراند. */

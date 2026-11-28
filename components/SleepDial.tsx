@@ -411,7 +411,7 @@ export function SleepDial({
         {onOpenCycles ? (
           <SleepCycleButton onClick={onOpenCycles} onPreload={onPreloadCycles} info={cycleInfo} bedtime={target.sleep} />
         ) : null}
-        <button type="button" className="sld-tile is-goal" onClick={onEditGoal}>
+        <button type="button" className="sld-tile is-goal" onClick={onEditGoal} onPointerEnter={onPreloadCycles} onFocus={onPreloadCycles} onTouchStart={onPreloadCycles}>
           <span className="sld-tile-ico" aria-hidden><Target /></span>
           <ChevronLeft className="sld-tile-go dir-flip" aria-hidden />
           <span className="sld-tile-txt">

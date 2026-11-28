@@ -5888,6 +5888,14 @@ textarea.wsearch-newform-name,
 .bodybuilding-glass textarea.wsearch-newform-name,
 .add-program-glass textarea.wsearch-newform-name,
 .auth-box textarea.wsearch-newform-name{ border-radius:var(--field-radius-multi); }
+/* ریشه‌ی باگ «تکست‌اریای بیضی»: .wsearch-newform-name.trade-glass-field (پیل) اسپسیفیسیتی بالاتر از
+   textarea.wsearch-newform-name داشت. کلاس دوبل‌شده یعنی هر فیلد چندخطی، با هر کلاسی، همیشه
+   گردی چندخطی می‌گیره (پیل فقط برای تک‌خطی‌هاست) */
+textarea.wsearch-newform-name.wsearch-newform-name,
+textarea.trade-glass-field.trade-glass-field,
+textarea.calorie-glass-field.calorie-glass-field,
+textarea.admin-input.admin-input,
+textarea.cs-input.cs-input{ border-radius:var(--field-radius-multi); }
 
 /* ── جایگزین‌های مرورگر قدیمی (iOS 13/14، کروم < 88) ───────────────────
    همه پشت @supports not (...)ـن؛ مرورگر مدرن این بلاک رو اصلا اعمال نمی‌کنه.

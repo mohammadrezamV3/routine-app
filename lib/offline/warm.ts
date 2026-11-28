@@ -102,7 +102,7 @@ const CHUNKS: Record<SectionKey, (() => Promise<unknown>)[]> = {
     () => import("@/components/AddProgramForm"),
     () => import("@/components/EditOccurrenceForm"),
     () => import("@/components/DayModal"),
-    () => import("@/components/SleepCycleSheet"),
+    () => import("@/components/SleepPlanSheet"),
     () => import("@/components/SleepToolsPanels"),
   ],
   workout: [
@@ -111,7 +111,7 @@ const CHUNKS: Record<SectionKey, (() => Promise<unknown>)[]> = {
     () => import("@/components/ExerciseSetTutorial"),
     () => import("@/components/CalorieGoalModal"),
     () => import("@/components/AddProgramForm"),
-    () => import("@/components/SleepCycleSheet"),
+    () => import("@/components/SleepPlanSheet"),
     () => import("@/components/SleepToolsPanels"),
   ],
   trade: [
