@@ -1,0 +1,101 @@
+/* شیشه‌ی مایع — components/LiquidGlass.tsx (opt-in؛ هیچ‌جای اپ خودکار نمی‌گیره).
+   لایه‌ها: خود عنصر (backdrop-filter + گرادیان‌ها + لبه با inset shadow)، ::before رم نوری،
+   .lg-spec هایلایت موس (فقط transform/opacity). محتوا بالای لایه‌هاست (z-index:-1 برای لایه‌ها). */
+.lg{
+  --lg-blur:12px; --lg-sat:1.5; --lg-fill:.10; --lg-rim:.38;
+  --lg-hi:255,255,255; --lg-lo:0,0,0; --lg-x:0px; --lg-y:0px;
+  position:relative; isolation:isolate; box-sizing:border-box;
+  color:var(--text);
+  background:
+    linear-gradient(135deg, rgba(var(--lg-hi), calc(var(--lg-fill) * 1.6)) 0%, rgba(var(--lg-hi), calc(var(--lg-fill) * .35)) 45%, rgba(var(--lg-hi), calc(var(--lg-fill) * .8)) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--lg-hi), calc(var(--lg-rim) * .55)),
+    inset 0 1px 1px rgba(var(--lg-hi), var(--lg-rim)),
+    inset 0 -1px 1px rgba(var(--lg-hi), calc(var(--lg-rim) * .4)),
+    inset 0 -10px 18px -12px rgba(var(--lg-lo), .22),
+    0 8px 24px -10px rgba(var(--lg-lo), .35);
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+  backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+}
+body[data-theme="light"] .lg{ --lg-fill:.30; --lg-rim:.85; --lg-lo:30,30,60;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.7),
+    inset 0 1px 1px rgba(255,255,255,.95),
+    inset 0 -1px 1px rgba(40,40,80,.10),
+    0 8px 24px -10px rgba(40,40,80,.28);
+}
+.lg-subtle{ --lg-blur:6px; --lg-fill:.07; }
+.lg-strong{ --lg-blur:20px; --lg-fill:.14; --lg-sat:1.7; }
+body[data-theme="light"] .lg-subtle{ --lg-fill:.22; }
+body[data-theme="light"] .lg-strong{ --lg-fill:.42; }
+
+/* رم نوری لبه‌ی بالا-چپ و پایین-راست (بدون mask: یک گرادیان خطی ساده) */
+.lg::before{
+  content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(150deg, rgba(var(--lg-hi), .28) 0%, rgba(var(--lg-hi), 0) 28%, rgba(var(--lg-hi), 0) 72%, rgba(var(--lg-hi), .16) 100%);
+}
+
+/* ردیف full: وقتی نقشه آماده شد، فیلتر SVG پشت blur */
+.lg-full.lg-ready{
+  -webkit-backdrop-filter:blur(calc(var(--lg-blur) * .35)) var(--lg-filter) saturate(var(--lg-sat));
+  backdrop-filter:blur(calc(var(--lg-blur) * .35)) var(--lg-filter) saturate(var(--lg-sat));
+}
+.lg-defs{ position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
+
+/* هایلایت موس: یک دایره‌ی نرم که با transform جابه‌جا می‌شه (فیزیکی left عمدی: مختصات موس
+   فیزیکیه و در RTL هم همان‌طور اندازه‌گیری می‌شه) */
+.lg-spec{
+  position:absolute; left:0; top:0; width:180px; height:180px; margin:-90px 0 0 -90px; z-index:-1;
+  border-radius:50%; pointer-events:none; opacity:0;
+  background:radial-gradient(circle, rgba(255,255,255,.34) 0%, rgba(255,255,255,.10) 38%, rgba(255,255,255,0) 68%);
+  transform:translate3d(var(--lg-x), var(--lg-y), 0);
+  transition:opacity .25s ease;
+}
+.lg-int:hover > .lg-spec{ opacity:1; }
+.lg-int{ overflow:hidden; }
+
+/* ردیف static: هیچ بلور، فقط گرادیان و لبه؛ هزینه‌ی رندر معمولی یک کارت */
+.lg-static{
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+  background:
+    linear-gradient(135deg, rgba(var(--lg-hi), .20) 0%, rgba(var(--lg-hi), .06) 50%, rgba(var(--lg-hi), .14) 100%);
+}
+body[data-theme="light"] .lg-static{
+  background:linear-gradient(135deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 50%, rgba(255,255,255,.52) 100%);
+}
+html[data-perf-weak] .lg, .lg-static{ transition:none; }
+html[data-perf-weak] .lg:not(.lg-static){
+  -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+@media (prefers-reduced-transparency:reduce){
+  .lg{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+@media (prefers-reduced-motion:reduce){ .lg-spec{ transition:none; } }
+
+/* ---- پیش‌نمایش ادمین (/admin/settings/liquid-glass) ---- */
+.lgp-grid{ display:grid; gap:16px; grid-template-columns:repeat(3, minmax(0,1fr)); }
+@media (max-width:1100px){ .lgp-grid{ grid-template-columns:1fr; } }
+.lgp-stage{
+  position:relative; overflow:hidden; border-radius:22px; padding:18px; min-height:560px;
+  display:flex; flex-direction:column; gap:16px;
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.18) 0 10px, rgba(0,0,0,.12) 10px 20px),
+    linear-gradient(135deg,#ff3d81 0%,#ffb800 28%,#00c2ff 56%,#7a5cff 80%,#00d68f 100%);
+}
+.lgp-blob{ position:absolute; inset-inline-start:-40px; top:120px; width:180px; height:180px; border-radius:50%; background:#fff; opacity:.85; animation:lgp-drift 9s ease-in-out infinite alternate; z-index:0; }
+.lgp-blob.b2{ top:300px; inset-inline-start:auto; inset-inline-end:-30px; width:130px; height:130px; background:#111; animation-duration:7s; }
+@keyframes lgp-drift{ to{ transform:translate3d(260px, 60px, 0); } }
+@media (prefers-reduced-motion:reduce){ .lgp-blob{ animation:none; } }
+.lgp-stage > *:not(.lgp-blob){ position:relative; z-index:1; }
+.lgp-btn, .lgp-card, .lgp-nav, .lgp-sheet{ text-shadow:0 1px 3px rgba(0,0,0,.45); }
+.lgp-label{ font-weight:700; font-size:14px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.5); }
+.lgp-row{ display:flex; gap:10px; flex-wrap:wrap; }
+.lgp-btn{ padding:10px 18px; border:0; cursor:pointer; font:inherit; font-weight:600; color:#fff; background-color:transparent; }
+.lgp-card{ padding:16px; display:flex; flex-direction:column; gap:6px; color:#fff; }
+.lgp-nav{ display:flex; gap:4px; padding:6px; width:fit-content; }
+.lgp-nav span{ padding:8px 14px; border-radius:999px; color:#fff; font-weight:600; font-size:13px; }
+.lgp-nav span.on{ background:rgba(255,255,255,.28); }
+.lgp-sheet{ margin-top:auto; padding:14px 16px 18px; color:#fff; display:flex; flex-direction:column; gap:10px; }
+.lgp-handle{ width:44px; height:5px; border-radius:3px; background:rgba(255,255,255,.7); margin:0 auto; }
+.lgp-hud{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+.lgp-seg{ min-width:240px; }
