@@ -56,6 +56,7 @@ const GET_ALLOW: RegExp[] = [
   /^\/api\/notifications$/,
   /^\/api\/analysis\/letters\/live$/,
   /^\/api\/pricing$/,
+  /^\/api\/workout\/heat$/,
   /^\/api\/maintenance$/,
   /^\/api\/auth\/session$/,
 ];

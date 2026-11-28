@@ -16,6 +16,7 @@ import { ExerciseStatsCard } from "./ExerciseStatsCard";
 import { ExerciseCatalogCard } from "./ExerciseCatalogCard";
 import { ExerciseTaskList } from "./ExerciseTaskList";
 import { ExerciseWeekGrid } from "./ExerciseWeekGrid";
+import { WorkoutHeatPanel } from "./WorkoutHeatCard";
 import { AddExerciseProgramForm } from "./AddExerciseProgramForm";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { HistoryCalendar } from "./HistoryCalendar";
@@ -281,10 +282,10 @@ export function ExerciseDashboard({
           inSpace && sessionActive
             ? "db-sp-stack flex flex-col"
             : inSpace
-            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch"
+            ? "db-sp-stack flex flex-col lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch"
             : sessionActive
             ? "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-start lg:gap-6"
-            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_1fr] lg:items-stretch lg:gap-6"
+            : "flex flex-col gap-4 sm:gap-6 lg:grid lg:grid-cols-[2.5fr_0.8fr_1fr] lg:items-stretch lg:gap-6"
         }
       >
         <ExerciseTaskList
@@ -308,23 +309,23 @@ export function ExerciseDashboard({
           delay={0.05}
         />
 
-        {/* «مشاهده حرکات» وقتی تمرین شروع می‌شه هم می‌مونه؛ در حالت عادی زیر آمار می‌شینه */}
-        {sessionActive && (
-          <div className="order-3 lg:order-2">
-            <ExerciseCatalogCard delay={0.1} compact={inSpace} />
-          </div>
-        )}
+        {/* «مشاهده حرکات» وقتی تمرین شروع می‌شه هم می‌مونه (فقط آمار/دوستان و
+            برنامه‌ی هفتگی پایین صفحه تو حالت تمرکز مخفی می‌شن) */}
+        <div className="order-3 lg:order-2">
+          <ExerciseCatalogCard delay={0.1} compact={inSpace && sessionActive} />
+        </div>
 
         {!sessionActive && (
-          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-2" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
+          <div className={inSpace ? "db-sp-stack order-2 flex flex-col lg:order-3" : "order-2 flex flex-col gap-4 sm:gap-6 lg:order-3"}>
             {dashboardPrefs.showFriends && <DashFriendsCard delay={0.15} module="exercise" />}
             <ExerciseStatsCard sessionsDone={sessionsDone} sessionsTotal={sessionsTotal} todayPct={todayPct} weekPct={weekPct} delay={0.2} />
-            <ExerciseCatalogCard delay={0.25} />
           </div>
         )}
       </div>
 
       {!sessionActive && <ExerciseWeekGrid planData={weekPlanData} todayName={effectiveTodayDay} dayStatus={weekDayStatus} />}
+
+      {!sessionActive && <WorkoutHeatPanel kind="exercise" delay={0.3} />}
 
       {historyPickerOpen && (
         <>

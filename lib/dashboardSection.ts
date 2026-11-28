@@ -5,7 +5,7 @@
 
 import { pathAllowedIn, type SectionKey } from "./sections";
 
-export type DashArea = "today" | "heat" | "ex" | "cal" | "space" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep" | "tools" | "meds";
+export type DashArea = "today" | "heat" | "ex" | "cal" | "wheat" | "space" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep" | "tools" | "meds";
 
 export type DashBlocks = {
   /** کارت‌های برنامه‌ی امروز و نقشه‌ی ثبات */
@@ -89,8 +89,8 @@ export function sectionAreas(has: Set<DashArea>, section: SectionKey): { lg: str
     lg.push(...packRows(rest, 3));
     md.push(...packRows(restMd, 2));
   } else if (section === "workout") {
-    // داشبورد واقعی ورزش: تمرین امروز، کالری، خواب، مربی‌ها (ردیف‌های متوازن)
-    order = ["ex", "cal", "sleep", "mentor"];
+    // داشبورد واقعی ورزش: تمرین امروز، کالری، نقشه‌ی ثبات، خواب، مربی‌ها (ردیف‌های متوازن)
+    order = ["ex", "cal", "wheat", "sleep", "mentor"];
     const all = pick(...order);
     lg.push(...packRows(all, 3));
     md.push(...packRows(all, 2));

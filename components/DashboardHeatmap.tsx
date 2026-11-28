@@ -20,7 +20,8 @@ function jalaliOf(iso: string) {
   return toJalali(y, m, d);
 }
 
-export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: HeatCell[][]; streak: number | null; ready: boolean; memberSince?: string | null }) {
+/** بدنه‌ی نقشه‌ی ثبات (شبکه + آمار)؛ هم کارت داشبورد روتین هم کارت‌های ورزش (WorkoutHeatCard) همین رو می‌گیرن */
+export function HeatmapBody({ heat, streak, ready, memberSince }: { heat: HeatCell[][]; streak: number | null; ready: boolean; memberSince?: string | null }) {
   const sinceIso = memberSince ? memberSince.slice(0, 10) : null;
   const [hover, setHover] = useState<HeatCell | null>(null);
 
@@ -57,9 +58,7 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
   })();
 
   return (
-    <BentoCard area="heat" className="db-heat" label={tr("نقشه‌ی ثبات", "Consistency map")}>
-      <CardHead icon="chart" title={tr("نقشه‌ی ثبات", "Consistency map")} href="/weekly" hrefLabel={tr("برنامه", "Routine")} />
-
+    <>
       <div className="db-heat-body">
         <div className="db-heat-wrap" style={{ ["--cols" as any]: heat.length || 13 }}>
           {!ready ? (
@@ -102,6 +101,16 @@ export function DashboardHeatmap({ heat, streak, ready, memberSince }: { heat: H
           <div><dt>{tr("روزهای کامل", "Perfect days")}</dt><dd><CountUp value={summary.perfect} /></dd></div>
         </dl>
       </div>
+    </>
+  );
+}
+
+export function DashboardHeatmap(props: { heat: HeatCell[][]; streak: number | null; ready: boolean; memberSince?: string | null }) {
+  return (
+    <BentoCard area="heat" className="db-heat" label={tr("نقشه‌ی ثبات", "Consistency map")}>
+      <CardHead icon="chart" title={tr("نقشه‌ی ثبات", "Consistency map")} href="/weekly" hrefLabel={tr("برنامه", "Routine")} />
+
+      <HeatmapBody {...props} />
     </BentoCard>
   );
 }
