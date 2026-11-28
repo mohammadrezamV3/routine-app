@@ -10,12 +10,21 @@ import { tr } from "@/lib/i18n";
 
 const RAYS = [0, 45, 90, 135, 180, 225, 270, 315];
 
-export default function ThemeSwitch() {
-  const { toggle } = useTheme();
+export default function ThemeSwitch({ withLabel = false }: { withLabel?: boolean }) {
+  const { theme, toggle } = useTheme();
   const mid = useId().replace(/:/g, "");
   return (
-    <button onClick={toggle} className="theme-switch" aria-label={tr("تغییر حالت نمایش", "Toggle theme")}>
-      <span className="ts-stars" aria-hidden="true">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={theme === "dark"}
+      onClick={toggle}
+      className={withLabel ? "theme-switch ts-row" : "theme-switch"}
+      aria-label={tr("حالت شب", "Dark mode")}
+    >
+      {withLabel && <span className="ts-label" aria-hidden="true">{tr("حالت شب", "Dark mode")}</span>}
+      <span className="ts-track" aria-hidden="true">
+      <span className="ts-stars">
         <i className="ts-star s1" /><i className="ts-star s2" /><i className="ts-star s3" />
       </span>
       <span className="ts-knob">
@@ -33,6 +42,7 @@ export default function ThemeSwitch() {
           </g>
           <circle className="ts-core" cx="12" cy="12" r="5" fill="var(--sun)" mask={`url(#ts-m-${mid})`} />
         </svg>
+      </span>
       </span>
     </button>
   );

@@ -33,9 +33,11 @@ export default function NavDrawerContent({ open, onClose, authed, features, acti
   return (
     <>
       <div className="nav-title">
-        <ThemeSwitch />
+        <span />
         <button onClick={onClose} className="nav-close" aria-label={tr("بستن منو", "Close menu")}>×</button>
       </div>
+
+      <ThemeSwitch withLabel />
 
       {visibleLinks.map((item) => {
         const isLocked = (m?: string) => isLockedModule(activeModules, m);
