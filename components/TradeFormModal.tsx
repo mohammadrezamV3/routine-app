@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TickButton } from "./TickButton";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Camera, ChevronDown, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
+import { AlertTriangle, Camera, ChevronDown, ChevronLeft, ChevronRight, Info, Smile, Tags, Trash2, Wand2, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { TradeTagField } from "./TradeTagField";
@@ -28,16 +28,16 @@ import { pick, tr } from "@/lib/i18n";
 type ChecklistItem = { id: string; text: string; order: number };
 type Checklist = { id: string; name: string; color: string; required: boolean; archived: boolean; items: ChecklistItem[] };
 
-type SecKey = "core" | "reasons" | "checklist" | "images" | "tags" | "emotions";
+type TabKey = "core" | "reasons" | "checklist" | "images" | "tags" | "emotions";
 
-const SECTIONS: Record<SecKey, { label: { fa: string; en: string }; icon: JSX.Element }> = {
-  core: { label: { fa: "اطلاعات", en: "Information" }, icon: <Info size={14} /> },
-  reasons: { label: { fa: "دلایل ورود و خروج", en: "Entry and exit reasons" }, icon: <Wand2 size={14} /> },
-  checklist: { label: { fa: "چک‌لیست", en: "Checklist" }, icon: <AlertTriangle size={14} /> },
-  images: { label: { fa: "عکس‌ها", en: "Images" }, icon: <Camera size={14} /> },
-  tags: { label: { fa: "برچسب‌ها", en: "Tags" }, icon: <Tags size={14} /> },
-  emotions: { label: { fa: "احساسات", en: "Emotions" }, icon: <Smile size={14} /> },
-};
+const TABS: { key: TabKey; label: { fa: string; en: string }; icon: JSX.Element }[] = [
+  { key: "core", label: { fa: "اطلاعات", en: "Information" }, icon: <Info size={14} /> },
+  { key: "reasons", label: { fa: "دلایل ورود و خروج", en: "Entry and exit reasons" }, icon: <Wand2 size={14} /> },
+  { key: "checklist", label: { fa: "چک‌لیست", en: "Checklist" }, icon: <AlertTriangle size={14} /> },
+  { key: "images", label: { fa: "عکس‌ها", en: "Images" }, icon: <Camera size={14} /> },
+  { key: "tags", label: { fa: "برچسب‌ها", en: "Tags" }, icon: <Tags size={14} /> },
+  { key: "emotions", label: { fa: "احساسات", en: "Emotions" }, icon: <Smile size={14} /> },
+];
 
 /**
  * فرم ثبت/ویرایش معامله.
@@ -75,6 +75,7 @@ export function TradeFormModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [tab, setTab] = useState<TabKey>("core");
   const [form, setForm] = useState<TradeFormState>(() =>
     entry
       ? tradeToFormState(entry, toLocalInputValue)
@@ -92,6 +93,57 @@ export function TradeFormModal({
   const [compressing, setCompressing] = useState(false);
 
   function patch(p: Partial<TradeFormState>) { setForm((f) => ({ ...f, ...p })); }
+
+  // ── ناوبری بین بخش‌های فرم ──
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [tabsRtl, setTabsRtl] = useState(true);
+  const [canStart, setCanStart] = useState(false);
+  const [canEnd, setCanEnd] = useState(false);
+  const tabIndex = TABS.findIndex((t) => t.key === tab);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      const pos = Math.abs(el.scrollLeft);
+      setTabsRtl(getComputedStyle(el).direction === "rtl");
+      setCanStart(max > 2 && pos > 2);
+      setCanEnd(max > 2 && pos < max - 2);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", update); ro.disconnect(); };
+  }, []);
+
+  // سمت «شروع» در راست‌به‌چپ یعنی راست؛ scrollLeft آنجا منفی می‌شود
+  function scrollTabs(toStart: boolean) {
+    const el = tabsRef.current;
+    if (!el) return;
+    const rtl = getComputedStyle(el).direction === "rtl";
+    const amount = el.clientWidth * 0.7;
+    const sign = (toStart ? -1 : 1) * (rtl ? -1 : 1);
+    el.scrollBy({ left: sign * amount, behavior: "smooth" });
+  }
+
+  function goTab(i: number) {
+    const next = TABS[i];
+    if (!next) return;
+    setTab(next.key);
+    const el = tabsRef.current;
+    const btn = el?.querySelectorAll<HTMLElement>(".trade-form-tab")[i];
+    if (el && btn) {
+      const er = el.getBoundingClientRect();
+      const br = btn.getBoundingClientRect();
+      const pad = 28;
+      let dx = 0;
+      if (br.left < er.left + pad) dx = br.left - er.left - pad;
+      else if (br.right > er.right - pad) dx = br.right - er.right + pad;
+      if (dx) el.scrollBy({ left: dx, behavior: "smooth" });
+    }
+  }
 
   // ── میزان اطمینان: حرکت پیوسته، ذخیره‌ی عدد صحیح ۱ تا ۱۰ ──
   const [confDraft, setConfDraft] = useState<number | null>(null);
@@ -219,21 +271,26 @@ export function TradeFormModal({
 
   async function save() {
     if (saving) return;
-    if (!form.symbol.trim()) { setError(tr("نماد معاملاتی را وارد کن", "Enter the trading symbol")); return; }
-    if (!form.volume.trim()) { setError(tr("حجم معامله را وارد کن", "Enter the trade volume")); return; }
+    // خطا همیشه در بخش «اطلاعات» است: به همان بخش می‌پریم و فیلد را فوکوس می‌کنیم
+    const jumpTo = (field: string) => {
+      setTab("core");
+      setTimeout(() => document.querySelector<HTMLElement>(`[data-tf="${field}"]`)?.focus(), 60);
+    };
+    if (!form.symbol.trim()) { jumpTo("symbol"); setError(tr("نماد معاملاتی را وارد کن", "Enter the trading symbol")); return; }
+    if (!form.volume.trim()) { jumpTo("volume"); setError(tr("حجم معامله را وارد کن", "Enter the trade volume")); return; }
 
     // عددها با جدول مشترک (lib/numberLimits.ts) سنجیده می‌شن؛ سرور هم دوباره می‌سنجه
-    const numberChecks: [string, LimitKey, boolean][] = [
-      [form.volume, form.volumeUnit === "USD" ? "tradeVolumeUsd" : "tradeVolumeLot", false],
-      [form.pnlAmount, "tradePnl", false],
-      [form.entryPrice, "tradePrice", true], [form.exitPrice, "tradePrice", true],
-      [form.stopLoss, "tradePrice", true], [form.takeProfit, "tradePrice", true],
-      [form.commission, "tradeFee", true], [form.swap, "tradeFee", true],
-      [form.riskAmount, "tradeRisk", true],
+    const numberChecks: [string, LimitKey, boolean, string][] = [
+      [form.volume, form.volumeUnit === "USD" ? "tradeVolumeUsd" : "tradeVolumeLot", false, "volume"],
+      [form.pnlAmount, "tradePnl", false, "pnlAmount"],
+      [form.entryPrice, "tradePrice", true, "entryPrice"], [form.exitPrice, "tradePrice", true, "exitPrice"],
+      [form.stopLoss, "tradePrice", true, "stopLoss"], [form.takeProfit, "tradePrice", true, "takeProfit"],
+      [form.commission, "tradeFee", true, "commission"], [form.swap, "tradeFee", true, "swap"],
+      [form.riskAmount, "tradeRisk", true, "riskAmount"],
     ];
-    for (const [text, key, optional] of numberChecks) {
+    for (const [text, key, optional, field] of numberChecks) {
       const r = readTyped(text, key);
-      if (!r.ok) { if (optional) setOptionalOpen(true); setError(r.error); return; }
+      if (!r.ok) { jumpTo(field); if (optional) setOptionalOpen(true); setError(r.error); return; }
     }
 
     setSaving(true);
@@ -274,13 +331,37 @@ export function TradeFormModal({
           <button type="button" className="trade-icon-btn" onClick={onClose} aria-label={tr("بستن", "Close")}><X size={16} /></button>
         </div>
 
-        <section className="trade-form-sec">
-          <h3 className="trade-form-sec-title">{SECTIONS.core.icon}{pick(SECTIONS.core.label)}</h3>
+        <div className="trade-form-tabs-wrap">
+          <button type="button" className="trade-tabs-arrow" aria-label={tr("بخش‌های قبلی", "Previous sections")}
+            hidden={!canStart} onClick={() => scrollTabs(true)}>
+            {tabsRtl ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+          <div className="trade-form-tabs no-scrollbar" ref={tabsRef}>
+            {TABS.map((t, i) => (
+              <button
+                key={t.key}
+                type="button"
+                className={`trade-form-tab${tab === t.key ? " active" : ""}`}
+                onClick={() => goTab(i)}
+              >
+                {t.icon}
+                {pick(t.label)}
+                {t.key === "checklist" && checklistIncomplete && <span className="trade-tab-warn" />}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="trade-tabs-arrow" aria-label={tr("بخش‌های بعدی", "Next sections")}
+            hidden={!canEnd} onClick={() => scrollTabs(false)}>
+            {tabsRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          </button>
+        </div>
+
+        {tab === "core" && (
           <div className="trade-form-body">
             <div className="trade-field-row">
               <div style={{ position: "relative" }} ref={symbolWrapRef}>
                 <label className="exercise-form-label">{tr("نماد معاملاتی", "Trading symbol")}</label>
-                <input className="wsearch-newform-name trade-glass-field"
+                <input className="wsearch-newform-name trade-glass-field" data-tf="symbol"
                   value={form.symbol}
                   onChange={(e) => { patch({ symbol: e.target.value.toUpperCase() }); setSymbolSuggestOpen(true); }}
                   onFocus={() => setSymbolSuggestOpen(true)}
@@ -342,7 +423,7 @@ export function TradeFormModal({
               <div>
                 <label className="exercise-form-label">{tr("حجم معامله", "Trade volume")}</label>
                 <div className="trade-volume-row">
-                  <NumberInput className="wsearch-newform-name trade-glass-field" limit={form.volumeUnit === "USD" ? "tradeVolumeUsd" : "tradeVolumeLot"} decimal value={form.volume} onChange={(v) => patch({ volume: v })} placeholder="0.00" />
+                  <NumberInput data-tf="volume" className="wsearch-newform-name trade-glass-field" limit={form.volumeUnit === "USD" ? "tradeVolumeUsd" : "tradeVolumeLot"} decimal value={form.volume} onChange={(v) => patch({ volume: v })} placeholder="0.00" />
                   <SegmentedTabs
                     active={form.volumeUnit}
                     onChange={(v) => patch({ volumeUnit: v })}
@@ -367,7 +448,7 @@ export function TradeFormModal({
             <div className="trade-field-row">
               <div>
                 <label className="exercise-form-label">{tr(`مقدار ${form.result === "LOSS" ? "ضرر" : "سود"} (${account.currency})`, `${form.result === "LOSS" ? "Loss" : "Profit"} amount (${account.currency})`)}</label>
-                <NumberInput limit="tradePnl" className="wsearch-newform-name trade-glass-field" value={form.pnlAmount}
+                <NumberInput data-tf="pnlAmount" limit="tradePnl" className="wsearch-newform-name trade-glass-field" value={form.pnlAmount}
                   onChange={(v) => patch({ pnlAmount: v })}
                   placeholder="0.00" disabled={form.result === "BREAKEVEN"}
                 />
@@ -407,38 +488,38 @@ export function TradeFormModal({
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">{tr("قیمت ورود", "Entry price")}</label>
-                    <NumberInput limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.entryPrice} onChange={(v) => patch({ entryPrice: v })} />
+                    <NumberInput data-tf="entryPrice" limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.entryPrice} onChange={(v) => patch({ entryPrice: v })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">{tr("قیمت خروج", "Exit price")}</label>
-                    <NumberInput limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.exitPrice} onChange={(v) => patch({ exitPrice: v })} />
+                    <NumberInput data-tf="exitPrice" limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.exitPrice} onChange={(v) => patch({ exitPrice: v })} />
                   </div>
                 </div>
 
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">{tr("حد ضرر", "Stop loss")}</label>
-                    <NumberInput limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.stopLoss} onChange={(v) => patch({ stopLoss: v })} />
+                    <NumberInput data-tf="stopLoss" limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.stopLoss} onChange={(v) => patch({ stopLoss: v })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">{tr("حد سود", "Take profit")}</label>
-                    <NumberInput limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.takeProfit} onChange={(v) => patch({ takeProfit: v })} />
+                    <NumberInput data-tf="takeProfit" limit="tradePrice" className="wsearch-newform-name trade-glass-field" value={form.takeProfit} onChange={(v) => patch({ takeProfit: v })} />
                   </div>
                 </div>
 
                 <div className="trade-field-row">
                   <div>
                     <label className="exercise-form-label">{tr("کمیسیون", "Commission")}</label>
-                    <NumberInput limit="tradeFee" className="wsearch-newform-name trade-glass-field" value={form.commission} onChange={(v) => patch({ commission: v })} />
+                    <NumberInput data-tf="commission" limit="tradeFee" className="wsearch-newform-name trade-glass-field" value={form.commission} onChange={(v) => patch({ commission: v })} />
                   </div>
                   <div>
                     <label className="exercise-form-label">{tr("سواپ", "Swap")}</label>
-                    <NumberInput limit="tradeFee" className="wsearch-newform-name trade-glass-field" value={form.swap} onChange={(v) => patch({ swap: v })} />
+                    <NumberInput data-tf="swap" limit="tradeFee" className="wsearch-newform-name trade-glass-field" value={form.swap} onChange={(v) => patch({ swap: v })} />
                   </div>
                 </div>
 
                 <label className="exercise-form-label">{tr(`مقدار ریسک (${account.currency}) — مبنای محاسبه‌ی R`, `Risk amount (${account.currency}), the basis for R`)}</label>
-                <NumberInput limit="tradeRisk" className="wsearch-newform-name trade-glass-field" value={form.riskAmount} onChange={(v) => patch({ riskAmount: v })} placeholder={tr("اختیاری", "Optional")} />
+                <NumberInput data-tf="riskAmount" limit="tradeRisk" className="wsearch-newform-name trade-glass-field" value={form.riskAmount} onChange={(v) => patch({ riskAmount: v })} placeholder={tr("اختیاری", "Optional")} />
                 {riskSuggestion !== null && (
                   <button type="button" className="trade-suggest-btn" onClick={() => patch({ riskAmount: String(riskSuggestion) })}>
                     <Wand2 size={12} /> {tr("پیشنهاد از فاصله‌ی حد ضرر:", "Suggested from the stop loss distance:")} {faNum(riskSuggestion.toFixed(2))}
@@ -453,10 +534,9 @@ export function TradeFormModal({
               </div>
             )}
           </div>
-        </section>
+        )}
 
-        <section className="trade-form-sec">
-          <h3 className="trade-form-sec-title">{SECTIONS.reasons.icon}{pick(SECTIONS.reasons.label)}</h3>
+        {tab === "reasons" && (
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("دلایل ورود", "Entry reasons")}</label>
             <div className="trade-choice-grid">
@@ -503,10 +583,9 @@ export function TradeFormModal({
             <label className="exercise-form-label">{tr("نکات معامله", "Trade notes")}</label>
             <textarea className="wsearch-newform-name trade-glass-field" rows={3} value={form.note} onChange={(e) => patch({ note: e.target.value })} maxLength={2000} placeholder={tr("هر نکته‌ای که بعدا به دردت می‌خورد", "Anything that will be useful to you later")} />
           </div>
-        </section>
+        )}
 
-        <section className="trade-form-sec">
-          <h3 className="trade-form-sec-title">{SECTIONS.checklist.icon}{pick(SECTIONS.checklist.label)}{checklistIncomplete && <span className="trade-tab-warn" />}</h3>
+        {tab === "checklist" && (
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("چک‌لیست این معامله", "Checklist for this trade")}</label>
             <select className="wsearch-newform-name trade-glass-field" value={form.checklistId || ""} onChange={(e) => patch({ checklistId: e.target.value || null, checklistState: {} })}>
@@ -551,10 +630,9 @@ export function TradeFormModal({
               </>
             )}
           </div>
-        </section>
+        )}
 
-        <section className="trade-form-sec">
-          <h3 className="trade-form-sec-title">{SECTIONS.images.icon}{pick(SECTIONS.images.label)}</h3>
+        {tab === "images" && (
           <div className="trade-form-body">
             <label className="exercise-form-label">
               {tr("تصاویر معامله", "Trade images")} ({faNum(form.images.length)}/{faNum(MAX_IMAGES_PER_TRADE)})
@@ -590,18 +668,16 @@ export function TradeFormModal({
 
             {imageError && <div className="trade-form-error">{imageError}</div>}
           </div>
-        </section>
+        )}
 
-        <section className="trade-form-sec">
-          <h3 className="trade-form-sec-title">{SECTIONS.tags.icon}{pick(SECTIONS.tags.label)}</h3>
+        {tab === "tags" && (
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("برچسب‌های معامله", "Trade tags")}</label>
             <TradeTagField tags={tags} value={form.tagIds} onChange={(ids) => patch({ tagIds: ids })} onCreated={onTagCreated} />
           </div>
-        </section>
+        )}
 
-        <section className="trade-form-sec">
-          <h3 className="trade-form-sec-title">{SECTIONS.emotions.icon}{pick(SECTIONS.emotions.label)}</h3>
+        {tab === "emotions" && (
           <div className="trade-form-body">
             <label className="exercise-form-label">{tr("حال من قبل از معامله", "My mood before the trade")}</label>
             <div className="trade-choice-grid">
@@ -675,7 +751,7 @@ export function TradeFormModal({
               ))}
             </div>
           </div>
-        </section>
+        )}
 
         {error && <div className="trade-form-error">{error}</div>}
 
