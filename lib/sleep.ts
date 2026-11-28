@@ -208,27 +208,58 @@ export type SleepScoreParts = {
 };
 export type SleepScore = { score: number; parts: SleepScoreParts };
 
+/** وزن هر بخش امتیاز (جمع 100) — برای توضیح «چطور حساب می‌شه» هم همین‌ها استفاده می‌شن */
+export const SCORE_WEIGHTS = { duration: 35, continuity: 25, timing: 20, quality: 20 } as const;
+
 /**
- * امتیاز خواب یک شب 0..100.
- * - مدت (وزن 45): نزدیکی به هدف؛ هر 15 دقیقه کمتر/بیشتر از ±30 دقیقه حدود 6 امتیاز کم می‌کنه.
- * - زمان‌بندی (وزن 20): فاصله‌ی ساعت خواب از ساعت خواب هدف؛ 0 تا 30 دقیقه کامل، 3 ساعت = 0.
- * - کیفیت (وزن 25): خودارزیابی 1..5.
- * - پیوستگی (وزن 10): زمان به خواب رفتن و دفعات بیدارشدن.
+ * مدت خواب بزرگسال نسبت به توصیه‌ی AASM/SRS (حداقل 7 ساعت) و NSF (7 تا 9 ساعت):
+ * 7 تا 9 ساعت کامل؛ 6 تا 7 و 9 تا 10 «ممکنه مناسب باشه» (NSF) پس افت ملایم؛
+ * زیر 6 یا بالای 10 ساعت افت تندتر.
+ */
+export function durationScore(durMin: number): number {
+  if (durMin >= 420 && durMin <= 540) return 100;
+  if (durMin < 420) {
+    if (durMin >= 360) return clamp100(100 - ((420 - durMin) / 60) * 25);
+    return clamp100(75 - ((360 - durMin) / 60) * 25);
+  }
+  if (durMin <= 600) return clamp100(100 - ((durMin - 540) / 60) * 15);
+  return clamp100(85 - ((durMin - 600) / 60) * 20);
+}
+
+/**
+ * پیوستگی خواب بر پایه‌ی شاخص‌های کیفیت خواب NSF (Ohayon 2017) و مولفه‌های PSQI:
+ * به خواب رفتن تا 30 دقیقه و حداکثر یک بار بیدارشدن وسط شب مطلوبه.
+ */
+export function continuityScore(latencyMin: number | null | undefined, awakenings: number | null | undefined): number | null {
+  if (typeof latencyMin !== "number" && typeof awakenings !== "number") return null;
+  const lat = latencyMin ?? 0;
+  const latPen = lat <= 15 ? 0 : lat <= 30 ? ((lat - 15) / 15) * 10 : 10 + (lat - 30);
+  const awPen = Math.max(0, (awakenings ?? 0) - 1) * 20;
+  return clamp100(100 - latPen - awPen);
+}
+
+/**
+ * امتیاز خواب یک شب 0..100 — ترکیبی از چهار بخش که هرکدوم پایه‌ی علمی دارن
+ * (این یک ابزار تشخیص پزشکی نیست؛ وزن‌ها تقریب خود ماست):
+ * - مدت (35): 7 تا 9 ساعت برای بزرگسال (AASM/SRS، NSF) — `durationScore`.
+ * - پیوستگی (25): زمان به خواب رفتن و بیدارشدن‌های شبانه (NSF، PSQI) — `continuityScore`.
+ * - نظم (20): فاصله‌ی ساعت خواب از ساعت خواب هدف خود کاربر؛ نامنظمی ساعت خواب با
+ *   پیامدهای سلامتی همراهه (Phillips 2017). تا 30 دقیقه کامل، 3 ساعت = 0.
+ * - کیفیت (20): خودارزیابی 1..5 (مولفه‌ی کیفیت ذهنی PSQI).
  * بخش‌های بی‌داده حذف و وزن‌ها دوباره نرمال می‌شن (ثبت ساده هم امتیاز منصفانه می‌گیره).
+ * ctx.goalMin دیگه روی امتیاز اثر نداره (توصیه‌ی علمی ثابته، نه هدف شخصی)؛ مقایسه با
+ * هدف شخصی جدا نمایش داده می‌شه.
  */
 export function sleepScore(rec: SleepRecord, ctx: { goalMin: number; targetBedMin: number | null }): SleepScore {
   const dur = sleepMinutes(rec);
-  const off = Math.abs(dur - ctx.goalMin);
-  const duration = clamp100(100 - Math.max(0, off - 30) * 0.4);
+  const duration = durationScore(dur);
   const bed = minuteOfDay(rec.sleptAt);
   const tDist = ctx.targetBedMin === null ? 0 : clockDistance(bed, ctx.targetBedMin);
   const timing = clamp100(100 - (Math.max(0, tDist - 30) / 150) * 100);
   const quality = typeof rec.quality === "number" ? clamp100(((rec.quality - 1) / 4) * 100) : null;
-  const hasCont = typeof rec.latencyMin === "number" || typeof rec.awakenings === "number";
-  const continuity = hasCont
-    ? clamp100(100 - Math.max(0, (rec.latencyMin ?? 0) - 15) * 1.2 - (rec.awakenings ?? 0) * 12)
-    : null;
-  const parts: [number, number | null][] = [[45, duration], [20, timing], [25, quality], [10, continuity]];
+  const continuity = continuityScore(rec.latencyMin, rec.awakenings);
+  const W = SCORE_WEIGHTS;
+  const parts: [number, number | null][] = [[W.duration, duration], [W.timing, timing], [W.quality, quality], [W.continuity, continuity]];
   let w = 0, sum = 0;
   for (const [weight, v] of parts) if (v !== null) { w += weight; sum += weight * v; }
   return { score: Math.round(sum / w), parts: { duration, timing, quality, continuity } };

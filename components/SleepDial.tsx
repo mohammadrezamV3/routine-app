@@ -1,5 +1,6 @@
 "use client";
 
+import { SleepScoreInfoButton } from "./SleepScoreInfo";
 import "./sleep-dial.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
@@ -247,11 +248,14 @@ export function SleepDial({
           <span className="sld-greet-k">{now && <GreetIcon aria-hidden />}{greet}</span>
           <b>{dateText}</b>
         </div>
-        {showStats && (
-          <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
-            <BarChart3 aria-hidden /> {tr("آمار خواب", "Sleep stats")}
-          </Link>
-        )}
+        <div className="sld-head-end">
+          {showLast && <SleepScoreInfoButton />}
+          {showStats && (
+            <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
+              <BarChart3 aria-hidden /> {tr("آمار خواب", "Sleep stats")}
+            </Link>
+          )}
+        </div>
       </header>
 
       <div className="sld-dial">

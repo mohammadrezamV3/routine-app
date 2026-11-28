@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { planDisplayName } from "@/lib/subscriptionI18n";
-import { ROUTINE_TRIAL_DAYS } from "@/lib/trial";
+import { routineTrialMsFor } from "@/lib/trial";
 import {
   ACTIVE_DAYS, NEW_DAYS, RISK_EXPIRY_DAYS, RISK_INACTIVE_DAYS, SORTS, UsersFilters, UsersSort, SortDir,
   deriveUserStatus, isChurnRisk, rangeDays,
@@ -138,7 +138,7 @@ async function shape(ids: string[], metrics: Metrics): Promise<UserListRow[]> {
       id: u.id, name: u.name, lastName: u.lastName, email: u.email, phone: u.phone, username: u.username, avatarUrl: u.avatarUrl, market: u.market,
       isSuperAdmin: u.isSuperAdmin, isAdmin: u.isSuperAdmin || u.adminPermissions.length > 0, isBlocked: u.isBlocked, deletedAt: u.deletedAt, createdAt: u.createdAt,
       plan: active ? planDisplayName(active.plan) : null,
-      status: deriveUserStatus(u, subs, now, ROUTINE_TRIAL_DAYS),
+      status: deriveUserStatus(u, subs, now, routineTrialMsFor(u.createdAt) / 86_400_000),
       atRisk: isChurnRisk(subs, last, now),
       subscriptionExpiresAt: active?.currentPeriodEnd || null,
       ltv: metrics.ltv.get(u.id) || null,

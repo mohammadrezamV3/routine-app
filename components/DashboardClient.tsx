@@ -30,6 +30,8 @@ import { DashboardHeatmap } from "./DashboardHeatmap";
 import { DashboardRoutineLock } from "./DashboardRoutineLock";
 import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardSleep } from "./DashboardSleep";
+import { DashboardMedication } from "./DashboardMedication";
+import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { DashboardWorkoutSpace } from "./DashboardWorkoutSpace";
 import { DashboardModuleLock } from "./DashboardModuleLock";
 import { useSection } from "./SectionProvider";
@@ -148,6 +150,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
   const on = (k: FeatureKey) => featureVisible(features, k);
   const flagSig = FEATURE_KEYS.map((k) => (on(k) ? 1 : 0)).join("");
   const routineOn = on("routine");
+  const prefs = useDashboardPrefs();
   const { has, locked } = useMemo(() => {
     // ورزش و ترید کارت مربی و اعلان‌ها رو ندارن (فقط روتین و دامنه‌ی اصلی)
     const set = new Set<Area>(section === "workout" || section === "trade" ? [] : ["inbox"]);
@@ -170,6 +173,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     };
     if (blocks.routine && routineOn) { set.add("today"); set.add("heat"); }
     if (blocks.sleep && on("sleep")) set.add("sleep");
+    // دارو: فقط بخش روتین، با ماژول روتین فعال و گزینه‌ی «کارت دارو» در تنظیمات داشبورد
+    if ((!section || section === "routine") && routineOn && prefs.showMedications && modules?.has("ROUTINE")) set.add("meds");
     if (blocks.fitness) {
       // ورزش: «فضای تمرین» (پنل‌های واقعی)؛ ماژول خریده‌نشده رو ModuleGate داخل خودش نشون می‌ده، پس کارت قفل جدا نداریم
       if (section === "workout") { if (on("exercise") || on("calorie")) set.add("space"); }
@@ -185,9 +190,9 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     if (blocks.roadmaps && owns("ROADMAP") && features?.roadmaps === true) set.add("road");
     return { has: set, locked: lock };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modules, flagSig, features?.roadmaps, section]);
+  }, [modules, flagSig, features?.roadmaps, section, prefs.showMedications]);
   const areas = useMemo(() => bentoAreas(has, section), [has, section]);
-  // «روتین من» بعد از ۱۴ روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
+  // «روتین من» بعد از 7 روز رایگان پلن می‌خواد — تا وقتی ماژول‌ها معلوم نشدن
   // (modules=null) قفل نشون داده نمی‌شه که صفحه‌ی خریده‌شده یک لحظه قفل نپره.
   const routineLocked = !!modules && !modules.has("ROUTINE");
   // نومو روی داشبورد روتین (و دامنه‌ی اصلی): همان گیت /weekly (فلگ routineAssistant)؛ با قفل
@@ -222,7 +227,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
             <DashboardHeatmap heat={routine.heat} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} memberSince={data?.user.memberSince} />
           </>
         )}
-        {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} />}
+        {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} onChanged={refreshNow} />}
+        {has.has("meds") && <DashboardMedication />}
         {has.has("space") && <DashboardWorkoutSpace features={features} />}
         {has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}
         {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}

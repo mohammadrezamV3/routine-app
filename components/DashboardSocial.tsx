@@ -45,7 +45,7 @@ export function DashboardRoadmaps({ r, loading }: { r: { items: DashRoadmap[]; t
       {loading ? (
         <Skel w="100%" h={90} r={12} />
       ) : !r ? null : r.items.length === 0 ? (
-        <EmptyState icon="spark" text={tr("هر مهارتی رو بگو، هوش مصنوعی قدم‌به‌قدم مسیرش رو می‌سازه.", "Name any skill and AI builds the path step by step.")} href="/roadmaps/new" cta={tr("ساخت رودمپ", "Create roadmap")} />
+        <EmptyState icon="spark" text={tr("هر مهارتی رو بگو، هوش مصنوعی قدم‌به‌قدم مسیرش رو می‌سازه.", "Name any skill and AI builds the path step by step.")} href="/roadmaps" cta={tr("ساخت رودمپ", "Create roadmap")} />
       ) : (
         <ul className="db-road-list">
           {r.items.map((it, i) => (

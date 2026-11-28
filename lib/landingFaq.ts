@@ -4,7 +4,7 @@ import { isEn } from "./i18n";
 import type { SectionKey } from "./sections";
 
 export const FAQ_ITEMS: { q: string; a: string }[] = [
-  { q: "آریون رایگان است؟", a: "شروع آریون رایگان است. «روتین من» برای هر حساب تازه 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند. بدنسازی، کالری‌شمار و ژورنال ترید هم 3 روز با استفاده‌ی محدود از AI باز است. ثبت‌نام در کمتر از یک دقیقه انجام می‌شود." },
+  { q: "آریون رایگان است؟", a: "شروع آریون رایگان است. «روتین من» برای هر حساب تازه 7 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند. بدنسازی، کالری‌شمار و ژورنال ترید هم 7 روز با استفاده‌ی محدود از AI باز است. ثبت‌نام در کمتر از یک دقیقه انجام می‌شود." },
   { q: "بعد از دوره‌ی آزمایشی چه می‌شود؟", a: "برای ادامه، پلنی متناسب با نیازت انتخاب می‌کنی. پلن «روتین من» روتین، برنامه هفتگی، خواب و کارها را پوشش می‌دهد؛ پلن‌های بدنسازی، ترید و مکس امکانات بیشتری اضافه می‌کنند و همه‌ی آن‌ها «روتین من» را هم شامل می‌شوند. قیمت‌ها در بخش پلن‌های همین صفحه آمده است." },
   { q: "اطلاعاتم امن است؟", a: "رمز عبور با bcrypt ذخیره می‌شود و اطلاعاتت فروخته نمی‌شود. چت‌ها سرتاسر رمزنگاری‌شده‌اند؛ متنشان را جز خودتان کسی نمی‌بیند." },
   { q: "روی گوشی نصب می‌شود (PWA)؟", a: "بله. آریون یک وب‌اپ PWA است؛ در مرورگر «افزودن به صفحه‌ی اصلی» را بزن تا مثل یک اپ با آیکون خودش باز شود و یادآوری‌ها را هم دریافت کنی." },
@@ -15,7 +15,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
 ];
 
 const FAQ_ITEMS_EN: { q: string; a: string }[] = [
-  { q: "Is Arion free?", a: "Getting started with Arion is free. My Routine is free for 14 days for every new account, then continues with the My Routine plan ({{routine_monthly}}). Workouts, the calorie counter and the trading journal are also open for 3 days with limited AI use. Sign-up takes less than a minute." },
+  { q: "Is Arion free?", a: "Getting started with Arion is free. My Routine is free for 7 days for every new account, then continues with the My Routine plan ({{routine_monthly}}). Workouts, the calorie counter and the trading journal are also open for 7 days with limited AI use. Sign-up takes less than a minute." },
   { q: "What happens after the trial?", a: "To continue, you pick a plan that fits your needs. The My Routine plan covers routine, weekly plan, sleep and tasks; the Workout, Trading and Max plans add more features, and all of them include My Routine. Prices are in the plans section of this page." },
   { q: "Is my data safe?", a: "Your password is stored with bcrypt and your data is never sold. Chats are end-to-end encrypted; nobody but you can see their text." },
   { q: "Can I install it on my phone (PWA)?", a: "Yes. Arion is a PWA web app; choose Add to Home Screen in your browser so it opens like an app with its own icon and you can receive reminders too." },
@@ -34,7 +34,7 @@ const pick = (list: Faq[], ...idx: number[]): Faq[] => idx.map((i) => list[i]);
 
 const SECTION_FAQ_FA: Record<SectionKey, Faq[]> = {
   routine: [
-    { q: "روتین اپ آریون رایگان است؟", a: "ثبت‌نام رایگان است و «روتین من» برای هر حساب تازه 14 روز رایگان است؛ بعد از آن با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند. ثبت‌نام کمتر از یک دقیقه طول می‌کشد." },
+    { q: "روتین اپ آریون رایگان است؟", a: "ثبت‌نام رایگان است و «روتین من» برای هر حساب تازه 7 روز رایگان است؛ بعد از آن با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند. ثبت‌نام کمتر از یک دقیقه طول می‌کشد." },
     { q: "چطور برنامه ریزی روزانه و هفتگی بسازم؟", a: "کارهای هر روز را با ساعت، تگ و تکرار (هفتگی، یک روز یا دوره) اضافه می‌کنی و می‌توانی برنامه را به‌صورت لیست چندآیتمی هم بسازی. همان لحظه تیک می‌زنی و برنامه‌ها روی تقویم شمسی دیده می‌شوند؛ کل هفته را هم در یک نگاه داری." },
     { q: "پیگیری عادت و استریک چطور کار می‌کند؟", a: "هر روزی که همه‌ی برنامه‌هایت را انجام بدهی به زنجیره‌ی روزهای کامل اضافه می‌شود. استریک 8 سطح از 1 تا 365 روز دارد، پیشرفت دوستانت را هم می‌بینی و آنالیز هفتگی نشان می‌دهد کجا جلو رفته‌ای." },
     { q: "ردیابی خواب هم دارد؟", a: "بله. هر شب ساعت خواب و بیداری را ثبت می‌کنی و امتیاز خواب، هدف خواب، چرخه‌های خواب و روند هفتگی را می‌بینی. ردیابی خواب جزو پلن «روتین من» است." },
@@ -42,7 +42,7 @@ const SECTION_FAQ_FA: Record<SectionKey, Faq[]> = {
     ...pick(FAQ_ITEMS, 6, 3, 2),
   ],
   workout: [
-    { q: "برنامه ورزشی آریون رایگان است؟", a: "ثبت‌نام رایگان است. بدنسازی و کالری‌شمار برای هر حساب تازه 3 روز با استفاده‌ی محدود از هوش مصنوعی باز است و بعد از آن با پلن بدنسازی یا مکس ادامه پیدا می‌کند. «روتین من» (روتین روزانه و خواب) هم 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند." },
+    { q: "برنامه ورزشی آریون رایگان است؟", a: "ثبت‌نام رایگان است. بدنسازی و کالری‌شمار برای هر حساب تازه 7 روز با استفاده‌ی محدود از هوش مصنوعی باز است و بعد از آن با پلن بدنسازی یا مکس ادامه پیدا می‌کند. «روتین من» (روتین روزانه و خواب) هم 7 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند." },
     { q: "چطور برنامه بدنسازی با هوش مصنوعی بسازم؟", a: "قد و وزن، هدفت (قدرت، حجم، کات یا استقامت)، امکاناتت (باشگاه یا خانه) و روزهای تمرینت را وارد می‌کنی و برنامه ساخته می‌شود. اگر بخواهی، برنامه را دستی هم می‌چینی." },
     { q: "برنامه ورزشی در خانه هم می‌سازد؟", a: "بله. امکاناتت را (باشگاه یا خانه) مشخص می‌کنی و حرکتی که تجهیزاتش را نداری با جایگزین مناسب عوض می‌شود. اگر محدودیت جسمی داشته باشی، حرکات پرفشار هم با معادل ملایم‌تر جایگزین می‌شوند." },
     { q: "هنگام تمرین چه امکاناتی دارم؟", a: "شروع تمرین با کرنومتر، ثبت ست به ست و کاتالوگ 149 حرکت با آموزش اجرا و سطح سختی. روزی را جا انداختی؟ «رد شدن» یا «ماندن» را خودت انتخاب می‌کنی." },
@@ -51,7 +51,7 @@ const SECTION_FAQ_FA: Record<SectionKey, Faq[]> = {
     ...pick(FAQ_ITEMS, 3, 2),
   ],
   trade: [
-    { q: "ژورنال ترید آریون رایگان است؟", a: "ثبت‌نام رایگان است. ژورنال ترید برای هر حساب تازه 3 روز با استفاده‌ی محدود از هوش مصنوعی باز است و بعد از آن با پلن ترید یا مکس ادامه پیدا می‌کند." },
+    { q: "ژورنال ترید آریون رایگان است؟", a: "ثبت‌نام رایگان است. ژورنال ترید برای هر حساب تازه 7 روز با استفاده‌ی محدود از هوش مصنوعی باز است و بعد از آن با پلن ترید یا مکس ادامه پیدا می‌کند." },
     { q: "ژورنال ترید چه چیزهایی را نشان می‌دهد؟", a: "هر حساب جدا: بالانس، سود و زیان، نرخ برد و هدف. چک‌لیست ورود که وضعیتش لحظه‌ی ثبت معامله ذخیره می‌شود، به‌علاوه‌ی یادداشت و برچسب. کارنامه‌ی روز، هفته یا ماه هر حساب را هم می‌توانی به‌صورت تصویر به اشتراک بگذاری." },
     FAQ_ITEMS[4],
     { q: "تقویم اقتصادی فارکس چه ارزهایی دارد؟", a: "رویدادهای 9 ارز اصلی با Actual، Forecast و Previous، فیلتر تاثیر و ارز و هشدار با نوتیفیکیشن برای خبرهایی که زیر نظر گرفته‌ای." },
@@ -63,7 +63,7 @@ const SECTION_FAQ_FA: Record<SectionKey, Faq[]> = {
 
 const SECTION_FAQ_EN: Record<SectionKey, Faq[]> = {
   routine: [
-    { q: "Is the Arion routine app free?", a: "Sign-up is free and My Routine is free for 14 days on every new account; after that it continues with the My Routine plan ({{routine_monthly}}). Sign-up takes less than a minute." },
+    { q: "Is the Arion routine app free?", a: "Sign-up is free and My Routine is free for 7 days on every new account; after that it continues with the My Routine plan ({{routine_monthly}}). Sign-up takes less than a minute." },
     { q: "How do I build a daily and weekly plan?", a: "You add each day's tasks with a time, a tag and a repeat (weekly, one day or a period), and you can make a plan a multi-item list too. You tick tasks the moment you finish them, plans show on the Jalali calendar and you see the whole week at a glance." },
     { q: "How do habit tracking and streaks work?", a: "Every day you complete all your plans is added to your chain of full days. Streaks have 8 levels from 1 to 365 days, you can see your friends' progress and the weekly review shows where you moved ahead." },
     { q: "Does it track sleep too?", a: "Yes. You log your sleep and wake times each night and see your sleep score, sleep goal, sleep cycles and weekly trend. Sleep tracking is part of the My Routine plan." },
@@ -71,7 +71,7 @@ const SECTION_FAQ_EN: Record<SectionKey, Faq[]> = {
     ...pick(FAQ_ITEMS_EN, 6, 3, 2),
   ],
   workout: [
-    { q: "Is the Arion workout plan free?", a: "Sign-up is free. Workouts and the calorie counter are open for 3 days on every new account with limited AI use, then continue with the Workout or Max plan. My Routine (daily routine and sleep) is free for 14 days and then continues with the My Routine plan ({{routine_monthly}})." },
+    { q: "Is the Arion workout plan free?", a: "Sign-up is free. Workouts and the calorie counter are open for 7 days on every new account with limited AI use, then continue with the Workout or Max plan. My Routine (daily routine and sleep) is free for 7 days and then continues with the My Routine plan ({{routine_monthly}})." },
     { q: "How do I build a bodybuilding plan with AI?", a: "You enter your height and weight, your goal (strength, muscle gain, cutting or endurance), your equipment (gym or home) and your training days, and the plan is built. You can also arrange a plan by hand." },
     { q: "Can it build a home workout plan?", a: "Yes. You choose your equipment (gym or home) and any exercise you lack the equipment for is replaced with a suitable alternative. If you have a physical limitation, high-stress exercises are replaced with gentler ones too." },
     { q: "What do I get during a workout?", a: "Start a workout with a timer, log set by set, and use a catalogue of 149 exercises with tutorials and difficulty levels. Missed a day? You choose Skip or Stay yourself." },
@@ -80,7 +80,7 @@ const SECTION_FAQ_EN: Record<SectionKey, Faq[]> = {
     ...pick(FAQ_ITEMS_EN, 3, 2),
   ],
   trade: [
-    { q: "Is the Arion trading journal free?", a: "Sign-up is free. The trading journal is open for 3 days on every new account with limited AI use, then continues with the Trading or Max plan." },
+    { q: "Is the Arion trading journal free?", a: "Sign-up is free. The trading journal is open for 7 days on every new account with limited AI use, then continues with the Trading or Max plan." },
     { q: "What does the trading journal show?", a: "Each account separately: balance, profit and loss, win rate and goal. An entry checklist whose state is saved at the moment you log a trade, plus notes and tags. You can also share the report of a day, week or month of any account as an image." },
     FAQ_ITEMS_EN[4],
     { q: "Which currencies does the forex economic calendar cover?", a: "Events for 9 major currencies with Actual, Forecast and Previous, filters for impact and currency, and notification alerts for the news events you are watching." },

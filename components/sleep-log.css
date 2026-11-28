@@ -202,3 +202,10 @@ html[data-perf-weak] .slg-quality[data-active] .auth-tab-indicator, html[data-pe
   .slg-panel.slg-stats.modal-panel{ max-width:640px; }
   .slg-body .sli-grid{ grid-template-columns:repeat(3, minmax(0,1fr)); }
 }
+
+/* جزئیات بیشتر (تاشو) در فرم ثبت */
+.slg-more{ align-self:flex-start; gap:6px; }
+.slg-more svg{ width:16px; height:16px; transition:transform .2s ease; }
+.slg-more svg.is-open{ transform:rotate(180deg); }
+.slg-details{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+@media (prefers-reduced-motion:reduce){ .slg-more svg{ transition:none; } }

@@ -1,6 +1,6 @@
 "use client";
 
-// شیت‌های تنبل فضای همکاری (یادداشت، برچسب، چیزهایی که می‌بینم، چی می‌بینه). با next/dynamic لود کن.
+// شیت‌های تنبل فضای همکاری (یادداشت، برچسب، چیزهایی که می‌بینم، تنظیم سطح دسترسی مربی). با next/dynamic لود کن.
 import "./coach.css";
 import "./coach-space.css";
 import { useEffect, useState } from "react";
@@ -13,7 +13,6 @@ import { MentorStudentNotes } from "./MentorStudentNotes";
 import { MentorStudentPrivacy } from "./MentorStudentPrivacy";
 import { MentorPrivacySettings } from "./MentorPrivacySettings";
 import { mentorApi } from "./MentorDashKit";
-import { TickOption } from "./TickOption";
 import { LoadingBlock } from "./Spinner";
 
 /** یادداشت خصوصی مربی (رمزگذاری‌شده فقط برای خودش؛ MentorStudentNotes خودش گیت کلید رو داره) */
@@ -74,35 +73,14 @@ export function CoachSeesSheet({ open, onClose, studentId, sleepShared }: { open
   );
 }
 
-/** «چی می‌بینه؟» برای شاگرد: تیک خواب (ذخیره‌ی فوری) + تنظیمات قبلی برنامه‌ها و جزئیات */
-export function CoachMineSheet({ open, onClose, mentorshipId, mentorName, active, shareSleep, onSleepChanged }: {
-  open: boolean; onClose: () => void; mentorshipId: string; mentorName: string; active: boolean; shareSleep: boolean; onSleepChanged: (v: boolean) => void;
+/** «تنظیم سطح دسترسی مربی» برای شاگرد: برنامه‌ها، جزئیات و خواب با پیش‌نمای زنده (یک ذخیره برای همه) */
+export function CoachMineSheet({ open, onClose, mentorshipId, mentorName, active, onSleepChanged }: {
+  open: boolean; onClose: () => void; mentorshipId: string; mentorName: string; active: boolean; shareSleep?: boolean; onSleepChanged: (v: boolean) => void;
 }) {
-  const [sleep, setSleep] = useState(shareSleep);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // MentorPrivacySettings کل پیش‌نویسش رو با ذخیره می‌فرسته؛ بعد از تغییر خواب دوباره خونده می‌شه تا مقدار قدیمی رو برنگردونه
-  const [rev, setRev] = useState(0);
-  useEffect(() => setSleep(shareSleep), [shareSleep]);
-
-  async function toggleSleep(v: boolean) {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    setSleep(v);
-    const r = await mentorApi<unknown>(`/api/mentorships/${mentorshipId}/privacy`, { method: "PUT", body: { shareSleep: v } });
-    setBusy(false);
-    if (!r.ok) { setSleep(!v); setError(r.error); return; }
-    onSleepChanged(v);
-    setRev((n) => n + 1);
-  }
-
   return (
-    <CoachSheet open={open} onClose={onClose} title={tr(`${mentorName} چی می‌بینه؟`, `What can ${mentorName} see?`)} size="md">
+    <CoachSheet open={open} onClose={onClose} title={tr("تنظیم سطح دسترسی مربی", "Coach access level")} size="lg">
       <CoachSheetBody>
-        <TickOption checked={sleep} onChange={toggleSleep} disabled={busy}>{tr("خواب", "Sleep")}</TickOption>
-        {error && <div className="form-inline-error" role="alert">{error}</div>}
-        <MentorPrivacySettings key={rev} mentorshipId={mentorshipId} mentorName={mentorName} active={active} />
+        <MentorPrivacySettings mentorshipId={mentorshipId} mentorName={mentorName} active={active} onSaved={(p) => onSleepChanged(!!p.shareSleep)} />
       </CoachSheetBody>
     </CoachSheet>
   );

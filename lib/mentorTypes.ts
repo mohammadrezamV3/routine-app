@@ -178,7 +178,7 @@ export type MentorWaitlistResponse = { entries: MentorWaitlistRow[]; capacity: n
 export type MentorCredential = { category: string; status: VerificationStatus; rejectReason: string | null };
 export type MentorDocumentMeta = {
   id: string;
-  kind: "IDENTITY" | "CERTIFICATE";
+  kind: "IDENTITY" | "IDENTITY_SELFIE" | "CERTIFICATE";
   category: string | null;
   fileName: string;
   mimeType: string;

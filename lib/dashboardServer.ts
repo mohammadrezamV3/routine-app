@@ -11,7 +11,7 @@
 // اعتبارسنجی و محدودش می‌کنه (±۲ روز از الان).
 
 import { ModuleKey, Prisma, SubscriptionStatus } from "@prisma/client";
-import { ROUTINE_TRIAL_MS } from "./trial";
+import { LEGACY_ROUTINE_TRIAL_DAYS } from "./trial";
 import { prisma } from "./prisma";
 import { NAME_STYLE_SELECT, nameFlags } from "./nameStyle";
 import { FA_WEEKDAY, isoLocal } from "./jalali";
@@ -310,12 +310,12 @@ export async function buildSleep({ userId, date }: Ctx): Promise<DashSleep> {
     return v && typeof v.wake === "string" && typeof v.sleep === "string" && HHMM.test(v.wake) && HHMM.test(v.sleep) ? { wake: v.wake, sleep: v.sleep } : null;
   };
   const goalMin = goalFromTargets(readTimes(SETTING_KEYS.sleepGoal) ?? readTimes(SETTING_KEYS.wakeSleepTimes));
-  const byIso = new Map<string, { minutes: number; quality: number | null }>();
+  const byIso = new Map<string, { minutes: number; quality: number | null; sleptAt: string; wokeAt: string }>();
   for (const r of rows) {
     if (!r.sleptAt || !r.wokeAt) continue;
     const minutes = Math.round((r.wokeAt.getTime() - r.sleptAt.getTime()) / 60000);
     if (minutes < SLEEP_MIN_MIN || minutes > SLEEP_MAX_MIN) continue;
-    byIso.set(dbIso(r.date), { minutes, quality: r.quality });
+    byIso.set(dbIso(r.date), { minutes, quality: r.quality, sleptAt: r.sleptAt.toISOString(), wokeAt: r.wokeAt.toISOString() });
   }
   const week = Array.from({ length: 7 }, (_, i) => {
     const iso = isoAdd(from, i);
@@ -326,7 +326,7 @@ export async function buildSleep({ userId, date }: Ctx): Promise<DashSleep> {
   const last = lastIso ? byIso.get(lastIso)! : null;
   return {
     goalMin,
-    lastNight: lastIso && last ? { iso: lastIso, minutes: last.minutes, quality: last.quality } : null,
+    lastNight: lastIso && last ? { iso: lastIso, ...last } : null,
     week,
     avgMin: logged.length ? Math.round(logged.reduce((a, w) => a + w.minutes, 0) / logged.length) : null,
   };
@@ -484,7 +484,7 @@ export async function buildDashboard(userId: string, day: { date: string; tz: nu
   // «روتین من» در دوره‌ی رایگان: ردیف ROUTINE با انقضا و بدون هیچ اشتراک فعال
   const routineRow = user.moduleAccess.find((r) => r.module === ModuleKey.ROUTINE);
   const routineMsLeft = routineRow?.active && routineRow.expiresAt ? routineRow.expiresAt.getTime() - Date.now() : 0;
-  const routineTrial = !isSuperAdmin && !sub && routineMsLeft > 0 && routineMsLeft <= ROUTINE_TRIAL_MS
+  const routineTrial = !isSuperAdmin && !sub && routineMsLeft > 0 && routineMsLeft <= LEGACY_ROUTINE_TRIAL_DAYS * 86_400_000
     ? { daysLeft: Math.ceil(routineMsLeft / 86_400_000) }
     : null;
   return {

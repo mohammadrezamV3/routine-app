@@ -32,6 +32,7 @@ function sectionShortcuts(key: SectionKey): MetadataRoute.Manifest["shortcuts"] 
     ];
   }
   return [
+    { name: tr("داشبورد", "Dashboard"), url: "/dashboard" },
     { name: tr("برنامه‌ی روزانه", "Daily plan"), url: "/weekly" },
     { name: tr("خواب", "Sleep"), url: "/sleep" },
     { name: tr("رودمپ‌ها", "Roadmaps"), url: "/roadmaps" },

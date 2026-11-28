@@ -20,6 +20,50 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# ─── کنترل فضای دیسک ────────────────────────────────────────────────────
+# هر build یک ایمیج تازه می‌سازد و قبلی dangling می‌شود؛ cache بیلدکیت هم
+# رشد می‌کند. آستانه‌ها با env قابل تنظیم‌اند.
+DISK_WARN_PCT="${DISK_WARN_PCT:-80}"        # هشدار
+DISK_CRIT_PCT="${DISK_CRIT_PCT:-92}"        # پاکسازی اضطراری قبل از build
+PRUNE_KEEP_HOURS="${PRUNE_KEEP_HOURS:-168}" # جدیدتر از ۷ روز می‌ماند (برای rollback)
+
+disk_pct() {
+  local root
+  root="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || echo /)"
+  df -P "$root" 2>/dev/null | awk 'NR==2{gsub("%","",$5); print $5}'
+}
+
+disk_check() {
+  local pct
+  pct="$(disk_pct || true)"
+  [ -n "$pct" ] || return 0
+  if [ "$pct" -ge "$DISK_CRIT_PCT" ]; then
+    echo "✖ دیسک ${pct}٪ پر است (بحرانی). پاکسازی اضطراری ایمیج‌های بی‌صاحب و cache قدیمی..."
+    docker image prune -f >/dev/null 2>&1 || true
+    docker builder prune -f --filter "until=24h" >/dev/null 2>&1 || true
+    pct="$(disk_pct || true)"
+    echo "  بعد از پاکسازی: ${pct}٪"
+  elif [ "$pct" -ge "$DISK_WARN_PCT" ]; then
+    echo "⚠ هشدار: دیسک ${pct}٪ پر است. بعد از دیپلوی پاکسازی انجام می‌شود؛ اگر بالا ماند deploy/arionapp-runbook.md بخش «فضای دیسک» را ببین."
+  else
+    echo "دیسک: ${pct}٪ پر — مشکلی نیست."
+  fi
+}
+
+# پاکسازی امن بعد از دیپلوی موفق: فقط چیزهای بی‌صاحب و قدیمی. ولوم‌ها
+# (db_data و next_cache) و ایمیج‌های در حال استفاده هرگز لمس نمی‌شوند.
+post_deploy_cleanup() {
+  echo
+  echo "── پاکسازی امن (قدیمی‌تر از $((PRUNE_KEEP_HOURS / 24)) روز) ─────────────"
+  docker image prune -f --filter "until=${PRUNE_KEEP_HOURS}h" || true
+  docker builder prune -f --filter "until=${PRUNE_KEEP_HOURS}h" || true
+  docker container prune -f --filter "until=24h" || true
+  docker system df || true
+  disk_check || true
+}
+
+disk_check
+
 echo "── ۱/۵ گرفتنِ آخرین کد ────────────────────────────────"
 if [ "${SKIP_PULL:-0}" != "1" ]; then
   git pull --ff-only
@@ -46,6 +90,7 @@ for i in $(seq 1 30); do
   if [ "$status" = "healthy" ]; then
     echo "✔ اپ بالا آمد و healthy است."
     docker compose ps
+    post_deploy_cleanup
     exit 0
   fi
   sleep 3

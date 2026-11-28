@@ -8,6 +8,16 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-routine}
     volumes:
       - db_data:/var/lib/postgresql/data
+    # سقف WAL صریح، و فقط پرس‌وجوی کندتر از ۲ ثانیه لاگ می‌شود (نه همه).
+    # لاگ Postgres به stderr می‌رود و با json-file پایین سقف دارد.
+    command:
+      - postgres
+      - -c
+      - max_wal_size=1GB
+      - -c
+      - min_wal_size=80MB
+      - -c
+      - log_min_duration_statement=2000
     # چرخش لاگ. پیش‌فرض داکر (json-file بدون سقف) لاگ رو بی‌نهایت نگه
     # می‌داره؛ روی یه VPS کوچیک بعد از چند ماه دیسک پر می‌شه و اون‌وقت هم
     # Postgres نمی‌تونه بنویسه هم Next نمی‌تونه کش بسازه — از بیرون دقیقا
@@ -80,6 +90,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    # کش runtime نکست (تصاویر بهینه‌شده/ISR) روی ولوم، نه لایه‌ی کانتینر.
+    # اپ هیچ فایل کاربری روی دیسک نمی‌نویسد (اسکرین‌شات اکسپرت، آپلودها و
+    # خروجی‌ها در Postgres هستند) پس ولوم uploads لازم نیست. tmpfs در RAM است.
+    volumes:
+      - next_cache:/app/.next/cache
+    tmpfs:
+      - /tmp:size=256m
     ports:
       - "127.0.0.1:3000:3000"
 
@@ -111,6 +128,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
 
   # ری‌استارت خودکار کانتینر *هنگ‌کرده* — مکمل `restart: unless-stopped`
   # که فقط وقتی پروسه واقعا exit کنه عمل می‌کنه. اگه Node زنده بمونه ولی
@@ -141,3 +163,4 @@ services:
 
 volumes:
   db_data:
+  next_cache:

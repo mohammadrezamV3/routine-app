@@ -6,7 +6,9 @@ WORKDIR /app
 # response") روی musl کرش می‌کنه.
 RUN apk add --no-cache openssl
 COPY package.json package-lock.json* ./
-RUN npm ci
+# cache دانلودهای npm روی cache mount بیلدکیت می‌ماند (داخل لایه‌ی ایمیج نیست)
+# پس با تغییر package-lock دوباره همه‌چیز از اینترنت نمی‌آید.
+RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline --no-audit --no-fund
 
 # ─── مرحله ۲: build ───────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
@@ -30,13 +32,15 @@ ENV NEXT_PUBLIC_SECTION_BASE_DOMAIN=$NEXT_PUBLIC_SECTION_BASE_DOMAIN
 # اگه اون دامنه کلا در دسترس نبود، PRISMA_ENGINES_MIRROR رو در .env بذار.
 ARG PRISMA_ENGINES_MIRROR
 ENV CHECKPOINT_DISABLE=1
-RUN [ -n "$PRISMA_ENGINES_MIRROR" ] || unset PRISMA_ENGINES_MIRROR; \
+RUN --mount=type=cache,target=/root/.cache/prisma \
+    [ -n "$PRISMA_ENGINES_MIRROR" ] || unset PRISMA_ENGINES_MIRROR; \
     for i in 1 2 3 4 5 6; do \
       npx prisma generate && exit 0; \
       echo "prisma generate failed (attempt $i), retrying in $((i * 10))s..."; \
       sleep $((i * 10)); \
     done; exit 1
-RUN npm run build
+# cache وبپک نکست بین buildها می‌ماند (build سریع‌تر) ولی توی لایه‌ی ایمیج نمی‌افتد
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # ─── مرحله ۳: ایمیج نهایی اجرا (سبک، بدون devDependencies) ───────────────
 FROM node:20-alpine AS runner
@@ -57,6 +61,12 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # ورودیِ کلاستر (فورکِ چند worker از همین server.js) — جزوِ خروجیِ standalone
 # نکست نیست چون هیچ فایلی importش نمی‌کنه، پس جدا کپی می‌شه.
 COPY --from=builder /app/cluster.js ./cluster.js
+
+# کش runtime نکست (بهینه‌ساز تصویر و ISR) در .next/cache می‌نویسد. این پوشه
+# ولوم نام‌دار next_cache است (docker-compose.yml) تا روی لایه‌ی کانتینر
+# بی‌نهایت رشد نکند و با ری‌ساخت کانتینر هم گم نشود. مالکیت باید قبل از
+# اولین mount به nextjs داده شود (داکر مالکیت ایمیج را به ولوم تازه کپی می‌کند).
+RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next/cache
 
 USER nextjs
 EXPOSE 3000

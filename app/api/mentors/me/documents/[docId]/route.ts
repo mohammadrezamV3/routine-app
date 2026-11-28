@@ -50,7 +50,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   if (!doc) return notFound();
 
   const status =
-    doc.kind === "IDENTITY"
+    doc.kind === "IDENTITY" || doc.kind === "IDENTITY_SELFIE"
       ? doc.profile.identityStatus
       : (
           await prisma.mentorCredential.findUnique({
@@ -65,17 +65,19 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     // اگه آخرین فایل یک درخواست «در انتظار بررسی» حذف شد، چیزی برای بررسی
     // نمونده — وضعیت به «ارسال نشده» برمی‌گرده (ردشده دست نمی‌خوره تا دلیلش بمونه).
     if (status !== "PENDING") return;
+    const isIdentity = doc.kind === "IDENTITY" || doc.kind === "IDENTITY_SELFIE";
+    // هویت دومرحله‌ایه: با حذف آخرین فایل هر کدوم از دو مرحله، درخواست ناقص می‌شه و از صف برمی‌گرده
     const remaining = await tx.mentorDocument.count({
       where: { profileId: doc.profileId, kind: doc.kind, ...(doc.kind === "CERTIFICATE" ? { category: doc.category } : {}) },
     });
     if (remaining > 0) return;
-    if (doc.kind === "IDENTITY") {
+    if (isIdentity) {
       await tx.mentorProfile.update({ where: { id: doc.profileId }, data: { identityStatus: "NOT_PROVIDED" } });
     } else {
       await tx.mentorCredential.updateMany({ where: { profileId: doc.profileId, category: doc.category ?? "" }, data: { status: "NOT_PROVIDED" } });
     }
     await tx.mentorVerificationEvent.create({
-      data: { profileId: doc.profileId, kind: doc.kind, category: doc.category, fromStatus: "PENDING", toStatus: "NOT_PROVIDED", reason: "حذف مدرک توسط مربی", actorUserId: g.userId },
+      data: { profileId: doc.profileId, kind: doc.kind === "IDENTITY_SELFIE" ? "IDENTITY" : doc.kind, category: doc.category, fromStatus: "PENDING", toStatus: "NOT_PROVIDED", reason: "حذف مدرک توسط مربی", actorUserId: g.userId },
     });
   });
 

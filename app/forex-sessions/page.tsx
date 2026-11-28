@@ -125,7 +125,7 @@ export default function ForexSessionsPage() {
             `این صفحه سشن‌های معاملاتی، هم‌پوشانی‌ها و DST را توضیح می‌دهد.`,
           `${brand} shows the opening and closing times of the four main forex sessions in your local time, and calculates the London, New York and Sydney summer time changes for real, not with a fixed UTC number. This page explains the trading sessions, the overlaps and DST.`,
         )}
-        ctaNote={tr("3 روز آزمایشی رایگان", "3 days free trial")}
+        ctaNote={tr("7 روز آزمایشی رایگان", "7 days free trial")}
         sections={[
           {
             title: tr("چهار سشن اصلی بازار فارکس", "The four main forex sessions"),

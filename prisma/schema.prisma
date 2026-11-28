@@ -2186,6 +2186,7 @@ model MentorCredential {
 
 enum MentorDocumentKind {
   IDENTITY
+  IDENTITY_SELFIE // سلفی با کارت ملی در دست (مرحله‌ی دوم احراز هویت)
   CERTIFICATE
 }
 

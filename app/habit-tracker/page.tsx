@@ -80,8 +80,8 @@ function content() {
     {
       q: tr("آیا هبیت ترکر فارسی رایگان است؟", "Is the Persian habit tracker free?"),
       a: tr(
-        "پیگیری عادت در بخش «روتین من» است که برای هر حساب تازه 14 روز رایگان است و بعد برای ادامه به یک پلن پولی نیاز دارد. می‌توانی بدون پرداخت امتحانش کنی و تصمیم بگیری.",
-        "Habit tracking lives in the “My Routine” section, which is free for 14 days on every new account and needs a paid plan to continue after that. You can try it without paying and then decide.",
+        "پیگیری عادت در بخش «روتین من» است که برای هر حساب تازه 7 روز رایگان است و بعد برای ادامه به یک پلن پولی نیاز دارد. می‌توانی بدون پرداخت امتحانش کنی و تصمیم بگیری.",
+        "Habit tracking lives in the “My Routine” section, which is free for 7 days on every new account and needs a paid plan to continue after that. You can try it without paying and then decide.",
       ),
     },
   ];

@@ -7,9 +7,9 @@ import { BASIC_MODULES, isBasicModule } from "@/lib/modules";
 import { findPlanPricing } from "@/lib/planPricing";
 
 describe("trial constants", () => {
-  it("is three days", () => {
-    expect(TRIAL_DAYS).toBe(3);
-    expect(TRIAL_MS).toBe(3 * 24 * 60 * 60 * 1000);
+  it("is seven days", () => {
+    expect(TRIAL_DAYS).toBe(7);
+    expect(TRIAL_MS).toBe(7 * 24 * 60 * 60 * 1000);
   });
 
   it("covers only exercise, calorie and trade (no roadmap / AI insight)", () => {
@@ -40,19 +40,19 @@ describe("trial constants", () => {
 const createMany = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/prisma", () => ({ prisma: { moduleAccess: { createMany } } }));
 
-describe("basic modules: 14-day trial, then paid", () => {
+describe("basic modules: 7-day trial, then paid", () => {
   beforeEach(() => createMany.mockReset());
 
   it("never overlap with trial modules", () => {
     for (const m of TRIAL_MODULES) expect(isBasicModule(m)).toBe(false);
   });
 
-  it("routine trial is 14 days", () => {
-    expect(ROUTINE_TRIAL_DAYS).toBe(14);
-    expect(ROUTINE_TRIAL_MS).toBe(14 * 24 * 60 * 60 * 1000);
+  it("routine trial is 7 days", () => {
+    expect(ROUTINE_TRIAL_DAYS).toBe(7);
+    expect(ROUTINE_TRIAL_MS).toBe(7 * 24 * 60 * 60 * 1000);
   });
 
-  it("provisionTrialAccess gives basics now+14d and trial modules now+3d", async () => {
+  it("provisionTrialAccess gives basics now+7d and trial modules now+7d", async () => {
     const now = new Date("2026-01-01T00:00:00Z");
     await provisionTrialAccess("u1", now);
     const { data } = createMany.mock.calls[0][0];

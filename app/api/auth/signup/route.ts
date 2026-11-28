@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // پایه‌ها همیشه رایگان + دوره آزمایشی ۳روزه‌ی بدنسازی/کالری/ترید (lib/trialAccess.ts — همون
+  // پایه‌ها همیشه رایگان + دوره آزمایشی ۷ روزه‌ی بدنسازی/کالری/ترید (lib/trialAccess.ts — همون
   // تابعی که ورود اول با گوگل هم صدا می‌زنه)
   await provisionTrialAccess(user.id);
 

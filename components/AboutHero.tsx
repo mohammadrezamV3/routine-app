@@ -169,7 +169,7 @@ export function AboutHero({ section = null, hero = null }: { section?: SectionKe
           </div>
 
           <div className="ab-trust ab-rise" style={abRise(0.7, 0.9, 0)}>
-            <span><Sparkles size={14} /> {sa ? sa.hero.trust.free : tr("«روتین من» 14 روز رایگان", "My Routine free for 14 days")}</span>
+            <span><Sparkles size={14} /> {sa ? sa.hero.trust.free : tr("«روتین من» 7 روز رایگان", "My Routine free for 7 days")}</span>
             <span><ShieldCheck size={14} /> {sa ? sa.hero.trust.secure : tr("چت‌های سرتاسر رمزنگاری‌شده", "End-to-end encrypted chats")}</span>
             <span><Smartphone size={14} /> {sa ? sa.hero.trust.pwa : tr("نصب روی گوشی (PWA)", "Install on your phone (PWA)")}</span>
           </div>

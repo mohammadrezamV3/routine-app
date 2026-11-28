@@ -97,3 +97,10 @@
 /* دکمه‌ی چسبان پایین صفحه‌ی مربی: آخرین محتوا باید کامل بالاتر از اون اسکرول بشه */
 .ch-page:has(> .chpf-cta){ padding-block-end:calc(148px + env(safe-area-inset-bottom)); }
 .chpf-link{ padding-block:4px; }
+
+/* دسکتاپ (>=1024px) */
+@media (min-width:1024px){
+  .chd-grid{ grid-template-columns:repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap:14px; }
+  .ch-page:has(.chd-grid) .chp-search{ max-inline-size:640px; }
+  .chpf-cta > *{ max-inline-size:420px; }
+}

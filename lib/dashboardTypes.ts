@@ -102,7 +102,7 @@ export type DashSleep = {
   /** هدف خواب به دقیقه (از ساعت‌های هدف خود کاربر) */
   goalMin: number;
   /** آخرین شب ثبت‌شده در ۷ شب اخیر؛ null = چیزی ثبت نشده */
-  lastNight: { iso: string; minutes: number; quality: number | null } | null;
+  lastNight: { iso: string; minutes: number; quality: number | null; sleptAt: string; wokeAt: string } | null;
   /** ۷ شب اخیر تا امروز (قدیمی به جدید)؛ minutes = 0 یعنی ثبت نشده */
   week: { iso: string; minutes: number }[];
   /** میانگین شب‌های ثبت‌شده، یا null */
@@ -135,7 +135,7 @@ export type DashboardData = {
     /** Owner/ادمین (از دیتابیس) → نام بنفش سمی، بر طلایی مقدمه (lib/nameStyle.ts) */
     staff: boolean;
   };
-  /** «روتین من»: در دوره‌ی ۱۴ روزه‌ی رایگان → روزهای باقی‌مونده؛ null = خریده/سوپریوزر/تموم‌شده */
+  /** «روتین من»: در دوره‌ی 7 روزه‌ی رایگان → روزهای باقی‌مونده؛ null = خریده/سوپریوزر/تموم‌شده */
   routineTrial: { daysLeft: number } | null;
   plan: { name: string; key: string; status: "ACTIVE" | "TRIAL"; endsAt: string } | null;
   /** ماژول‌های فعال (سوپریوزر: همه) */

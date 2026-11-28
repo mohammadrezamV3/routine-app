@@ -19,6 +19,7 @@ const STATUSES: VerificationStatus[] = ["NOT_PROVIDED", "PENDING", "VERIFIED", "
 
 class Conflict extends Error {}
 class NoChange extends Error {}
+class Incomplete extends Error {}
 
 export async function POST(req: NextRequest, { params }: { params: { profileId: string } }) {
   const g = await requireAdmin("mentors");
@@ -62,6 +63,14 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
       let from: VerificationStatus;
       if (kind === "IDENTITY") {
         from = profile.identityStatus;
+        if (status === "VERIFIED") {
+          // تایید هویت فقط با هر دو فایل: مدرک شناسایی + سلفی با کارت ملی
+          const [hasId, hasSelfie] = await Promise.all([
+            tx.mentorDocument.count({ where: { profileId: profile.id, kind: "IDENTITY" } }),
+            tx.mentorDocument.count({ where: { profileId: profile.id, kind: "IDENTITY_SELFIE" } }),
+          ]);
+          if (hasId === 0 || hasSelfie === 0) throw new Incomplete();
+        }
         if (from === status && status !== "REJECTED") throw new NoChange();
         const r = await tx.mentorProfile.updateMany({
           where: { id: profile.id, identityStatus: from },
@@ -106,6 +115,7 @@ export async function POST(req: NextRequest, { params }: { params: { profileId: 
       return from;
     });
   } catch (e) {
+    if (e instanceof Incomplete) return NextResponse.json({ error: tr("برای تایید هویت، هم مدرک شناسایی و هم سلفی با کارت ملی لازمه", "Identity approval needs both the ID document and the selfie holding the ID card") }, { status: 400 });
     if (e instanceof NoChange) return NextResponse.json({ error: tr("وضعیت فعلی همین است؛ تغییری ثبت نشد", "This is already the current status; no change was saved") }, { status: 400 });
     if (e instanceof Conflict || (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) {
       return NextResponse.json({ error: tr("وضعیت در این فاصله تغییر کرده است؛ صفحه باید تازه شود", "The status changed in the meantime; the page needs to be refreshed") }, { status: 409 });

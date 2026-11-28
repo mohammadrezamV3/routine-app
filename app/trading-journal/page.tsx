@@ -61,8 +61,8 @@ function content() {
     {
       q: tr("آیا ژورنال ترید رایگان است؟", "Is the trading journal free?"),
       a: tr(
-        "بخش ترید جزو بخش‌های اشتراکی است. هر حساب تازه 3 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 14 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
-        "The trading section is a subscription section. Every new account gets 3 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 14 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
+        "بخش ترید جزو بخش‌های اشتراکی است. هر حساب تازه 7 روز دسترسی به بدنسازی، کالری‌شمار و ژورنال ترید، با استفاده‌ی محدود از هوش مصنوعی می‌گیرد. «روتین من» (روتین و کارهای روزانه) 7 روز رایگان است و بعد با پلن «روتین من» ({{routine_monthly}}) ادامه پیدا می‌کند.",
+        "The trading section is a subscription section. Every new account gets 7 days of access to workouts, the calorie counter and the trading journal, with limited use of AI. “My Routine” (routine and daily tasks) is free for 7 days and then continues with the “My Routine” plan ({{routine_monthly}}).",
       ),
     },
     {
@@ -125,7 +125,7 @@ export default async function TradingJournalPage() {
             `این صفحه توضیح می‌دهد ژورنال معاملاتی چیست و چه چیزی را باید ثبت کرد.`,
           `${brand} has a trading journal: you log each trade with its details and see your real performance: win rate, average R, a profit and loss calendar and more. This page explains what a trading journal is and what you should record.`,
         )}
-        ctaNote={tr("3 روز آزمایشی رایگان", "3 days free trial")}
+        ctaNote={tr("7 روز آزمایشی رایگان", "7 days free trial")}
         sections={[
           {
             title: tr("ژورنال معاملاتی به چه دردی می‌خورد؟", "What is a trading journal good for?"),

@@ -40,7 +40,7 @@ export function MedicationForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [timesPerDay, setTimesPerDay] = useState(String(initial?.timesPerDay ?? 3));
   const [firstDoseTime, setFirstDoseTime] = useState(initial?.firstDoseTime ?? "08:00");
-  const [durationDays, setDurationDays] = useState(String(initial?.durationDays ?? 7));
+  const [durationDays, setDurationDays] = useState(initial?.durationDays ? String(initial.durationDays) : "");
   const [note, setNote] = useState(initial?.note ?? "");
   const [startJalali, setStartJalali] = useState<JalaliDate>(() =>
     initial ? isoToJalali(initial.startDate) : toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate())
@@ -67,7 +67,7 @@ export function MedicationForm({
     timesPerDay: Number(timesPerDay) || 1,
     firstDoseTime: toEnDigits(firstDoseTime) || "08:00",
     startDate: isoLocal(now),
-    durationDays: Number(durationDays) || 1,
+    ...(Number(durationDays) >= 1 ? { durationDays: Number(durationDays) } : {}),
   };
   const doseTimes = doseMinutesOfDay(previewMed).map(minutesToDoseTime);
   const intervalHours = doseIntervalHours(previewMed);
@@ -87,8 +87,9 @@ export function MedicationForm({
     const time = toEnDigits(firstDoseTime).trim();
     if (!/^\d{1,2}:\d{2}$/.test(time)) { setTimeError(tr("ساعت اولین نوبت رو کامل وارد کن", "Enter the full time of the first dose")); return; }
 
-    const days = Number(durationDays);
-    if (!Number.isFinite(days) || days < 1 || days > MAX_DURATION_DAYS) {
+    // دوره اختیاریه: خالی = بدون دوره (ادامه‌دار تا وقتی خودت متوقفش کنی)
+    const days = durationDays.trim() === "" ? null : Number(durationDays);
+    if (days !== null && (!Number.isFinite(days) || days < 1 || days > MAX_DURATION_DAYS)) {
       setDurationError(tr(`طول دوره باید بین 1 تا ${MAX_DURATION_DAYS} روز باشه`, `Course length must be between 1 and ${MAX_DURATION_DAYS} days`));
       return;
     }
@@ -108,7 +109,7 @@ export function MedicationForm({
         timesPerDay: Math.round(times),
         firstDoseTime: time,
         startDate,
-        durationDays: Math.round(days),
+        ...(days !== null ? { durationDays: Math.round(days) } : {}),
         notify: initial?.notify ?? true,
         ...(note.trim() ? { note: note.trim() } : {}),
       });
@@ -157,20 +158,20 @@ export function MedicationForm({
               {timeError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{timeError}</div>}
             </div>
             <div className="time-field">
-              <span className="time-field-label">{tr("طول دوره (روز)", "Course length (days)")}</span>
+              <span className="time-field-label">{tr("طول دوره (اختیاری)", "Course length (optional)")}</span>
               <NumberInput
                 className="wsearch-add-time"
                 limit="medicationDays"
                 value={durationDays}
                 onChange={(v) => { setDurationDays(v); setDurationError(null); }}
-                placeholder="7"
+                placeholder={tr("ادامه‌دار", "Ongoing")}
               />
               {durationError && <div className="field-error-msg" style={{ display: "block", marginTop: 4 }}>{durationError}</div>}
             </div>
           </div>
 
           <div className="time-field" style={{ marginTop: 14 }}>
-            <span className="time-field-label">{tr("تاریخ شروع دوره", "Course start date")}</span>
+            <span className="time-field-label">{tr("تاریخ شروع", "Start date")}</span>
             <button type="button" className="jdate-btn" onClick={() => setPickerOpen(true)}>
               {formatJalali(startJalali)}
             </button>
@@ -208,7 +209,7 @@ export function MedicationForm({
       {pickerOpen && (
         <JalaliDatePicker
           initial={startJalali}
-          title={tr("تاریخ شروع دوره", "Course start date")}
+          title={tr("تاریخ شروع", "Start date")}
           onClose={() => setPickerOpen(false)}
           onPick={(d) => { setStartJalali(d); setPickerOpen(false); }}
         />

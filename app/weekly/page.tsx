@@ -91,7 +91,7 @@ function isTaskNotStarted(iso: string, time: string): boolean {
 
 type Occ = { dayName: string; jsDay: number; time: string; id: string; custom?: boolean; importance?: Importance; tag?: string };
 
-// «روتین من» بعد از ۱۴ روز آزمایشی پلن می‌خواد — ModuleGate فقط UI ـه، نوشتن‌ها
+// «روتین من» بعد از 7 روز آزمایشی پلن می‌خواد — ModuleGate فقط UI ـه، نوشتن‌ها
 // سمت سرور هم با requireModule(ROUTINE) بسته‌ان (tasks/daily، settings).
 export default function WeeklyPage() {
   return (

@@ -70,7 +70,7 @@ export const TRADING_POSTS_EN: Record<string, BlogPostEn> = {
         "Judging by a single trade. Patterns only appear across a set of trades, not in one win or one loss.",
       ] },
       { type: "h2", text: "Trading journal in Arion" },
-      { type: "p", text: "Arion has all the fields above and calculates the statistics itself: profit and loss, win rate, average win and loss, average R, profit factor, streaks, maximum drawdown, and a monthly profit and loss calendar. The entry checklist is also saved at the moment a trade is recorded, so you can later see which trades were opened with a complete checklist and which were not. The trading module comes with a 3-day trial period for new accounts." },
+      { type: "p", text: "Arion has all the fields above and calculates the statistics itself: profit and loss, win rate, average win and loss, average R, profit factor, streaks, maximum drawdown, and a monthly profit and loss calendar. The entry checklist is also saved at the moment a trade is recorded, so you can later see which trades were opened with a complete checklist and which were not. The trading module comes with a 7-day trial period for new accounts." },
       { type: "cta", text: "See Arion’s trading journal and how it records and analyzes your trades.", href: "/trading-journal", label: "Arion trading journal" },
       { type: "p", text: "If you still choose your trade size by feel, it is worth calculating size from your risk before you start a journal. The free lot size calculator helps with this step." },
       { type: "cta", text: "Calculate your lot size from your risk percentage and the distance to your stop loss.", href: "/tools/lot-size-calculator", label: "Lot size calculator" },

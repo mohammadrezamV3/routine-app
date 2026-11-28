@@ -12,7 +12,7 @@ export function generateMetadata(): Metadata {
       `Online daily planner with a Jalali calendar | Planning app | ${brand}`,
     ),
     description: tr(
-      `اپ برنامه ریزی روزانه فارسی: کارهای امروز، کارهای بدون ساعت و یادآوری را در یک صفحه و با تقویم شمسی بچین؛ برنامه هفتگی هم همان‌جاست. 14 روز رایگان.`,
+      `اپ برنامه ریزی روزانه فارسی: کارهای امروز، کارهای بدون ساعت و یادآوری را در یک صفحه و با تقویم شمسی بچین؛ برنامه هفتگی هم همان‌جاست. 7 روز رایگان.`,
       `A Persian daily planning app: arrange today's tasks, tasks without a time and reminders on one page with a Jalali calendar. Your weekly plan lives there too.`,
     ),
     path: "/daily-planner",
@@ -77,8 +77,8 @@ function content() {
     {
       q: tr("برنامه ریزی روزانه رایگان در اپ ممکن است؟", "Can I plan my day for free in the app?"),
       a: tr(
-        "هر حساب تازه 14 روز دوره‌ی آزمایشی رایگان «روتین من» دارد که برنامه‌ی روزانه و هفتگی را هم شامل می‌شود. بعد از آن برای ادامه یک پلن پولی لازم است؛ خواندن تاریخچه‌ی قبلی رایگان می‌ماند.",
-        "Every new account gets a free 14-day trial of “My Routine”, which includes the daily and weekly plan. After that a paid plan is needed to continue; reading your earlier history stays free.",
+        "هر حساب تازه 7 روز دوره‌ی آزمایشی رایگان «روتین من» دارد که برنامه‌ی روزانه و هفتگی را هم شامل می‌شود. بعد از آن برای ادامه یک پلن پولی لازم است؛ خواندن تاریخچه‌ی قبلی رایگان می‌ماند.",
+        "Every new account gets a free 7-day trial of “My Routine”, which includes the daily and weekly plan. After that a paid plan is needed to continue; reading your earlier history stays free.",
       ),
     },
   ];

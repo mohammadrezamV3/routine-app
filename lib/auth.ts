@@ -15,7 +15,7 @@ import { getAdminFlags } from "@/lib/adminFlag";
 import { sessionCookieDomain } from "@/lib/authCookies";
 
 // موقع ورود با گوگل، اگه کاربر جدید بود، دقیقا همون تدارک ثبت‌نام معمولی
-// (پایه‌ی همیشه‌رایگان + دوره آزمایشی ۳روزه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
+// (پایه‌ی همیشه‌رایگان + دوره آزمایشی ۷ روزه + کد رفرال) رو براش انجام می‌دیم — تا تجربه‌ی
 // کاربر جدید مستقل از روش ورودش یکسان باشه.
 async function provisionNewUser(userId: string) {
   await provisionTrialAccess(userId);

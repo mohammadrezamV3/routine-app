@@ -22,7 +22,7 @@ const PLANS: {
     nameEn: "My Routine",
     market: Market.IRAN,
     currency: Currency.IRR,
-    priceMonthly: 990_000, // ۹۹,۰۰۰ تومان — بعد از ۱۴ روز آزمایشی (migration 20260930120000_routine_paid_trial)
+    priceMonthly: 990_000, // ۹۹,۰۰۰ تومان — بعد از 7 روز آزمایشی (migration 20260930120000_routine_paid_trial)
     // رودمپ فقط در «روتین من» و مکس (migration 20261024120000_roadmap_plans_routine_max)
     modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.ROADMAP],
   },
@@ -43,7 +43,8 @@ const PLANS: {
     market: Market.IRAN,
     currency: Currency.IRR,
     priceMonthly: 1_750_000, // ۱۷۵,۰۰۰ تومان (migration 20260928150000_trade_plan_price_175k)
-    modules: [ModuleKey.ROUTINE, ModuleKey.SLEEP, ModuleKey.TASKS, ModuleKey.TRADE],
+    // خواب فقط در روتین من، Gym و Max؛ نه Trader (migration 20261127120000_sleep_not_in_trader)
+    modules: [ModuleKey.ROUTINE, ModuleKey.TASKS, ModuleKey.TRADE],
   },
   {
     key: "max",

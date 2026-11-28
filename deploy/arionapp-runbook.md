@@ -133,3 +133,40 @@ crontab -e
 ```bash
 cd /opt/routine-app && bash deploy/update.sh
 ```
+
+## فضای دیسک (جلوگیری از پر شدن بی‌دلیل)
+
+چیزهایی که روی سرور رشد می‌کنند و کنترل هر کدام:
+
+| منبع | کنترل |
+|---|---|
+| ایمیج‌های بی‌صاحب هر build | `update.sh` بعد از دیپلوی موفق ایمیج‌های بی‌صاحب قدیمی‌تر از ۷ روز را پاک می‌کند (ایمیج قبلی برای rollback می‌ماند) |
+| cache بیلدکیت | همان پاکسازی (`docker builder prune` با فیلتر ۷ روز)؛ cache دانلود npm و Prisma و webpack عمدا نگه داشته می‌شود تا build دوباره همه‌چیز را از اینترنت نگیرد |
+| کانتینرهای متوقف | `docker container prune` با فیلتر ۲۴ ساعت |
+| لاگ کانتینرها | همه‌ی سرویس‌ها (db، app، migrate، autoheal) json-file با سقف دارند |
+| کش runtime نکست (`.next/cache`) | ولوم نام‌دار `next_cache`، روی لایه‌ی کانتینر نمی‌نویسد |
+| آپلود، اسکرین‌شات، خروجی | اپ فایل روی دیسک نمی‌نویسد و همه‌چیز در Postgres است. `/tmp` کانتینر tmpfs (RAM) و ۲۵۶ مگ است |
+| WAL و لاگ Postgres | `max_wal_size=1GB`، فقط پرس‌وجوی کندتر از ۲ ثانیه لاگ می‌شود، لاگ هم سقف دارد |
+| journald سرور | سقف ۲۰۰ مگ (دستور در `deploy/cron.example`) |
+
+**هشدار دیسک:** `update.sh` اول کار و بعد از دیپلوی درصد پر بودن را چاپ می‌کند؛ از ۸۰٪ هشدار و از ۹۲٪ قبل از build پاکسازی اضطراری می‌کند. آستانه‌ها: `DISK_WARN_PCT`، `DISK_CRIT_PCT` و `PRUNE_KEEP_HOURS`. کرون هفتگی پاکسازی و هشدار ۸۵٪ در `deploy/cron.example` است.
+
+**بررسی دستی:**
+
+```bash
+df -h /
+docker system df
+sudo du -sh /var/lib/docker/containers/*/ | sort -h | tail
+```
+
+**پاکسازی دستی امن** (هیچ‌کدام ولوم داده را پاک نمی‌کند):
+
+```bash
+docker image prune -f --filter "until=168h"
+docker builder prune -f --filter "until=168h"
+docker container prune -f --filter "until=24h"
+```
+
+هرگز `docker volume prune`، `docker system prune --volumes` یا `docker compose down -v` را نزن: ولوم `db_data` دیتابیس است.
+
+**نکته:** بار اول بعد از این تغییر، `update.sh` کانتینر db را هم با تنظیمات WAL دوباره می‌سازد (چند ثانیه قطعی؛ داده سالم می‌ماند).

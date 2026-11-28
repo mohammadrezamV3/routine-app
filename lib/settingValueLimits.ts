@@ -57,8 +57,20 @@ export function validateSettingNumbers(key: string, value: unknown): SettingChec
         if (!isPlainObject(m)) return BAD();
         const t = numField(m, "timesPerDay", "medicationTimes");
         if (t) return { ok: false, error: t };
+        // دوره اختیاریه: نبودن/null = بدون دوره (ادامه‌دار)
+        if (m.durationDays === null) delete m.durationDays;
         const d = numField(m, "durationDays", "medicationDays");
         if (d) return { ok: false, error: d };
+      }
+      return { ok: true, value };
+    }
+    case "medicationDoses": {
+      // { "YYYY-MM-DD": ["medId@HH:MM", ...] } — فقط روزهای اخیر، رشته‌های کوتاه
+      if (value === null || value === undefined) return { ok: true, value: {} };
+      if (!isPlainObject(value) || Object.keys(value).length > 60) return BAD();
+      for (const [d, list] of Object.entries(value)) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !Array.isArray(list) || list.length > 400) return BAD();
+        if (list.some((k) => typeof k !== "string" || k.length > 60)) return BAD();
       }
       return { ok: true, value };
     }

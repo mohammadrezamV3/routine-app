@@ -153,7 +153,7 @@ export function LandingStats({ section = null }: SecProp) {
 /* ───────────────────────── 2) How it works ───────────────────────── */
 
 const steps = () => [
-  { icon: UserPlus, title: tr("برنامه‌ات را بساز", "Build your plan"), body: tr("ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 14 روز رایگان است.", "Sign up and lay out your routine, or tell Nomo what you want. My Routine is free for 14 days.") },
+  { icon: UserPlus, title: tr("برنامه‌ات را بساز", "Build your plan"), body: tr("ثبت‌نام کن و روتینت را بچین؛ یا به «نومو» بگو چه می‌خواهی. «روتین من» 7 روز رایگان است.", "Sign up and lay out your routine, or tell Nomo what you want. My Routine is free for 7 days.") },
   { icon: LayoutGrid, title: tr("اجرا کن", "Do it"), body: tr("کارهای امروزت را انجام بده و همان لحظه تیک بزن.", "Do today's tasks and tick them off the moment you finish.") },
   { icon: CalendarCheck, title: tr("پیشرفتت را ببین", "See your progress"), body: tr("استریک، تاریخچه و آنالیز هفتگی نشان می‌دهند مسیرت چطور پیش می‌رود.", "Your streak, history and weekly review show how your journey is going.") },
 ];
@@ -716,7 +716,7 @@ export function LandingFinalCTA({ section = null }: SecProp) {
         <span className="ls-cta-glow" aria-hidden="true" />
         <span className="ls-cta-glow ls-cta-glow-2" aria-hidden="true" />
         <div className="ls-cta-in">
-          <span className="ls-cta-chip"><Sparkles size={14} /> {copy ? copy.ctaChip : tr("14 روز رایگان", "14 days free")}</span>
+          <span className="ls-cta-chip"><Sparkles size={14} /> {copy ? copy.ctaChip : tr("7 روز رایگان", "7 days free")}</span>
           <h2 className="ls-cta-title">{tr("شروعش کن.", "Get started.")}</h2>
           <p className="ls-cta-sub">{copy ? copy.ctaSub : tr("مسیرت را مشخص کن، برنامه‌ات را بساز و از امروز اجرا کن.", "Set your direction, build your plan and start today.")}</p>
           <div className="ls-cta-actions">

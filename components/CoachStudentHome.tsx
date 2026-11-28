@@ -6,6 +6,7 @@ import "./coach.css";
 import "./coach-space.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import dynamic from "next/dynamic";
 import { ChevronDown, ChevronLeft, Search, Users } from "lucide-react";
 import { useLiveRefresh, useVisiblePolling } from "@/lib/liveSync";
 import type { CoachSpace as CoachSpaceData } from "@/lib/coachTypes";
@@ -32,6 +33,9 @@ import { useSection } from "./SectionProvider";
 import { SmartLink } from "./SmartLink";
 import { TickButton } from "./TickButton";
 import { LoadingBlock, Spinner } from "./Spinner";
+import { CoachAccessRow } from "./CoachSpaceSide";
+
+const MineSheet = dynamic(() => import("./CoachSpaceSheets").then((m) => m.CoachMineSheet), { ssr: false });
 
 export function CoachStudentHome() {
   const { status } = useSession();
@@ -123,8 +127,8 @@ function Home() {
   }
 
   const header = <CoachHeader title={tr("مربی من", "My mentor")} />;
-  if (error) return <div className="ch-page cs-page">{header}<MentorErrorState message={error} onRetry={load} /></div>;
-  if (!rows) return <div className="ch-page cs-page">{header}<LoadingBlock /></div>;
+  if (error) return <div className="ch-page cs-page cs-home">{header}<MentorErrorState message={error} onRetry={load} /></div>;
+  if (!rows) return <div className="ch-page cs-page cs-home">{header}<LoadingBlock /></div>;
 
   const busy = (key: string) => pendingKey === key;
   const rowError = (id: string) => (actionFor === id && actionError && !confirmCancel ? <p className="cs-card-error" role="alert">{actionError}</p> : null);
@@ -139,7 +143,7 @@ function Home() {
   const none = active.length === 0 && invites.length === 0 && outgoing.length === 0 && past.length === 0;
 
   return (
-    <div className="ch-page cs-page">
+    <div className="ch-page cs-page cs-home">
       <span className="ch-halo" aria-hidden="true" />
       {header}
 
@@ -173,7 +177,7 @@ function Home() {
       {active.length === 1 && <SingleCoach row={active[0]} space={spaces[active[0].id]} line={roleLine(active[0], spaces[active[0].id])} nameNode={nameOf(active[0])} />}
 
       {active.length > 1 && (
-        <ul className="ch-list" aria-label={tr("مربی‌های من", "My mentors")}>
+        <ul className="ch-list cs-coach-grid" aria-label={tr("مربی‌های من", "My mentors")}>
           {active.map((r) => {
             const sp = spaces[r.id];
             const tasks = sp?.todayTasks ?? null;
@@ -285,8 +289,10 @@ function SingleCoach({ row, space, line, nameNode }: { row: MentorshipRow; space
   const goal = space?.goal && space.goal.status !== "ENDED" ? space.goal : null;
   const pending = space?.pendingProgram ?? null;
   const spaceHref = `/mentorship/${row.id}`;
+  const [accessOpen, setAccessOpen] = useState(false);
   return (
-    <>
+    <div className="cs-home-cols">
+      <div className="cs-home-a">
       <section className="ch-card ch-card-lg cs-coach-card" aria-label={tr("مربی من", "My mentor")}>
         <CoachAvatar user={row.counterpart} size={64} />
         <div className="cs-coach-body">
@@ -307,6 +313,8 @@ function SingleCoach({ row, space, line, nameNode }: { row: MentorshipRow; space
         </SmartLink>
       )}
 
+      </div>
+      <div className="cs-home-b">
       {tasks && tasks.length > 0 && (
         <section className="ch-card cs-side-card" aria-label={tr("امروز", "Today")}>
           <h2 className="ch-section-title">{tr("امروز", "Today")}</h2>
@@ -324,10 +332,12 @@ function SingleCoach({ row, space, line, nameNode }: { row: MentorshipRow; space
         </section>
       )}
 
+      <CoachAccessRow onPress={() => setAccessOpen(true)} sub={space?.privacy ? (space.privacy.shareSleep ? tr("خواب دیده می‌شه", "Sleep is visible") : tr("خواب خصوصیه", "Sleep is private")) : undefined} />
       <div className="cs-home-actions">
-        <SmartLink href={`/account/general/mentors?mentorship=${encodeURIComponent(row.id)}`} className="btn btn-ghost">{tr(`${firstName} چی می‌بینه؟`, `What can ${firstName} see?`)}</SmartLink>
         <SmartLink href={spaceHref} className="btn btn-primary">{tr(`پیام به ${firstName}`, `Message ${firstName}`)}</SmartLink>
       </div>
-    </>
+      </div>
+      {accessOpen && <MineSheet open onClose={() => setAccessOpen(false)} mentorshipId={row.id} mentorName={firstName} active onSleepChanged={() => undefined} />}
+    </div>
   );
 }

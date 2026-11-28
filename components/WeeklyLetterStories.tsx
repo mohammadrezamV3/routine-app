@@ -28,7 +28,7 @@ import { INSIGHT_ICONS, moodLabels } from "./WeeklyLetterStory";
 import { WeeklyMoodStarsStatic } from "./WeeklyMoodStars";
 import { WeeklyMedalBadge } from "./WeeklyMedalBadge";
 import { ARCH_ICONS, BrandMark } from "./WeeklyLetterCover";
-import { archetypeMeaning, goalCtaHref, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
+import { archetypeMeaning, weekCtaHref, type StorySlide } from "./WeeklyLetterStoriesData";
 import { jalaliDayMonth, letterYear, offsetOfWeek, scoreIntensity, smoothPath } from "./WeeklyLetterUtils";
 import { TradeSlideView } from "./WeeklyLetterTradeStories";
 import { FitSlideView } from "./WeeklyLetterFitStories";
@@ -570,7 +570,6 @@ function SummarySlide({ s, weekStart, onReplay }: { s: Extract<StorySlide, { id:
         {s.focus.target !== null && <span className="wl-st-next-t" dir="ltr">{Math.round(s.focus.target)}</span>}
       </SItem>
       <SItem className="wl-st-cta">
-        <Link href={goalCtaHref(s.focus)} className="trade-primary-btn wl-cta-btn"><Target size={16} />{tr("تعیین هدف", "Set a goal")}</Link>
         <Link href={weekCtaHref(weekStart)} className="account-outline-btn wl-cta-btn">{tr("آنالیز کامل این هفته", "Full analysis of this week")}</Link>
         <button type="button" className="trade-ghost-btn wl-st-replay" onClick={onReplay}><RotateCcw size={14} />{tr("پخش دوباره", "Replay")}</button>
       </SItem>

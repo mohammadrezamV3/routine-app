@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 import { useMenuPresence } from "@/lib/useMenuPresence";
 import { DashCard } from "./DashCard";
 import { isoLocal } from "@/lib/jalali";
-import { getNotificationPermission, requestNotificationPermission } from "@/lib/notifications";
 import {
-  Medication, MAX_MEDICATIONS, doseIntervalHours, doseMinutesOfDay, getMedications,
-  medicationDaysLeft, minutesToDoseTime, setMedications, setMedicationsChecked,
+  Medication, MAX_MEDICATIONS, doseIntervalHours, doseMinutesOfDay,
+  medicationDaysLeft, minutesToDoseTime,
 } from "@/lib/medications";
+import { useMedications } from "@/lib/useMedications";
 import { tr, isEn, iso } from "@/lib/i18n";
 import dynamic from "next/dynamic";
 // تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
@@ -31,7 +31,7 @@ function intervalLabel(med: Medication): string {
 // اسم هر دارو، ویرایش/حذف رو می‌ده. کل این کارت از «تنظیمات» قابل
 // خاموش‌شدنه (dashboardPrefs.showMedications).
 export function DashMedicationCard({ delay }: { delay?: number }) {
-  const [meds, setMeds] = useState<Medication[] | null>(null);
+  const { meds, saveMedication, removeMedication: removeMed, toggleNotify } = useMedications();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Medication | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -39,8 +39,6 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
   const menuRef = useRef<HTMLDivElement>(null);
   // خروج نرم منو (حرکت مشترک menu-motion)
   const menuPresence = useMenuPresence(!!menuFor);
-
-  useEffect(() => { getMedications().then(setMeds); }, []);
 
   useEffect(() => {
     if (!menuFor) return;
@@ -52,34 +50,9 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [menuFor]);
 
-  async function persist(next: Medication[]) {
-    setMeds(next);
-    await setMedications(next);
-  }
-
-  // طبق درخواست صریح: اگر ذخیره واقعا شکست بخورد (شبکه/سرور)، فرم باید
-  // بفهمد — قبلا setMedications هر خطایی را بی‌صدا می‌بلعید و فرم همیشه
-  // «ثبت شد» نشان می‌داد، حتی وقتی چیزی ذخیره نشده بود.
-  async function saveMedication(med: Medication) {
-    const current = meds ?? [];
-    const exists = current.some((m) => m.id === med.id);
-    const next = exists ? current.map((m) => (m.id === med.id ? med : m)) : [...current, med];
-    const result = await setMedicationsChecked(next);
-    if (!result.ok) throw new Error(result.error);
-    setMeds(next);
-    // بدون اجازه‌ی نوتیف مرورگر، این یادآوری‌ها هیچ‌وقت دیده نمی‌شن
-    if (getNotificationPermission() !== "granted") await requestNotificationPermission();
-  }
-
   async function removeMedication(id: string) {
     setMenuFor(null);
-    await persist((meds ?? []).filter((m) => m.id !== id));
-  }
-
-  async function toggleNotify(med: Medication) {
-    const next = med.notify === false;
-    if (next && getNotificationPermission() !== "granted") await requestNotificationPermission();
-    await persist((meds ?? []).map((m) => (m.id === med.id ? { ...m, notify: next } : m)));
+    await removeMed(id);
   }
 
   function openMenu(e: React.MouseEvent, id: string) {
@@ -123,6 +96,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
             list.map((m) => {
               const daysLeft = medicationDaysLeft(m, todayIso);
               const finished = daysLeft === 0;
+              const ongoing = daysLeft === null;
               const times = doseMinutesOfDay(m).map(minutesToDoseTime);
               const notifyOn = m.notify !== false;
               return (
@@ -153,7 +127,7 @@ export function DashMedicationCard({ delay }: { delay?: number }) {
                     <div className="mt-1 truncate text-[9.5px] text-dash-muted sm:text-[11px]">
                       <span className="mono" dir="ltr">{times.join(" · ")}</span>
                       <span className="mx-1.5">·</span>
-                      {finished ? tr("دوره تموم شده", "Course finished") : tr(`${daysLeft} روز مونده`, `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`)}
+                      {ongoing ? tr("ادامه‌دار", "Ongoing") : finished ? tr("دوره تموم شده", "Course finished") : tr(`${daysLeft} روز مونده`, `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`)}
                     </div>
                     {m.note && <div className="mt-0.5 truncate text-[9.5px] text-dash-muted sm:text-[10.5px]">{m.note}</div>}
                   </div>

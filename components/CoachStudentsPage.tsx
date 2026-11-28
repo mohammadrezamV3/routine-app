@@ -11,6 +11,7 @@ import { SegmentedTabs } from "./SegmentedTabs";
 import { CoachPanelShell } from "./CoachPanelShell";
 import { CoachAvatar } from "./CoachAvatar";
 import { CoachEmpty } from "./CoachEmpty";
+import { CoachStatRow } from "./CoachStatRow";
 import { CoachSheet } from "./CoachSheet";
 import { MentorDashError, mentorApi } from "./MentorDashKit";
 import { MentorWaitlistSection } from "./MentorWaitlistSection";
@@ -103,7 +104,15 @@ export function CoachStudentsPage() {
     body = (
       <>
         {rows.length > 0 && (
-          <div className="ch-stack">
+          <CoachStatRow className="chp-desk-only chp-students-stats" stats={[
+            { value: rows.length, label: tr("شاگرد", "Students") },
+            { value: rows.filter((r) => r.needsHelp).length, label: tr("کمک لازم", "Needs help"), tone: "warn" },
+            { value: rows.filter((r) => r.nearGoal).length, label: tr("نزدیک هدف", "Near goal"), tone: "ok" },
+            { value: rows.reduce((n, r) => n + (r.unread > 0 ? 1 : 0), 0), label: tr("پیام تازه", "New messages"), tone: "accent" },
+          ]} />
+        )}
+        {rows.length > 0 && (
+          <div className="ch-stack chp-toolbar">
             <div className="chp-search">
               <input
                 type="search" className="wsearch-newform-name trade-glass-field" value={q} onChange={(e) => setQ(e.target.value)}
@@ -129,7 +138,7 @@ export function CoachStudentsPage() {
         ) : shown.length === 0 ? (
           <CoachEmpty text={tr("کسی با این فیلتر پیدا نشد", "Nobody matches this filter")} />
         ) : (
-          <ul className="ch-list">
+          <ul className="ch-list chp-students-grid">
             {shown.map((r) => {
               const st = studentStatusText({ rate: r.weekRate == null ? null : r.weekRate / 100, idleDays: r.idleDays, paused: r.paused });
               const goalLine = r.goal ? tr(`${r.goal.weeksLeft} هفته تا هدف`, `${r.goal.weeksLeft} ${r.goal.weeksLeft === 1 ? "week" : "weeks"} to goal`) : null;
