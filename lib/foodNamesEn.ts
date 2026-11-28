@@ -1,8 +1,9 @@
 // نام انگلیسی غذاهای کاتالوگ داخلی (lib/foodSeed.ts) — فقط برای نمایش و جستجو.
 // کلید = همون نام فارسی؛ نام فارسی ذخیره‌شده در ثبت‌های کاربر (customName) عوض نمی‌شه.
 import { isEn } from "./i18n";
+import { CATALOG_ITEMS } from "./foodCatalog";
 
-export const FOOD_NAME_EN: Record<string, string> = {
+const LEGACY_FOOD_NAME_EN: Record<string, string> = {
   "برنج پخته": "Cooked rice",
   "برنج قهوه‌ای پخته": "Cooked brown rice",
   "نان لواش": "Lavash bread",
@@ -269,22 +270,28 @@ export const FOOD_NAME_EN: Record<string, string> = {
   "کیک اسفنجی خانگی": "Homemade sponge cake",
 };
 
+/** نام انگلیسی همه‌ی آیتم‌ها: آیتم‌های قدیمی + کاتالوگ بزرگ (lib/foodCatalog). */
+export const FOOD_NAME_EN: Record<string, string> = {
+  ...Object.fromEntries(CATALOG_ITEMS.map((c) => [c.name, c.nameEn])),
+  ...LEGACY_FOOD_NAME_EN,
+};
+
 /** نام غذا برای نمایش: در انگلیسی نام انگلیسی کاتالوگ (اگه بود)، وگرنه همون نام ذخیره‌شده. */
 export function foodNameDisplay(nameFa: string, nameEn?: string | null): string {
   if (!isEn()) return nameFa;
   return nameEn || FOOD_NAME_EN[nameFa] || nameFa;
 }
 
-/** جستجوی انگلیسی در نام غذاها (سمت کلاینت)؛ خروجی نام‌های فارسی کلید. */
+/** جستجوی انگلیسی در نام غذاها (سمت کلاینت)؛ خروجی نام‌های فارسی کلید، شروع‌شونده‌ها اول. */
 export function searchFoodNamesEn(query: string, limit = 10): string[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  const out: string[] = [];
+  const starts: string[] = [];
+  const rest: string[] = [];
   for (const fa of Object.keys(FOOD_NAME_EN)) {
-    if (FOOD_NAME_EN[fa].toLowerCase().includes(q)) {
-      out.push(fa);
-      if (out.length >= limit) break;
-    }
+    const en = FOOD_NAME_EN[fa].toLowerCase();
+    if (en.startsWith(q)) starts.push(fa);
+    else if (en.includes(q)) rest.push(fa);
   }
-  return out;
+  return [...starts, ...rest].slice(0, limit);
 }

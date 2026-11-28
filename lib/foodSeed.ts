@@ -1,4 +1,14 @@
-export type FoodSeedItem = { name: string; caloriesPer100g: number };
+import { normalizeFa } from "./mentorSearch";
+import { CATALOG_ITEMS, LEGACY_ALIASES } from "./foodCatalog";
+
+// ماکروها اختیاری‌ان: آیتم‌های قدیمی فقط کالری دارن؛ آیتم‌های کاتالوگ جدید پروتئین/کربو/چربی هم دارن.
+export type FoodSeedItem = {
+  name: string;
+  caloriesPer100g: number;
+  proteinPer100g?: number;
+  carbsPer100g?: number;
+  fatPer100g?: number;
+};
 
 // دیتابیس داخلی غذاها (کالری به‌ازای هر ۱۰۰ گرم) — شامل غذاهای خانگی ایرانی،
 // تنقلات/محصولات پرکاربرد سوپرمارکتی، میوه/سبزی/خشکبار، و مهم‌ترین غذاهای
@@ -7,7 +17,7 @@ export type FoodSeedItem = { name: string; caloriesPer100g: number };
 // شده، وگرنه لیست جستجو با چندین ردیف هم‌کالری تکراری شلوغ می‌شد. برای هر
 // چیزی که این‌جا نبود، کاربر همچنان می‌تونه از پنل کالری، کالری هر ۱۰۰
 // گرمش رو دستی وارد کنه (CaloriePanel.tsx).
-export const FOOD_SEED: FoodSeedItem[] = [
+const LEGACY_SEED: FoodSeedItem[] = [
   // ===== غلات، نان و پاستا =====
   { name: "برنج پخته", caloriesPer100g: 130 },
   { name: "برنج قهوه‌ای پخته", caloriesPer100g: 111 },
@@ -299,8 +309,56 @@ export const FOOD_SEED: FoodSeedItem[] = [
   { name: "کیک اسفنجی خانگی", caloriesPer100g: 300 },
 ];
 
-export function searchFoodSeed(query: string): FoodSeedItem[] {
-  const q = query.trim();
+// آیتم‌های قدیمی همیشه اول می‌مونن (ترتیب و نام ثابت)، کاتالوگ جدید بعدشون.
+// نام تکراری با آیتم قدیمی نادیده گرفته می‌شه تا ثبت‌های قبلی کاربر معتبر بمونن.
+const LEGACY_NAMES = new Set(LEGACY_SEED.map((f) => f.name));
+export const FOOD_SEED: FoodSeedItem[] = [
+  ...LEGACY_SEED,
+  ...CATALOG_ITEMS.filter((c) => !LEGACY_NAMES.has(c.name)).map(
+    (c): FoodSeedItem => ({
+      name: c.name,
+      caloriesPer100g: c.caloriesPer100g,
+      proteinPer100g: c.proteinPer100g,
+      carbsPer100g: c.carbsPer100g,
+      fatPer100g: c.fatPer100g,
+    }),
+  ),
+];
+
+/** نام انگلیسی آیتم‌های کاتالوگ جدید (آیتم‌های قدیمی در lib/foodNamesEn.ts هستن). */
+export const CATALOG_NAMES_EN: Record<string, string> = Object.fromEntries(CATALOG_ITEMS.map((c) => [c.name, c.nameEn]));
+
+type IndexRow = { item: FoodSeedItem; name: string; flat: string; all: string; allFlat: string };
+let index: IndexRow[] | null = null;
+
+function buildIndex(): IndexRow[] {
+  const aliasOf = new Map<string, string[]>();
+  for (const c of CATALOG_ITEMS) aliasOf.set(c.name, c.aliases);
+  return FOOD_SEED.map((item) => {
+    const name = normalizeFa(item.name);
+    const extra = [...(aliasOf.get(item.name) || []), ...(LEGACY_ALIASES[item.name] || [])].map((a) => normalizeFa(a));
+    const all = [name, ...extra].join(" | ");
+    return { item, name, flat: name.replace(/ /g, ""), all, allFlat: all.replace(/ /g, "") };
+  });
+}
+
+/** جستجوی غذا: یکسان‌سازی فارسی (ی/ک/نیم‌فاصله/ارقام)، همه‌ی کلمه‌ها باید پیدا بشن، نام و مترادف‌ها؛ نتیجه‌ی بهتر اول. */
+export function searchFoodSeed(query: string, limit = 10): FoodSeedItem[] {
+  const q = normalizeFa(query);
   if (!q) return FOOD_SEED.slice(0, 8);
-  return FOOD_SEED.filter((f) => f.name.indexOf(q) !== -1).slice(0, 10);
+  index ||= buildIndex();
+  const qFlat = q.replace(/ /g, "");
+  const tokens = q.split(" ").filter(Boolean);
+  const scored: { item: FoodSeedItem; score: number; len: number }[] = [];
+  for (const row of index) {
+    let score = -1;
+    if (row.name === q) score = 0;
+    else if (row.name.startsWith(q) || row.flat.startsWith(qFlat)) score = 1;
+    else if (row.name.includes(" " + q) || row.name.includes(q)) score = 2;
+    else if (tokens.length > 1 && tokens.every((t) => row.name.includes(t))) score = 3;
+    else if (row.allFlat.includes(qFlat) || tokens.every((t) => row.all.includes(t))) score = 4;
+    if (score >= 0) scored.push({ item: row.item, score, len: row.name.length });
+  }
+  scored.sort((a, b) => a.score - b.score || a.len - b.len);
+  return scored.slice(0, limit).map((s) => s.item);
 }
