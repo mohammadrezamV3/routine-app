@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import "./sleep-tools-row.css";
 import type { sleepInsights, SleepRecord } from "@/lib/sleep";
-import { formatRemaining, remainingMs, useSleepSound, type SleepSoundKind } from "@/lib/sleepSound";
+import { formatRemaining, remainingMs, useSleepSound } from "@/lib/sleepSound";
+import { soundSummary } from "@/lib/sleepSoundCatalog";
 import { formatCountdown, useNapTimer } from "@/lib/sleepNap";
 import { tr } from "@/lib/i18n";
 
@@ -87,15 +88,6 @@ function ArtStats() {
 }
 const ART: Record<Tool, () => JSX.Element> = { sound: ArtSound, breath: ArtBreath, nap: ArtNap, stats: ArtStats };
 
-const soundName = (k: SleepSoundKind): string => ({
-  rain: tr("باران", "Rain"),
-  ocean: tr("اقیانوس", "Ocean"),
-  fan: tr("پنکه", "Fan"),
-  white: tr("نویز سفید", "White noise"),
-  pink: tr("نویز صورتی", "Pink noise"),
-  brown: tr("نویز قهوه‌ای", "Brown noise"),
-})[k];
-
 export function SleepToolsPanels({
   entries,
   insights,
@@ -159,7 +151,7 @@ export function SleepToolsPanels({
       <div className="slt-row" role="group" aria-label={tr("ابزارهای خواب", "Sleep tools")}>
         {tile("sound", tr("صداها", "Sounds"),
           snd.playing
-            ? `${soundName(snd.kind)} · ${rem != null ? tr(`${formatRemaining(rem)} مانده`, `${formatRemaining(rem)} left`) : tr("بدون تایمر", "no timer")}`
+            ? `${soundSummary(snd.layers)} · ${rem != null ? tr(`${formatRemaining(rem)} مانده`, `${formatRemaining(rem)} left`) : tr("بدون تایمر", "no timer")}`
             : tr("باران، اقیانوس، نویز", "Rain, ocean, noise"),
           { live: snd.playing, eq: snd.playing })}
         {tile("breath", tr("تنفس آرام", "Breathe"), tr("4-7-8 · 5 دقیقه", "4-7-8 · 5 min"))}
