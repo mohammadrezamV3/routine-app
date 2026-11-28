@@ -4,6 +4,7 @@ import { getSessionFast } from "@/lib/serverSession";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
+import { withGuard } from "@/lib/requestGuard";
 
 // عکس پروفایل به‌جای آپلود فایل روی یه استوریج ابری (که هنوز راه‌اندازی
 // نشده)، به‌شکل data URL مستقیم توی همون فیلد avatarUrl ذخیره می‌شه — چون
@@ -51,5 +52,5 @@ async function handleDELETE() {
 }
 
 // حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
-export const PATCH = withLiveSync(["account"], handlePATCH);
+export const PATCH = withLiveSync(["account"], withGuard({ policy: "upload", scope: "avatar" }, handlePATCH));
 export const DELETE = withLiveSync(["account"], handleDELETE);

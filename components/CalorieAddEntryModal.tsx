@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchQuery } from "@/lib/useSearchQuery";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
 import type { FoodSearchResult as FoodSeedItem } from "@/lib/foodCatalogServer";
@@ -38,7 +39,16 @@ export function CalorieAddEntryModal({
 }) {
   useLockBodyScroll();
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
+  // جستجوی غذا (فارسی و لاتین) کامل سمت سرور؛ هر نتیجه nameEn داره. آفلاین و بدون کش:
+  // پیشنهادی نیست و ثبت دستی (کالری هر 100 گرم) کار می‌کنه. یک حرف هم مجازه (فهرست پیشوندی ارزان)
+  const { data: suggestionData, notice: searchNotice } = useSearchQuery<FoodSeedItem[]>({
+    query,
+    minLength: 1,
+    debounceMs: 250,
+    buildUrl: (q) => `/api/calorie/foods?q=${encodeURIComponent(q)}`,
+    parse: (d) => d?.results || [],
+  });
+  const suggestions: FoodSeedItem[] = suggestionData ?? [];
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);
   const [customPer100, setCustomPer100] = useState("");
   const [proteinG, setProteinG] = useState("");
@@ -60,18 +70,7 @@ export function CalorieAddEntryModal({
     try { localStorage.setItem(LAST_UNIT_KEY, u); } catch {}
   }
 
-  useEffect(() => {
-    const id = setTimeout(() => {
-      // جستجو (فارسی و لاتین) کامل سمت سرور؛ هر نتیجه nameEn داره
-      fetch(`/api/calorie/foods?q=${encodeURIComponent(query)}`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => setSuggestions(d?.results || []))
-        .catch(() => setSuggestions([])); // آفلاین و بدون کش: پیشنهادی نیست، ثبت دستی (کالری هر 100 گرم) کار می‌کنه
-    }, 150);
-    return () => clearTimeout(id);
-  }, [query]);
-
-  const isManual = !selectedFood && query.trim() && suggestions.length === 0;
+  const isManual = !selectedFood && query.trim() && suggestions.length === 0 && !searchNotice;
 
   // سقف مقدار تایپ‌شده به واحد انتخابی: کل وزن یک ثبت (بعد از تبدیل واحد) از سقف
   // foodGrams رد نشه — مثلا برای «پیمانه» (240 گرم) سقف کمتر از «گرم» می‌شه.
@@ -144,6 +143,7 @@ export function CalorieAddEntryModal({
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setSelectedFood(null); }}
               />
+              {!selectedFood && searchNotice && <div className="search-notice" role="status">{searchNotice}</div>}
               {!selectedFood && query.trim() && suggestions.length > 0 && (
                 <div className="mt-1.5 flex max-h-[180px] flex-col gap-1.5 overflow-y-auto">
                   {suggestions.map((f) => (

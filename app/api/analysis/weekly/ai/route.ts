@@ -15,6 +15,7 @@ import { loadTradeWeek } from "@/lib/weeklyLetter/tradeWeekServer";
 import { buildTradeCoachInput } from "@/lib/weeklyLetter/tradeWeekText";
 import { gatherFitWeek } from "@/lib/weeklyLetter/fitWeekServer";
 import { fitAiSummary } from "@/lib/weeklyLetter/fitWeekText";
+import { withGuard } from "@/lib/requestGuard";
 
 // POST /api/analysis/weekly/ai { offset } — ساخت/بازسازی مربی AI برای
 // یک هفته‌ی مشخص. واقعا گیت‌وی AI رو صدا می‌زنه (هزینه/زمان داره)، پس
@@ -24,7 +25,7 @@ const MAX_OFFSET_BACK = -52;
 // گیت‌وی AI ممکنه تا ~۵۵ ثانیه طول بکشه (lib/aiClient.ts → AI_TOTAL_BUDGET_MS)
 export const maxDuration = 60;
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   try {
     const guard = await requireModule(ModuleKey.AI_INSIGHT);
     if (!guard.ok) return guard.response;
@@ -97,3 +98,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }
+
+export const POST = withGuard({ policy: "ai", scope: "weeklyAi", gate: "ai" }, handlePOST);

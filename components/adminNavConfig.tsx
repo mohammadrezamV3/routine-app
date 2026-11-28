@@ -109,6 +109,7 @@ export function navGroups(): NavGroup[] {
           children: [
             { label: tr("وضعیت سرورها و منابع", "Server and resource status"), href: "/admin/system/status" },
             { label: tr("خطاها و لاگ‌ها", "Errors and logs"), href: "/admin/system/errors" },
+            { label: tr("بار و محدودیت درخواست‌ها", "Load and request limits"), href: "/admin/system/load" },
           ],
         },
         { label: tr("قابلیت‌ها", "Features"), href: "/admin/features", icon: <ToggleRight size={I} />, perm: "settings" },

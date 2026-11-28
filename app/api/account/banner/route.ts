@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { withLiveSync } from "@/lib/realtime";
+import { withGuard } from "@/lib/requestGuard";
 
 // بنر بالای پروفایل — دقیقا هم‌الگوی /api/account/avatar: data URL توی
 // همون ردیف User. سقفش بزرگ‌تره چون تصویر پهنه (۱۰۲۴×۳۲۰)، ولی باز هم
@@ -51,5 +52,5 @@ async function handleDELETE() {
 }
 
 // حساب/پروفایل روی بقیه‌ی دستگاه‌های همین کاربر همون لحظه (lib/realtime.ts)
-export const PATCH = withLiveSync(["account"], handlePATCH);
+export const PATCH = withLiveSync(["account"], withGuard({ policy: "upload", scope: "banner" }, handlePATCH));
 export const DELETE = withLiveSync(["account"], handleDELETE);

@@ -4,6 +4,8 @@ import { requireAdmin } from "@/lib/requireAdmin";
 import { hasPermission } from "@/lib/adminPermissions";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { tr } from "@/lib/i18n";
+import { normalizeQuery } from "@/lib/guard/queryNormalize";
+import { withGuard } from "@/lib/requestGuard";
 
 // جست‌وجوی سراسری پنل (Ctrl K). هر نوع نتیجه فقط وقتی برمی‌گرده که ادمین
 // دسترسی همون بخش رو داره. حداقل 2 حرف، حداکثر 5 نتیجه برای هر نوع، و هیچ
@@ -12,15 +14,16 @@ export const dynamic = "force-dynamic";
 
 const MAX = 5;
 
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const guard = await requireAdmin();
   if (!guard.ok) return guard.response;
 
   const ok = await checkRateLimit(`admin-search:${guard.userId}`, 60, 60_000);
   if (!ok) return NextResponse.json({ error: tr("تعداد درخواست زیاده، کمی صبر کن", "Too many requests, please wait a moment") }, { status: 429 });
 
-  const q = (req.nextUrl.searchParams.get("q") || "").trim().slice(0, 64);
-  if (q.length < 2) return NextResponse.json({ users: [], transactions: [], codes: [], tickets: [] });
+  const nq = normalizeQuery(req.nextUrl.searchParams.get("q"), { min: 2, max: 64 });
+  const q = nq.ok ? nq.q : "";
+  if (!nq.ok) return NextResponse.json({ users: [], transactions: [], codes: [], tickets: [] });
   const contains = { contains: q, mode: "insensitive" as const };
   const can = (p: Parameters<typeof hasPermission>[1]) => hasPermission(guard, p);
 
@@ -57,3 +60,5 @@ export async function GET(req: NextRequest) {
     tickets: tickets.map((t) => ({ id: t.id, title: t.subject, sub: t.status === "OPEN" ? tr("باز", "Open") : t.status === "ANSWERED" ? tr("پاسخ داده‌شده", "Answered") : tr("بسته", "Closed"), href: `/admin/support/${t.id}` })),
   });
 }
+
+export const GET = withGuard({ policy: "search", scope: "admin" }, handleGET);

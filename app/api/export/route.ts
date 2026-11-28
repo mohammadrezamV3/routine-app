@@ -9,6 +9,7 @@ import { toCsv } from "@/lib/export/csv";
 import { EXPORT_META, EXPORT_MODULES, type ExportModule } from "@/lib/export/modules";
 import { parseExportParams } from "@/lib/export/params";
 import { buildProfileExtras, buildTable, exportFileName } from "@/lib/export/exportServer";
+import { withGuard } from "@/lib/requestGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +39,7 @@ function download(body: string, contentType: string, filename: string) {
   });
 }
 
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const parsed = parseExportParams(req.nextUrl.searchParams);
   if (!parsed.ok) return deny(400, parsed.error);
   const p = parsed.value;
@@ -110,3 +111,5 @@ export async function GET(req: NextRequest) {
     "application/json", exportFileName("all", "json", now),
   );
 }
+
+export const GET = withGuard({ policy: "export", scope: "export", gate: "export" }, handleGET);

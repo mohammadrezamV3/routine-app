@@ -22,6 +22,7 @@
 // طبق درخواست صریح، عنوان رویدادها دیگر به فارسی ترجمه نمی‌شود — دقیقا
 // همان متن انگلیسی منبع (مثل خود JBlanked) ذخیره/نمایش داده می‌شود.
 
+import { guardedFetch } from "@/lib/guard/fetchGuard";
 import { tr } from "./i18n";
 import { localizedRecord } from "./localizedRecord";
 
@@ -391,6 +392,10 @@ export function normalizeExternalEvents(raw: unknown): NormalizedEvent[] {
 // گاهی با تاخیر خیلی زیاد/قطعی اتصال مواجه می‌شود) کل sync رو تا مدت
 // نامعلومی معلق نگه می‌داشت — از بیرون دقیقا شبیه «دیتا نمیاد» بود، چون
 // نه خطا می‌داد نه جواب. ۱۲ ثانیه برای یک فید JSON سبک کافی‌ست.
+function hostOf(url: string): string {
+  try { return new URL(url).host; } catch { return "unknown"; }
+}
+
 async function fetchOneFeed(
   url: string,
   headers: Record<string, string> | undefined,
@@ -398,11 +403,9 @@ async function fetchOneFeed(
 ): Promise<NormalizedEvent[]> {
   let res: Response;
   try {
-    res = await fetch(url, {
-      headers,
-      cache: "no-store",
-      signal: AbortSignal.timeout(12_000),
-    });
+    // قطع‌کننده‌ی مدار به‌ازای هر میزبان: منبعی که پشت‌سرهم خراب می‌شه چند دقیقه
+    // کنار گذاشته می‌شه و پشتیبان (فارکس‌فکتوری) فورا نوبت می‌گیره
+    res = await guardedFetch(`calendar:${hostOf(url)}`, url, { headers, cache: "no-store", timeoutMs: 12_000 }, { threshold: 3, resetMs: 120_000 });
   } catch (err) {
     const reason = err instanceof Error && err.name === "TimeoutError"
       ? "زمان اتصال تمام شد (احتمالا این دامنه از سرور در دسترس نیست)"

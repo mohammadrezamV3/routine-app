@@ -9,11 +9,12 @@ import { getWeekReport } from "@/lib/coachWeekServer";
 import { isRealIso, weekStartOf } from "@/lib/coachWeek";
 import { dateFromIso } from "@/lib/mentorServer";
 import { tr, isEn } from "@/lib/i18n";
+import { withGuard } from "@/lib/requestGuard";
 
 export const dynamic = "force-dynamic";
 
 // POST { mentorshipId, weekStart } → { summary, quota }؛ خلاصه روی عکس هفته ذخیره می‌شه
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const guard = await guardNomo(req);
   if (!guard.ok) return guard.response;
   const { userId, unlimited, used, ctx, body } = guard.a;
@@ -38,3 +39,5 @@ export async function POST(req: Request) {
   });
   return NextResponse.json({ summary, quota: quotaOf(unlimited, used + 1) });
 }
+
+export const POST = withGuard({ policy: "ai", scope: "coachNomo", gate: "ai" }, handlePOST);

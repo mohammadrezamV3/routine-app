@@ -4,6 +4,7 @@ import { requireMentorsUser, badRequest, forbidden, conflict } from "@/lib/mento
 import { validateDocument, MAX_DOCUMENT_BYTES } from "@/lib/mentorUpload";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { tr } from "@/lib/i18n";
+import { withGuard } from "@/lib/requestGuard";
 
 // سقف تعداد مدارک یک پروفایل — فایل‌ها داخل دیتابیسن (Bytes)، پس بدون
 // سقف یک حساب می‌تونست با آپلود پشت‌سرهم دیتابیس رو پر کنه.
@@ -12,7 +13,7 @@ const MAX_DOCUMENTS_PER_PROFILE = 20;
 // POST /api/mentors/me/documents (multipart: file, kind, category?)
 // ارسال مدرک → وضعیت مربوط PENDING + ردیف تاریخچه. حتی اگه قبلا VERIFIED
 // بوده، مدرک تازه دوباره باید بررسی بشه (وگرنه می‌شد بعد از تایید، فایل رو عوض کرد).
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const g = await requireMentorsUser();
   if (!g.ok) return g.response;
   const userId = g.userId;
@@ -130,3 +131,5 @@ async function readBodyCapped(req: Request, max: number): Promise<Uint8Array<Arr
   }
   return out;
 }
+
+export const POST = withGuard({ policy: "upload", scope: "mentorDoc" }, handlePOST);

@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { featureBlocked } from "@/lib/featureFlagsServer";
 import { buildDashboard, resolveDay } from "@/lib/dashboardServer";
 import { getSection } from "@/lib/sectionServer";
+import { withGuard } from "@/lib/requestGuard";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
  * این روت برای تازه‌سازی‌های بعدیه. روی زیردامنه‌ی یک بخش فقط بلوک‌های همون بخش
  * ساخته می‌شن (بخش از getSection()، نه پارامتر آدرس).
  */
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const session = await getSessionFast();
   const userId = (session?.user as any)?.id as string | undefined;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -40,3 +41,5 @@ export async function GET(req: NextRequest) {
   if (data === "blocked") return NextResponse.json({ error: tr("حساب کاربری مسدود شده است", "This account is blocked") }, { status: 403 });
   return NextResponse.json(data, { headers: { "Cache-Control": "private, no-store" } });
 }
+
+export const GET = withGuard({ policy: "read", scope: "dashboard" }, handleGET);

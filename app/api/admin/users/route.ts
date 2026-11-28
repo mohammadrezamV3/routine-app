@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/requireAdmin";
 import { sanitizeFilters } from "@/lib/adminUsersView";
 import { listUsers, tabCounts } from "@/lib/adminUsersList";
+import { withGuard } from "@/lib/requestGuard";
 
 // GET ?tab=&search=&plan=&seen=&signup=&tag=&sort=&dir=&page=&pageSize=&counts=1
 // (پارامتر قدیمی filter= هم به‌جای tab= پذیرفته می‌شه)
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   const guard = await requireAdmin("users.view");
   if (!guard.ok) return guard.response;
 
@@ -24,3 +25,5 @@ export async function GET(req: NextRequest) {
   const counts = sp.get("counts") === "1" ? await tabCounts(filters) : undefined;
   return NextResponse.json({ ...result, counts });
 }
+
+export const GET = withGuard({ policy: "search", scope: "adminUsers" }, handleGET);
