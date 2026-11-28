@@ -86,3 +86,15 @@ export function goalDiffKind(diffMin: number): "within" | "over" | "under" {
   if (Math.abs(diffMin) <= 30) return "within";
   return diffMin > 0 ? "over" : "under";
 }
+
+/** نقاط خط روند کوچک (کاشی آمار): مقدارها به مختصات w در h با حاشیه‌ی pad؛ کمتر از دو مقدار = null */
+export function sparkPoints(values: number[], w: number, h: number, pad = 3): { x: number; y: number }[] | null {
+  if (values.length < 2) return null;
+  const lo = Math.min(...values), hi = Math.max(...values);
+  const span = hi - lo || 1;
+  const r = (v: number) => Math.round(v * 10) / 10;
+  return values.map((v, i) => ({
+    x: r(pad + (i / (values.length - 1)) * (w - 2 * pad)),
+    y: r(h - pad - ((v - lo) / span) * (h - 2 * pad)),
+  }));
+}

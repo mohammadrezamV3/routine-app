@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useId, useMemo, useState, type ComponentType } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import "./sleep-tools-row.css";
-import type { sleepInsights, SleepRecord } from "@/lib/sleep";
+import { sleepMinutes, type sleepInsights, type SleepRecord } from "@/lib/sleep";
+import { sparkPoints } from "@/lib/sleepWeekStats";
 import { formatRemaining, remainingMs, useSleepSound } from "@/lib/sleepSound";
 import { soundSummary } from "@/lib/sleepSoundCatalog";
 import { formatCountdown, useNapTimer } from "@/lib/sleepNap";
@@ -46,47 +47,45 @@ const SleepStatsSheet = dynamic(safeLoad(loadStats, (m) => m.SleepStatsSheet), {
 
 type Tool = "sound" | "breath" | "nap" | "stats";
 
-// آیکون‌های تصویرگونه‌ی ابزارها: فقط stroke (currentColor + رنگ تاکید کاشی)، بدون بک‌گراند
-function ArtSound() {
+// تصویرگری زنده‌ی هر کاشی: فقط SVG/CSS. حرکت‌ها فقط transform/opacity و با
+// reduced-motion و data-perf-weak خاموش می‌شن (sleep-tools-row.css).
+const EQ_V = [0.5, 0.9, 0.6, 1, 0.7, 0.95, 0.55];
+function ArtSound({ playing }: { playing: boolean }) {
   return (
-    <svg viewBox="0 0 48 48" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="24" r="4.5" stroke="currentColor" />
-      <path d="M21 18.5Q25 24 21 29.5" stroke="var(--t)" />
-      <path d="M27.5 13.5Q36 24 27.5 34.5" stroke="var(--t)" opacity=".75" />
-      <path d="M34 8.5Q47 24 34 39.5" stroke="var(--t)" opacity=".5" />
-    </svg>
+    <span className={`slt-bars${playing ? " is-playing" : ""}`}>
+      {EQ_V.map((v, i) => <i key={i} style={{ ["--v" as string]: v, ["--i" as string]: i } as React.CSSProperties} />)}
+    </span>
   );
 }
 function ArtBreath() {
+  return <span className="slt-breath"><i /><i /><i /></span>;
+}
+function ArtNap({ pct }: { pct: number }) {
   return (
-    <svg viewBox="0 0 48 48" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="24" cy="24" r="21" stroke="var(--t)" strokeDasharray="1.5 4.5" opacity=".7" />
-      <circle cx="24" cy="24" r="15" stroke="currentColor" />
-      <circle cx="24" cy="24" r="9" stroke="var(--t)" />
-      <circle cx="24" cy="24" r="3.2" fill="var(--t)" stroke="none" />
+    <svg viewBox="0 0 34 34" fill="none" strokeLinecap="round">
+      <circle cx="17" cy="17" r="14" className="slt-ring-track" strokeWidth="3" />
+      <circle cx="17" cy="17" r="14" className="slt-ring-arc" strokeWidth="3" pathLength={100} strokeDasharray={`${pct} 100`} transform="rotate(-90 17 17)" />
+      <text x="17" y="21" textAnchor="middle" className="slt-z">z</text>
     </svg>
   );
 }
-function ArtNap() {
+function ArtStats({ values }: { values: number[] }) {
+  const id = useId().replace(/:/g, "");
+  const pts = sparkPoints(values, 64, 34) ?? sparkPoints([2, 4, 3, 6, 5, 8], 64, 34)!;
+  const d = pts.map((p, i) => `${i ? "L" : "M"}${p.x} ${p.y}`).join("");
+  const last = pts[pts.length - 1];
   return (
-    <svg viewBox="0 0 48 48" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M26 9.5a14.5 14.5 0 1 0 12.5 22A11.5 11.5 0 0 1 26 9.5z" stroke="currentColor" />
-      <path d="M33 7h6.5L33 14.5h6.5" stroke="var(--t)" />
-      <path d="M40.5 19.5h4l-4 4.5h4" stroke="var(--t)" opacity=".7" />
+    <svg viewBox="0 0 64 34" fill="none" strokeLinecap="round" strokeLinejoin="round" className="slt-spark">
+      <defs>
+        <linearGradient id={`sp${id}`} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" style={{ stopColor: "var(--slt-a)" }} /><stop offset="1" style={{ stopColor: "var(--slt-b)" }} />
+        </linearGradient>
+      </defs>
+      <path d={d} stroke={`url(#sp${id})`} strokeWidth="2.5" />
+      <circle cx={last.x} cy={last.y} r="3" style={{ fill: "var(--slt-b)" }} />
     </svg>
   );
 }
-function ArtStats() {
-  return (
-    <svg viewBox="0 0 48 48" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 40.5h36" stroke="currentColor" opacity=".5" />
-      <rect x="9" y="26" width="8" height="14" rx="4" stroke="currentColor" />
-      <rect x="20" y="18" width="8" height="22" rx="4" stroke="var(--t)" />
-      <rect x="31" y="9" width="8" height="31" rx="4" stroke="currentColor" />
-    </svg>
-  );
-}
-const ART: Record<Tool, () => JSX.Element> = { sound: ArtSound, breath: ArtBreath, nap: ArtNap, stats: ArtStats };
 
 export function SleepToolsPanels({
   entries,
@@ -124,27 +123,25 @@ export function SleepToolsPanels({
 
   const rem = snd.playing ? remainingMs(snd.endsAt, now) : null;
 
-  const tile = (t: Tool, label: string, sub: string, opts?: { live?: boolean; eq?: boolean; pulse?: boolean }) => {
-    const Art = ART[t];
-    return (
-      <button
-        type="button"
-        className={`slt-tile is-${t}${opts?.live ? " is-live" : ""}`}
-        aria-haspopup="dialog"
-        onClick={() => setOpen(t)}
-        onMouseEnter={preload(t)}
-        onFocus={preload(t)}
-        onTouchStart={preload(t)}
-      >
-        <span className={`slt-art${opts?.pulse ? " slt-pulse" : ""}`} aria-hidden="true"><Art /></span>
-        {opts?.eq && <span className="slt-eq" aria-hidden="true"><i /><i /><i /><i /></span>}
-        <span className="slt-txt">
-          <span className="slt-label">{label}</span>
-          <span className="slt-sub">{sub}</span>
-        </span>
-      </button>
-    );
-  };
+  const sparkValues = useMemo(() => entries.slice(-7).map((e) => sleepMinutes(e)), [entries]);
+
+  const tile = (t: Tool, label: string, sub: string, art: React.ReactNode, live = false) => (
+    <button
+      type="button"
+      className={`slt-tile is-${t}${live ? " is-live" : ""}`}
+      aria-haspopup="dialog"
+      onClick={() => setOpen(t)}
+      onMouseEnter={preload(t)}
+      onFocus={preload(t)}
+      onTouchStart={preload(t)}
+    >
+      <span className="slt-art" aria-hidden="true">{art}</span>
+      <span className="slt-txt">
+        <span className="slt-label">{label}</span>
+        <span className="slt-sub">{sub}</span>
+      </span>
+    </button>
+  );
 
   return (
     <>
@@ -153,13 +150,13 @@ export function SleepToolsPanels({
           snd.playing
             ? `${soundSummary(snd.layers)} · ${rem != null ? tr(`${formatRemaining(rem)} مانده`, `${formatRemaining(rem)} left`) : tr("بدون تایمر", "no timer")}`
             : tr("باران، اقیانوس، نویز", "Rain, ocean, noise"),
-          { live: snd.playing, eq: snd.playing })}
-        {tile("breath", tr("تنفس آرام", "Breathe"), tr("4-7-8 · 5 دقیقه", "4-7-8 · 5 min"))}
+          <ArtSound playing={snd.playing} />, snd.playing)}
+        {tile("breath", tr("تنفس آرام", "Breathe"), tr("4-7-8 · 5 دقیقه", "4-7-8 · 5 min"), <ArtBreath />)}
         {tile("nap", nap.ended ? tr("بیدار شو", "Wake up") : tr("چرت", "Nap"),
           nap.running ? tr(`${formatCountdown(nap.remainingSec)} مانده`, `${formatCountdown(nap.remainingSec)} left`)
             : nap.ended ? tr("وقت بیدار شدنه", "Time to wake up") : tr("20 دقیقه", "20 min"),
-          { live: nap.running || nap.ended, pulse: nap.ended })}
-        {tile("stats", tr("آمار", "Stats"), tr("تقویم و روند", "Calendar and trends"))}
+          <ArtNap pct={nap.running ? Math.max(4, Math.round(nap.progress * 100)) : nap.ended ? 100 : 28} />, nap.running || nap.ended)}
+        {tile("stats", tr("آمار", "Stats"), tr("تقویم و روند", "Calendar and trends"), <ArtStats values={sparkValues} />)}
       </div>
 
       {open === "sound" && <SleepSoundSheet open onClose={close} />}

@@ -107,3 +107,18 @@ export function greetKey(hour: number): GreetKey {
   if (h >= 19 && h < 22) return "evening";
   return "night";
 }
+
+export type SkyStar = { top: number; left: number; size: number; dur: number; delay: number };
+
+/** ستاره‌های ریز و چشمک‌زن پس‌زمینه‌ی کارت هیرو (قطعی، درصدی) */
+export function skyStars(n: number, seed: number): SkyStar[] {
+  const rand = rng(seed);
+  const rd = (v: number) => Math.round(v * 10) / 10;
+  return Array.from({ length: n }, () => ({
+    top: rd(rand() * 96),
+    left: rd(rand() * 98),
+    size: rd(1 + rand() * 1.6),
+    dur: rd(3 + rand() * 4),
+    delay: -rd(rand() * 5),
+  }));
+}

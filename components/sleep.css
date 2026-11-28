@@ -8,8 +8,8 @@
   --slp-moon:#FFE7A8;
   --slp-sub:#A9B0C4;
   /* صفحه‌ی ساعت (SleepDial): آسمان شب؛ همه‌ی رنگ‌ها فقط داخل SVG هنر ساعت استفاده می‌شن */
-  --sld-face-a:#1D2352; --sld-face-b:#080A19; --sld-rim:rgba(140,155,255,.34); --sld-star:#DCE3FF;
-  --sld-arc-a:#6F7DFF; --sld-arc-b:#C58BFF;
+  --sld-face-a:#1b1740; --sld-face-b:#0c0b1d; --sld-rim:rgba(140,155,255,.34); --sld-star:#DCE3FF;
+  --sld-arc-a:#8b7bff; --sld-arc-b:#4fb8ff;
   --sld-moon-a:#8F9CFF; --sld-moon-b:#5A4FE0; --sld-sun-a:#FFD27A; --sld-sun-b:#FF9A3D;
   color:var(--text);
 }
@@ -19,7 +19,7 @@ body[data-theme="light"] .sleep-scope{
   --slp-moon:#E3A82B;
   --slp-sub:#66492F;
   /* سحر: صفحه‌ی روشن و گرم، قوس‌های عمیق‌تر برای کنتراست */
-  --sld-face-a:#FFF1D6; --sld-face-b:#E7DAF2; --sld-rim:rgba(83,99,232,.4); --sld-star:#6F5BD0;
+  --sld-face-a:#FFF6EA; --sld-face-b:#E9DDF7; --sld-rim:rgba(83,99,232,.4); --sld-star:#6F5BD0;
   --sld-arc-a:#4252DC; --sld-arc-b:#8A3FE0;
   --sld-moon-a:#6573F0; --sld-moon-b:#4338C8; --sld-sun-a:#F7B63C; --sld-sun-b:#E0700F;
 }

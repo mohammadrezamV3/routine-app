@@ -17,7 +17,7 @@ import { barHeight, bestNight, buildWeekNights, lastLogged, weekAverage } from "
 
 const MAX_MIN = 10 * 60;
 const BAR_H = 124;
-const BAR_W = 18;
+const BAR_W = 14;
 
 function hm(min: number): string {
   const h = Math.floor(min / 60), m = Math.round(min % 60);
@@ -74,21 +74,14 @@ export function SleepWeek({
               aria-label={n.rec ? tr(`${wd}: ${hm(n.min)} خواب${n.score != null ? `، امتیاز ${n.score}` : ""}`, `${wd}: ${hm(n.min)} asleep${n.score != null ? `, score ${n.score}` : ""}`) : tr(`${wd}: ثبت نشده، برای ثبت بزن`, `${wd}: not logged, tap to log`)}
             >
               <span className="slw-val">{n.rec ? faNum(hm(n.min)) : <Plus aria-hidden />}</span>
-              <svg className="slw-bar" width={BAR_W} height={BAR_H} viewBox={`0 0 ${BAR_W} ${BAR_H}`} aria-hidden="true">
-                <rect x={0} y={0} width={BAR_W} height={BAR_H} rx={BAR_W / 2} className="slw-slot" />
-                {isToday && <rect x={BAR_W / 2 - 6} y={-5} width={12} height={3} rx={1.5} className="slw-cap" />}
+              <span className="slw-plot" aria-hidden="true">
                 {n.rec && (
-                  <rect
-                    x={0}
-                    y={BAR_H - h}
-                    width={BAR_W}
-                    height={h}
-                    rx={BAR_W / 2}
+                  <span
                     className={`slw-fill slw-grow${n.band ? ` slp-c-${n.band}` : ""}`}
-                    style={{ ["--d" as string]: `${i * 50}ms` } as React.CSSProperties}
+                    style={{ height: h, ["--d" as string]: `${i * 60}ms` } as React.CSSProperties}
                   />
                 )}
-              </svg>
+              </span>
               <span className="slw-day">{wd}</span>
             </button>
           );

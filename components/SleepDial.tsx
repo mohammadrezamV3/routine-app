@@ -4,7 +4,7 @@ import { SleepScoreInfoButton } from "./SleepScoreInfo";
 import "./sleep-dial.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { m as motion, useReducedMotion } from "framer-motion";
-import { BarChart3, Check, ChevronLeft, Flame, Moon, MoonStar, Sun, Sunrise, Sunset, Target, TrendingDown, TrendingUp, BatteryLow, PenLine, Clock } from "lucide-react";
+import { BarChart3, Check, ChevronLeft, Moon, Repeat2, Sparkles, Sun, Clock } from "lucide-react";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { Spinner } from "./Spinner";
 import { faNum, jMonthName, toJalali, weekdayName } from "@/lib/jalali";
@@ -13,16 +13,11 @@ import {
   scoreBandLabel, clockOf, durationLabel, goalFromTargets, minuteOfDay, minutesUntil, scoreBand,
   sleepMinutes, sleepPhase, type SleepRecord,
 } from "@/lib/sleep";
-import { arcPath, fitFontSize, greetKey, hhmmToMin, minuteToAngle, pointAt, starField } from "@/lib/sleepDial";
+import { arcPath, fitFontSize, greetKey, hhmmToMin, minuteToAngle, pointAt, skyStars, starField } from "@/lib/sleepDial";
+import { moonLitPath, moonName, moonPhase, type MoonName } from "@/lib/moonPhase";
 import { cycleBoundaries } from "@/lib/sleepCycles";
-import { SleepCycleButton } from "./SleepCycleButton";
 import { startTracking, stopTracking, type SleepTracking } from "@/lib/sleepTracker";
-import { cycleTileInfo, dialHint, dialHintText, type DialHint } from "@/lib/sleepDialHints";
-
-const HINT_ICON: Record<DialHint["kind"], typeof Moon> = {
-  winddown: Moon, pastBedtime: Clock, streak: Flame, under: TrendingDown, over: TrendingUp,
-  onGoal: Target, debt: BatteryLow, logPrompt: PenLine, idle: Target,
-};
+import { cycleTileInfo, dialHint, dialHintText } from "@/lib/sleepDialHints";
 
 /** عدد امتیاز از 0 به مقدار واقعی می‌شمره (فقط متن عوض می‌شه، نه layout)؛ با حرکت کاهی یکباره */
 function useCountUp(value: number | null, off: boolean): number | null {
@@ -73,6 +68,34 @@ const PIN_R = 12.5;
 // حاشیه‌ی خالی دور صفحه (واحد SVG)
 const VB = 2;
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+function moonLabel(n: MoonName): string {
+  switch (n) {
+    case "new": return tr("ماه نو", "New moon");
+    case "waxCrescent": return tr("هلال رو به رشد", "Waxing crescent");
+    case "firstQuarter": return tr("تربیع اول", "First quarter");
+    case "waxGibbous": return tr("ماه رو به رشد", "Waxing gibbous");
+    case "full": return tr("ماه کامل", "Full moon");
+    case "wanGibbous": return tr("ماه رو به کاهش", "Waning gibbous");
+    case "lastQuarter": return tr("تربیع آخر", "Last quarter");
+    default: return tr("هلال رو به کاهش", "Waning crescent");
+  }
+}
+
+/** آیکون ماه با فاز واقعی تاریخ (SVG ساده: دیسک کم‌رنگ + بخش روشن) */
+function MoonPhaseIcon({ p }: { p: number }) {
+  return (
+    <svg className="sld-moon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" className="sld-moon-dark" />
+      <path d={moonLitPath(p, 12, 12, 9)} className="sld-moon-lit" />
+    </svg>
+  );
+}
+
+function bedCountdown(min: number): string {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
 
 function hms(totalSec: number): string {
   const s = Math.max(0, Math.floor(totalSec));
@@ -208,7 +231,9 @@ export function SleepDial({
         goalMin, goalStreak, debt7Min, tracking: !!tracking,
       })
     : null;
-  const HintIcon = hint ? HINT_ICON[hint.kind] : null;
+  // شمارش معکوس تا ساعت خواب (فقط وقتی هنوز وقتش نشده و بیشتر از 20 ساعت نمونده)
+  const toBedRaw = nowMin !== null && !tracking && phase !== "bedtime" && phase !== "night" ? minutesUntil(Math.floor(nowMin), target.sleep) : null;
+  const toBed = toBedRaw !== null && toBedRaw > 0 && toBedRaw <= 20 * 60 ? toBedRaw : null;
   const cycleInfo = nowMin !== null ? cycleTileInfo(nowMin, bedMin, latency, goalMin, phase, tracking ? trackFrom : null) : null;
   // اندازه و جای عمودی متن وسط (نسبت به مرکز)؛ امتیاز درشت و فاصله‌ها بازتر
   const isScore = bigCls.includes("is-score");
@@ -224,6 +249,7 @@ export function SleepDial({
   const wakePt = pointAt(C, R_GOAL, minuteToAngle(wakeMin));
   const cycleDots = useMemo(() => cycleBoundaries(bedMin, wakeMin, latency).map((m) => pointAt(C, R_GOAL, minuteToAngle(m))), [bedMin, wakeMin, latency]);
   const stars = useMemo(() => starField(30, 11, C, 120, 68, 64), []);
+  const sky = useMemo(() => skyStars(34, 7), []);
   const draw = reduce ? { duration: 0 } : { duration: 1.2, ease: EASE };
 
   const glow = isMorning && !tracking ? "var(--slp-fair)" : "var(--slp-ink)";
@@ -231,11 +257,11 @@ export function SleepDial({
 
   // سلام و تاریخ امروز (بعد از mount، تا بین سرور و کلاینت اختلافی نباشه)
   const gk = now ? greetKey(now.getHours()) : null;
-  const GreetIcon = gk === "morning" ? Sunrise : gk === "afternoon" ? Sun : gk === "evening" ? Sunset : MoonStar;
   const greet = gk === "morning" ? tr("صبح بخیر", "Good morning")
     : gk === "afternoon" ? tr("عصر بخیر", "Good afternoon")
     : gk === "evening" ? tr("شب بخیر", "Good evening")
     : tr("شب بخیر", "Good night");
+  const mp = now ? moonPhase(now) : 0;
   const dateText = now ? (() => {
     const [, jm, jd] = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
     return `${weekdayName(now.getDay())} ${faNum(jd)} ${jMonthName(jm - 1)}`;
@@ -243,16 +269,26 @@ export function SleepDial({
 
   return (
     <section className="sl-card sld m-rise" aria-live="polite" data-phase={tracking ? "tracking" : phase}>
+      {/* آسمان شب: شفق نرم (فقط transform) و ستاره‌های چشمک‌زن (فقط opacity) */}
+      <div className="sld-aurora" aria-hidden="true" />
+      <div className="sld-sky" aria-hidden="true">
+        {sky.map((st, i) => (
+          <span key={i} style={{ top: `${st.top}%`, left: `${st.left}%`, width: st.size, height: st.size, ["--d" as string]: `${st.dur}s`, ["--dl" as string]: `${st.delay}s` } as React.CSSProperties} />
+        ))}
+      </div>
       <header className="sld-head">
         <div className="sld-greet" aria-hidden={!now}>
-          <span className="sld-greet-k">{now && <GreetIcon aria-hidden />}{greet}</span>
-          <b>{dateText}</b>
+          <MoonPhaseIcon p={mp} />
+          <span className="sld-greet-txt">
+            <span className="sld-greet-k">{greet}</span>
+            <b>{dateText}{now ? <span className="sld-moon-name"> · {moonLabel(moonName(mp))}</span> : null}</b>
+          </span>
         </div>
         <div className="sld-head-end">
           {showLast && <SleepScoreInfoButton />}
           {showStats && (
             <Link href="/analysis/weekly#sleep" prefetch={false} className="slp-stats-link">
-              <BarChart3 aria-hidden /> {tr("آمار خواب", "Sleep stats")}
+              <span>{tr("آمار خواب", "Sleep stats")}</span><ChevronLeft className="dir-flip" aria-hidden />
             </Link>
           )}
         </div>
@@ -299,17 +335,16 @@ export function SleepDial({
           {/* خط زمان 24 ساعته */}
           <circle cx={C} cy={C} r={R_GOAL} className="sld-track" />
           <circle cx={C} cy={C} r={R_LAST} className="sld-lane" />
-          {Array.from({ length: 24 }, (_, h) => {
-            const a = minuteToAngle(h * 60);
-            const major = h % 6 === 0;
+          {Array.from({ length: 48 }, (_, k) => {
+            const a = minuteToAngle(k * 30);
+            const major = k % 12 === 0, hourly = k % 2 === 0;
             const p0 = pointAt(C, 123, a);
-            const p1 = pointAt(C, major ? 132 : 127.5, a);
-            return <line key={h} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} className={major ? "sld-tick is-major" : "sld-tick"} />;
+            const p1 = pointAt(C, major ? 134 : hourly ? 130 : 127, a);
+            return <line key={k} x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} className={major ? "sld-tick is-major" : hourly ? "sld-tick" : "sld-tick is-half"} />;
           })}
-          {Array.from({ length: 8 }, (_, k) => {
-            const h = k * 3;
+          {[0, 6, 12, 18].map((h) => {
             const p = pointAt(C, R_NUM, minuteToAngle(h * 60));
-            return <text key={h} x={p.x} y={p.y} className={h % 6 === 0 ? "sld-hour is-major" : "sld-hour"} textAnchor="middle" dominantBaseline="central">{String(h).padStart(2, "0")}</text>;
+            return <text key={h} x={p.x} y={p.y} className="sld-hour is-major" textAnchor="middle" dominantBaseline="central">{String(h).padStart(2, "0")}</text>;
           })}
 
           {/* پنجره‌ی هدف خواب: درخشش ثابت نرم + قوس گرادیانی */}
@@ -389,62 +424,53 @@ export function SleepDial({
         </div>
       </div>
 
-      {/* ساعت‌های هدف (فقط نمایش؛ ویرایش از باکس هدف خواب) */}
-      <div className="sld-times" dir="auto">
-        <span className="sld-time">
-          <span className="sld-time-ico" aria-hidden><Moon /></span>
-          <span className="sld-time-txt"><small>{tr("خواب", "Sleep")}</small><b>{target.sleep}</b></span>
-        </span>
-        <span className="sld-span" aria-label={tr(`هدف ${durationLabel(goalMin)}`, `Goal ${durationLabel(goalMin)}`)}>
-          <i aria-hidden />
-          <em>{durationLabel(goalMin)}</em>
-          <i aria-hidden />
-        </span>
-        <span className="sld-time is-wake">
-          <span className="sld-time-ico" aria-hidden><Sun /></span>
-          <span className="sld-time-txt"><small>{tr("بیداری", "Wake")}</small><b>{target.wake}</b></span>
-        </span>
-      </div>
-
-      {/* دو باکس هوشمند: چرخه‌های خواب و هدف خواب */}
-      <div className="sld-tiles">
-        {onOpenCycles ? (
-          <SleepCycleButton onClick={onOpenCycles} onPreload={onPreloadCycles} info={cycleInfo} bedtime={target.sleep} />
-        ) : null}
-        <button type="button" className="sld-tile is-goal" onClick={onEditGoal} onPointerEnter={onPreloadCycles} onFocus={onPreloadCycles} onTouchStart={onPreloadCycles}>
-          <span className="sld-tile-ico" aria-hidden><Target /></span>
-          <ChevronLeft className="sld-tile-go dir-flip" aria-hidden />
-          <span className="sld-tile-txt">
-            <small>{tr("هدف خواب", "Sleep goal")}</small>
-            <b>{durationLabel(goalMin)}</b>
-            <em>{tr("تغییر", "Change")}</em>
-          </span>
-        </button>
-      </div>
-
-      {/* نکته‌ی شخصی تک‌خطی */}
-      {hint && HintIcon && (
-        <p className={`sld-insight is-${hint.tone}`}>
-          <HintIcon aria-hidden /><span>{dialHintText(hint)}</span>
-        </p>
-      )}
-
-      <div className="sld-actions">
-        {tracking ? (
-          <>
-            <button type="button" className="btn btn-primary" onClick={onWakeUp}>{tr("بیدار شدم", "I'm awake")}</button>
-            <button type="button" className="btn btn-ghost sld-cancel" onClick={() => stopTracking()}>{tr("لغو", "Cancel")}</button>
-          </>
-        ) : phase === "winddown" || phase === "bedtime" || phase === "night" ? (
-          <>
-            <button type="button" className="btn btn-primary" onClick={() => startTracking()}>{tr("دارم می‌خوابم", "I'm going to sleep")}</button>
-            <button type="button" className="btn btn-outline sld-secondary" onClick={onLog}>{lastNight ? tr("ویرایش دیشب", "Edit last night") : tr("ثبت دیشب", "Log last night")}</button>
-          </>
-        ) : (
-          <button type="button" className={lastNight ? "btn btn-outline" : "btn btn-primary"} onClick={onLog}>
-            {lastNight ? tr("ویرایش خواب دیشب", "Edit last night's sleep") : tr("ثبت خواب دیشب", "Log last night's sleep")}
+      <div className="sld-foot">
+        {/* دو باکس شیشه‌ای: چرخه‌های خواب و تا وقت خواب (هر دو پنجره‌ی برنامه خواب رو باز می‌کنن) */}
+        <div className="sld-tiles">
+          {onOpenCycles ? (
+            <button type="button" className="sld-tile is-cycles" onClick={onOpenCycles} onPointerEnter={onPreloadCycles} onFocus={onPreloadCycles} onTouchStart={onPreloadCycles}>
+              <span className="sld-tile-k"><Repeat2 aria-hidden />{tr("چرخه‌های خواب", "Sleep cycles")}</span>
+              <b>{cycleInfo ? cycleInfo.clock : "--:--"}</b>
+              <em>
+                {cycleInfo?.mode === "bed"
+                  ? tr(`اگه ${target.sleep} بخوابی`, `If you sleep at ${target.sleep}`)
+                  : cycleInfo?.mode === "tracked"
+                    ? tr("بیداری مناسب برای خوابت", "Good time to wake up")
+                    : tr("اگه الان بخوابی", "If you sleep now")}
+              </em>
+            </button>
+          ) : null}
+          <button type="button" className="sld-tile is-goal" onClick={onEditGoal} onPointerEnter={onPreloadCycles} onFocus={onPreloadCycles} onTouchStart={onPreloadCycles}>
+            <span className="sld-tile-k"><Clock aria-hidden />{toBed !== null ? tr("تا وقت خواب", "Until bedtime") : tr("هدف خواب", "Sleep goal")}</span>
+            <b>{toBed !== null ? bedCountdown(toBed) : durationLabel(goalMin)}</b>
+            <em>{tr(`هدف ${target.sleep} تا ${target.wake}`, `Goal ${target.sleep} to ${target.wake}`)}</em>
           </button>
+        </div>
+
+        {/* نکته‌ی شخصی تک‌خطی */}
+        {hint && (
+          <p className={`sld-insight is-${hint.tone}`}>
+            <Sparkles aria-hidden /><span>{dialHintText(hint)}</span>
+          </p>
         )}
+
+        <div className="sld-actions">
+          {tracking ? (
+            <>
+              <button type="button" className="btn btn-primary sld-cta" onClick={onWakeUp}><Sun aria-hidden />{tr("بیدار شدم", "I'm awake")}</button>
+              <button type="button" className="btn btn-ghost sld-cancel" onClick={() => stopTracking()}>{tr("لغو", "Cancel")}</button>
+            </>
+          ) : phase === "winddown" || phase === "bedtime" || phase === "night" ? (
+            <>
+              <button type="button" className="btn btn-primary sld-cta" onClick={() => startTracking()}><Moon aria-hidden />{tr("دارم می‌خوابم", "I'm going to sleep")}</button>
+              <button type="button" className="btn btn-outline sld-secondary" onClick={onLog}>{lastNight ? tr("ویرایش دیشب", "Edit last night") : tr("ثبت دیشب", "Log last night")}</button>
+            </>
+          ) : (
+            <button type="button" className={lastNight ? "btn btn-outline sld-secondary" : "btn btn-primary sld-cta"} onClick={onLog}>
+              {lastNight ? tr("ویرایش خواب دیشب", "Edit last night's sleep") : tr("ثبت خواب دیشب", "Log last night's sleep")}
+            </button>
+          )}
+        </div>
       </div>
 
       {canQuick && (
