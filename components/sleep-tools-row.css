@@ -1,8 +1,8 @@
 /* ── ابزارهای خواب (SleepToolsPanels): شبکه‌ی 2x2 کاشی با تصویرگری زنده ──
    سطح کاشی‌ها همون سطح واحد باکس‌ها (--box-bg / --box-line). تصویرگری‌ها SVG/CSS ان
    و حرکتشون فقط transform/opacity (خاموش با reduced-motion و data-perf-weak). */
-.slt-row{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; min-width:0; }
-@media (min-width:1024px){ .slt-row{ gap:20px; } }
+.slt-row{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; min-width:0; }
+@media (min-width:1024px){ .slt-row{ gap:14px; grid-template-columns:repeat(2, minmax(0,1fr)); } }
 .sleep-scope .slt-row{
   --slt-a:#8b7bff; --slt-b:#7ee0b0; --slt-sound-a:#7ee0b0; --slt-sound-b:#3aa6ff; --slt-breath:#4fb8ff; --slt-nap:#ffd27a;
 }
@@ -11,9 +11,9 @@ body[data-theme="light"] .sleep-scope .slt-row{
 }
 body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{
   --t:var(--accent);
-  position:relative; overflow:hidden; width:100%; min-height:132px; padding:14px; border-radius:20px;
+  position:relative; overflow:hidden; width:100%; min-height:84px; padding:10px 8px; border-radius:18px;
   background:var(--box-bg); border:1px solid var(--box-line); box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
-  display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:12px;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:6px;
   color:var(--text); font-family:inherit; min-width:0; text-align:start;
   transition:border-color .25s ease, transform .25s cubic-bezier(.2,.8,.2,1);
 }
@@ -22,9 +22,9 @@ body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="lig
 .sleep-scope .slt-tile.is-nap{ --t:var(--slt-nap); }
 .sleep-scope .slt-tile.is-stats{ --t:var(--slt-a); }
 @media (min-width:1024px){
-  body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{ padding:18px; min-height:150px; border-radius:22px; }
+  body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{ padding:14px 18px; min-height:84px; border-radius:22px; }
 }
-.slt-art{ display:flex; align-items:center; width:100%; height:38px; flex:none; color:var(--t); }
+.slt-art{ display:flex; align-items:center; width:100%; height:30px; flex:none; color:var(--t); }
 .slt-art svg{ display:block; height:100%; width:auto; max-width:100%; overflow:visible; }
 .slt-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; max-width:100%; }
 .slt-label{ font-size:15px; font-weight:800; line-height:1.4; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -76,3 +76,17 @@ html[data-perf-weak] .slt-bars i, html[data-perf="low"] .slt-bars i,
 html[data-perf-weak] .slt-breath i, html[data-perf="low"] .slt-breath i{ animation:none; }
 html[data-perf-weak] .slt-breath i, html[data-perf="low"] .slt-breath i{ transform:scale(.86); }
 html[data-perf-weak] .sleep-scope button.slt-tile{ transition:none; transform:none !important; }
+
+/* موبایل/تبلت: چهار کاشی در یک ردیف، متن وسط‌چین؛ خط وضعیت فقط وقتی زنده‌ست */
+@media (max-width:1023px){
+  body[data-theme="light"] .sleep-scope button.slt-tile, body:not([data-theme="light"]) .sleep-scope button.slt-tile{ align-items:center; text-align:center; justify-content:center; }
+  .slt-art{ justify-content:center; height:28px; }
+  .slt-txt{ align-items:center; }
+  .slt-label{ font-size:12.5px; }
+  .slt-tile:not(.is-live) .slt-sub{ display:none; }
+  .slt-sub{ font-size:12px; }
+}
+@media (min-width:1024px){
+  .slt-art{ height:34px; }
+  .slt-bars{ height:30px; }
+}

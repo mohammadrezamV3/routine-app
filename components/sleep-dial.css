@@ -90,8 +90,8 @@ body[data-theme="light"] .sld-stars{ opacity:.2; }
 .sld-tick{ stroke:var(--slp-sub); stroke-width:1.2; stroke-linecap:round; opacity:.42; }
 .sld-tick.is-half{ stroke-width:1; opacity:.2; }
 .sld-tick.is-major{ stroke-width:2; opacity:.85; stroke:var(--sh-ink); }
-.sld-hour{ fill:var(--slp-sub); font-size:10px; font-weight:700; font-variant-numeric:tabular-nums; }
-.sld-hour.is-major{ fill:var(--text); font-size:11px; font-weight:800; }
+.sld-hour{ fill:var(--slp-sub); font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; }
+.sld-hour.is-major{ fill:var(--text); font-size:14px; font-weight:800; }
 .sld-goal, .sld-goal-glow{ fill:none; stroke-width:15; stroke-linecap:round; }
 .sld-goal-glow{ opacity:.55; }
 .sld-last{ fill:none; stroke:currentColor; stroke-width:8; stroke-linecap:round; }
@@ -123,7 +123,7 @@ body[data-theme="light"] .sld-now{ fill:#e0700f; }
 .sld-center > span{
   /* مرکزچینی فیزیکی عمدیه: inset-inline-start با direction خود عنصر حساب می‌شه و
      عددهای ساعت direction:ltr دارن، پس در rtl نصف عرض به راست می‌پریدن. */
-  position:absolute; left:50%; width:calc(136 / 316 * 100%);
+  position:absolute; left:50%; width:calc(146 / 316 * 100%);
   transform:translate(-50%, -50%); text-align:center; line-height:1.2; white-space:nowrap;
   letter-spacing:0; unicode-bidi:plaintext;
 }
@@ -209,13 +209,14 @@ html body .sleep-scope .btn.sld-secondary{ --btn-h:54px; --btn-bd:var(--sh-glass
 /* ── هفت شب اخیر ───────────────────────────────────────── */
 .slw{
   --slw-a:#a99bff; --slw-b:#5b4ce0; --slw-ok-a:#7ee0b0; --slw-ok-b:#2fae85; --slw-mid-a:#7aa8ff; --slw-mid-b:#3b5fd0; --slw-low-a:#ffb38a; --slw-low-b:#d0663b;
-  --slw-warm:#ffb38a; --slw-green:#7ee0b0; gap:16px;
+  --slw-warm:#ffb38a; --slw-green:#7ee0b0; gap:10px; padding:14px 16px;
+  --slw-h:clamp(48px, 7dvh, 120px);
 }
 body[data-theme="light"] .slw{
   --slw-a:#8d7cf5; --slw-b:#5240d4; --slw-ok-a:#3fcf9b; --slw-ok-b:#0a9a70; --slw-mid-a:#6f9bf6; --slw-mid-b:#2f5bd0; --slw-low-a:#f6a071; --slw-low-b:#d2602f;
   --slw-warm:#c2571f; --slw-green:#067a58;
 }
-.slw-grid{ --slw-top:28px; position:relative; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:2px; padding-inline-start:40px; }
+.slw-grid{ --slw-top:26px; position:relative; display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:2px; padding-inline-start:40px; }
 .slw-goal{
   position:absolute; inset-inline:0; height:0; pointer-events:none; z-index:1;
   display:flex; align-items:center; gap:6px;
@@ -226,7 +227,7 @@ body[data-theme="light"] .slw{
 }
 .slw-goal i{ flex:1 1 auto; height:0; border-top:1.5px dashed color-mix(in srgb, var(--slp-ink) 65%, transparent); }
 .slw-col{
-  display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px 0 4px;
+  display:flex; flex-direction:column; align-items:center; gap:4px; padding:6px 0 2px;
   border:none; border-radius:14px; color:var(--text); cursor:pointer; min-width:0;
 }
 .slw-val{ height:16px; font-size:11px; font-weight:700; color:var(--slp-sub); font-variant-numeric:tabular-nums; line-height:16px; }
@@ -234,7 +235,7 @@ body[data-theme="light"] .slw{
 .slw-col.is-empty .slw-val svg{ width:15px; height:15px; stroke-width:2.2; }
 .slw-val{ direction:ltr; unicode-bidi:isolate; }
 /* ستون: شیار کم‌رنگ + میله‌ی گرادیانی با سر گرد که از پایین رشد می‌کنه (یک بار، پله‌ای) */
-.slw-plot{ position:relative; display:block; width:100%; max-width:30px; height:124px; border-radius:11px; background:color-mix(in srgb, var(--text) 6%, transparent); }
+.slw-plot{ position:relative; display:block; width:100%; max-width:30px; height:var(--slw-h); border-radius:11px; background:color-mix(in srgb, var(--text) 6%, transparent); }
 .slw-fill{
   position:absolute; inset-inline:0; bottom:0; display:block; border-radius:11px 11px 5px 5px; color:inherit;
   background:linear-gradient(180deg, var(--slw-a), var(--slw-b));
@@ -260,7 +261,7 @@ body[data-theme="light"] .slw{
   .slw-col.is-empty:hover .slw-val{ opacity:1; color:var(--accent); }
 }
 @media (min-width:1024px){
-  .slw-plot{ height:150px; max-width:36px; border-radius:12px; }
+  .slw-plot{ max-width:36px; border-radius:12px; }
   .slw-fill{ border-radius:12px 12px 6px 6px; }
 }
 
@@ -286,3 +287,41 @@ html[data-perf-weak] .sld-goal-glow, html[data-perf="low"] .sld-goal-glow{ displ
 .slw-goal em{ color:color-mix(in srgb, var(--slp-ink) 82%, var(--text)); }
 body[data-theme="light"] .slw-col.is-today .slw-day{ color:var(--accent-deep); }
 .sld-head-end{ display:flex; align-items:center; gap:4px; }
+
+/* ── یک‌صفحه‌ای: هیرو و ساعت با ارتفاع صفحه مقیاس می‌گیرن (موبایل فشرده، دسکتاپ بدون اسکرول) ── */
+.sleep-scope .sld{ --dial:min(66vw, 36dvh, 340px); padding:10px 14px 12px; gap:6px; border-radius:24px; }
+.sld-head{ min-height:32px; gap:8px; }
+.sld-moon{ width:28px; height:28px; }
+.sld-greet{ gap:8px; flex:1 1 auto; }
+.sld-greet-txt{ flex-direction:row; align-items:baseline; gap:6px; flex-wrap:nowrap; flex:1 1 auto; overflow:hidden; }
+.sld-greet-k{ flex:none; min-height:0; font-size:13px; line-height:1.4; white-space:nowrap; }
+.sld-greet b{ display:block; min-height:0; min-width:0; font-size:14px; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sld-head-end{ flex:none; }
+.sld .slp-stats-link{ padding:4px 2px; }
+.sld-dial{ width:var(--dial); max-width:100%; }
+.sld-foot{ gap:8px; }
+.sld-tiles{ gap:8px; }
+body[data-theme="light"] .sleep-scope .sld-tile, body:not([data-theme="light"]) .sleep-scope .sld-tile{ padding:8px 12px; gap:1px; border-radius:14px; }
+.sld-tile-k{ line-height:1.35; }
+.sld-tile b{ font-size:20px; line-height:1.2; }
+.sld-tile em{ line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sld-foot .sld-insight{ align-items:center; font-size:13px; line-height:1.5; margin:0 2px; min-width:0; }
+.sld-insight svg{ width:16px; height:16px; margin-top:0; }
+.sld-insight span{ min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-wrap:nowrap; }
+html body .sleep-scope .btn.sld-cta, html body .sleep-scope .btn.sld-secondary{ --btn-h:46px; --btn-fs:15px; }
+@media (min-width:1024px){
+  .sleep-scope .sld{ --dial:clamp(210px, calc(100dvh - 358px), 400px); padding:14px 18px; gap:8px; }
+  .sld-foot{ gap:8px 10px; }
+  html body .sleep-scope .sld-actions > .btn{ --btn-h:auto; min-height:44px; }
+  .sld-dial{ margin-block:auto; }
+}
+@media (max-width:400px){ .sld{ padding-inline:12px; gap:8px; } }
+
+@media (max-width:1023px){
+  .slw{ padding:12px 14px; gap:6px; }
+  .slw .sl-card-title{ font-size:14px; }
+  .slw-stats{ padding-top:6px; }
+  .slw-stats b{ font-size:16px; }
+  .slw-stats span{ font-size:12px; }
+  .slw-stats > div{ gap:1px; }
+}
