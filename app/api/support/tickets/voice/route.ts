@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { readAudioFromRequest, transcribeVoice } from "@/lib/speechToText";
+import { withGuard } from "@/lib/requestGuard";
 
 // تبدیل ویس به متن برای فیلد پیام پشتیبانی — طبق درخواست صریح («دکمه
 // ارسال و فیلد متن مثل مدیربرنامه باشه، فرد حتی بتونه ویس بفرسته»).
@@ -14,7 +15,7 @@ import { readAudioFromRequest, transcribeVoice } from "@/lib/speechToText";
 // lib/speechToText.ts مشترک با همان روت روتین است.
 export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   const userId = (session?.user as any)?.id as string | undefined;
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -33,3 +34,5 @@ export async function POST(req: NextRequest) {
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status });
   return NextResponse.json({ text: result.text });
 }
+
+export const POST = withGuard({ policy: "upload", scope: "voice" }, handlePOST);

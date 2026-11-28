@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { FeaturePageGate } from "@/components/FeaturePageGate";
 import { ModuleGate } from "@/components/ModuleGate";
 import { tr } from "@/lib/i18n";
 import { SleepHub } from "@/components/SleepHub";
@@ -14,8 +15,10 @@ export function generateMetadata(): Metadata {
 
 export default function SleepPage() {
   return (
-    <ModuleGate module="SLEEP">
-      <SleepHub />
-    </ModuleGate>
+    <FeaturePageGate feature="sleep">
+      <ModuleGate module="SLEEP">
+        <SleepHub />
+      </ModuleGate>
+    </FeaturePageGate>
   );
 }

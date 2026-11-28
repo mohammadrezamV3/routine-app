@@ -8,6 +8,7 @@ import { featureBlocked } from "@/lib/featureFlagsServer";
 import { buildLiveWeek } from "@/lib/weeklyLetter/live";
 import { getSection } from "@/lib/sectionServer";
 import { MAX_WEEKS_BACK, offsetOfLegacyParam, offsetOfWeekParam } from "@/lib/weeklyLetter/weekParam";
+import { withGuard } from "@/lib/requestGuard";
 
 // GET /api/analysis/letters/live?week=YYYY-MM-DD  (یا ?offset=-1؛ بدون پارامتر = هفته‌ی جاری)
 // → LiveWeekPayload { letter, analysis, issue, prev, next, weekStart, offset, isCurrent }
@@ -16,7 +17,7 @@ import { MAX_WEEKS_BACK, offsetOfLegacyParam, offsetOfWeekParam } from "@/lib/we
 // بدون فراخوانی AI. سقف: 52 هفته‌ی گذشته، آینده نامعتبره.
 export const maxDuration = 30;
 
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   try {
     const guard = await requireModule(ModuleKey.AI_INSIGHT);
     if (!guard.ok) return guard.response;
@@ -48,3 +49,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: err?.message || tr("خطای غیرمنتظره", "Unexpected error") }, { status: 500 });
   }
 }
+
+export const GET = withGuard({ policy: "read", scope: "weeklyLive", gate: "weekly" }, handleGET);

@@ -6,6 +6,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone, isValidEmail } from "@/lib/validate";
 import { sendOtpSms } from "@/lib/sms";
 import { sendOtpEmail } from "@/lib/email";
+import { withGuard } from "@/lib/requestGuard";
 
 function hashCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
@@ -20,7 +21,7 @@ function resolveIdentifier(raw: string): { kind: "phone" | "email"; value: strin
   return null;
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const body = await req.json();
   const { identifier: rawIdentifier } = body as { identifier: string };
@@ -67,3 +68,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, kind });
 }
+
+export const POST = withGuard({ policy: "auth", scope: "forgot-password/request" }, handlePOST);

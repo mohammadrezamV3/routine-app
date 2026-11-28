@@ -19,6 +19,7 @@ import { addDaysIso } from "@/lib/schedule";
 import type { CustomOccurrence } from "@/lib/storage";
 import { tr, isEn } from "@/lib/i18n";
 import { publishDataChanged, clientTabId } from "@/lib/realtime";
+import { withGuard } from "@/lib/requestGuard";
 
 // دستیار «مدیر برنامه» — تنها نقطه‌ای که مدل زبانی اجازه دارد برنامه‌های
 // کاربر را عوض کند.
@@ -78,7 +79,7 @@ function parseHistory(raw: unknown): RoutineChatTurn[] {
     .map((t: any) => ({ role: t.role, text: String(t.text).slice(0, 600) }));
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   // ROUTINE ماژول پایه و همیشه رایگان است؛ این نگهبان این‌جا برای دسترسی
   // نیست، برای همان سه کار دیگری است که می‌کند: ۴۰۱ برای مهمان، بلاک
   // کاربر مسدودشده، و بیرون‌دادن userId/isSuperAdmin. خود «نومو» جزو
@@ -309,3 +310,5 @@ export async function GET() {
     remaining: unlimited ? null : Math.max(0, freeLimit - used),
   });
 }
+
+export const POST = withGuard({ policy: "ai", scope: "nomo", gate: "ai" }, handlePOST);

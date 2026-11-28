@@ -1,8 +1,10 @@
 import { tr } from "@/lib/i18n";
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionFast } from "@/lib/serverSession";
+import { guardedFetch } from "@/lib/guard/fetchGuard";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
+import { withGuard } from "@/lib/requestGuard";
 
 // پروکسی سمت سرور برای قیمت لحظه‌ای بازار — هیچ سرویس رسمی/کلیددار برای این
 // پروژه تنظیم نشده، پس از endpoint عمومی (و غیررسمی) یاهو فایننس استفاده
@@ -49,9 +51,11 @@ async function fetchQuote(symbol: string): Promise<Quote | null> {
   if (cached && cached.expiresAt > Date.now()) return cached.data;
 
   try {
-    const res = await fetch(
+    // قطع‌کننده‌ی مدار: یاهو که پشت‌سرهم خراب شد چند ثانیه کنار گذاشته می‌شه و کش قدیمی جواب می‌ده
+    const res = await guardedFetch(
+      "yahoo",
       `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
-      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store", signal: AbortSignal.timeout(5000) }
+      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store", timeoutMs: 5000 },
     );
     if (!res.ok) return cached?.data ?? null;
     const json = await res.json();
@@ -71,7 +75,7 @@ async function fetchQuote(symbol: string): Promise<Quote | null> {
 }
 
 // GET /api/market/prices?symbols=SPY,QQQ,^VIX
-export async function GET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   { const off = await sessionFeatureBlocked("tradeChart"); if (off) return off; }
   // قبلا کاملا باز بود: هرکسی بدون حساب می‌تونست از این سرور به‌عنوان یه
   // پروکسی رایگان یاهو استفاده کنه (هزینه‌ی پهنای‌باند و ریسک بلاک‌شدن IP
@@ -94,3 +98,5 @@ export async function GET(req: NextRequest) {
   // سرور خودش ۳۰ثانیه کش می‌کنه؛ مرورگر هم کوتاه نگه می‌داره (فقط private چون پشت لاگینه)
   return NextResponse.json({ quotes }, { headers: { "Cache-Control": "private, max-age=15" } });
 }
+
+export const GET = withGuard({ policy: "read", scope: "prices" }, handleGET);

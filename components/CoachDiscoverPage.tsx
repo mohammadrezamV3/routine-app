@@ -1,5 +1,6 @@
 "use client";
 
+import { isBackoffStatus, limitNotice, parseRetryAfterSec } from "@/lib/searchClient";
 import "./coach.css";
 import "./coach-pages.css";
 import "./coach-discover.css";
@@ -165,19 +166,28 @@ function Results({ q, cat, onClear }: { q: string; cat: string; onClear: () => v
   const [moreBusy, setMoreBusy] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
   const reqId = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const load = useCallback(async (p: number) => {
     const id = ++reqId.current;
+    // درخواست کهنه (تایپ یا دسته‌ی تازه‌تر) لغو می‌شه، نه فقط نادیده گرفته
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (cat) params.set("cat", cat);
     params.set("page", String(p));
     if (p === 1) { setMentors(null); setError(null); } else { setMoreBusy(true); setMoreError(null); }
     try {
-      const res = await fetch(`/api/mentors?${params}`, { cache: "no-store" });
+      const res = await fetch(`/api/mentors?${params}`, { cache: "no-store", signal: ac.signal });
       if (id !== reqId.current) return;
       if (!res.ok) {
-        const msg = await readApiError(res, tr("فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن", "Couldn't load mentors. Try again"));
+        // 429/503: پیام انتظار با Retry-After و بدون تلاش خودکار (دکمه‌ی «تلاش دوباره» دست کاربره)
+        const msg = isBackoffStatus(res.status)
+          ? limitNotice(res.status, parseRetryAfterSec(res.headers.get("Retry-After")))
+          : await readApiError(res, tr("فهرست مربی‌ها دریافت نشد؛ دوباره تلاش کن", "Couldn't load mentors. Try again"));
         if (p === 1) setError(msg); else setMoreError(msg);
         return;
       }

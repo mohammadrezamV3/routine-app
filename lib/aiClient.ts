@@ -18,6 +18,7 @@ import { MUSCLE_LABELS, sameSplit, splitRuleIssues, toKeyedSplit, type SplitRule
 import { AiFeatureKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/errorLog";
+import { guardedFetch } from "@/lib/guard/fetchGuard";
 import { toEnglishDigits } from "@/lib/validate";
 import { tr, isEn } from "@/lib/i18n";
 import { getAiCostRate, estimateAiCostUsdMicros } from "@/lib/appSettings";
@@ -172,7 +173,7 @@ export async function callAiChat(
   const startedAt = Date.now();
   let response: Response;
   try {
-    response = await fetch(`${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
+    response = await guardedFetch("ai-gateway", `${baseUrl.replace(/\/+$/, "")}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -188,7 +189,7 @@ export async function callAiChat(
           { role: "user", content: userContent },
         ],
       }),
-      signal: AbortSignal.timeout(timeoutMs),
+      timeoutMs,
     });
   } catch (e: any) {
     if (e?.name === "TimeoutError" || e?.name === "AbortError") {

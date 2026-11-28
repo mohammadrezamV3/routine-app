@@ -13,6 +13,7 @@ import {
   NOMO_MAX_MESSAGE, NOMO_SYSTEM_PROMPT, buildUserContent, detectBlockedRequest, identityText, offTopicText,
   parseAgentOutput, sanitizeHistory, sanitizeUserText, summarizeOp,
 } from "@/lib/nomoAgent";
+import { withGuard } from "@/lib/requestGuard";
 
 // «نومو» حالت گفت‌وگو + عملیات چندبخشی. این روت هیچ‌چیز *نمی‌نویسد*:
 //   • گفت‌وگو → متن ساده‌ی فیلترشده
@@ -28,7 +29,7 @@ const quotaOf = (unlimited: boolean, freeLimit: number, used: number) => ({
   unlimited, used, limit: unlimited ? null : freeLimit, remaining: unlimited ? null : Math.max(0, freeLimit - used),
 });
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const guard = await requireModule(ModuleKey.ROUTINE);
   if (!guard.ok) return guard.response;
   { const off = await featureBlocked("routineAssistant", guard.userId); if (off) return off; }
@@ -129,3 +130,5 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({ kind: "reply", reply: out.reply, quota });
 }
+
+export const POST = withGuard({ policy: "ai", scope: "nomoAgent", gate: "ai" }, handlePOST);

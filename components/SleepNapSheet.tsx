@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-log.css";
 import "./sleep-tools.css";
 import { useEffect, useRef, useState } from "react";
@@ -63,7 +64,7 @@ function SheetBody({ onClose, latency }: SleepNapSheetProps) {
 
   return (
     <>
-      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-overlay open sleep-ov" onClick={onClose} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("چرت", "Nap")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("چرت", "Nap")}</div>

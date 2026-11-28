@@ -5,6 +5,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { hashSecret } from "@/lib/metatrader";
 import { parseMtShotBody, recordShotDiag, savePendingShot, storeShotOnEntry } from "@/lib/mtScreenshots";
 import { publishDataChanged } from "@/lib/realtime";
+import { withGuard } from "@/lib/requestGuard";
 
 // POST /api/mt/screenshot — اکسپرت (نسخه‌ی 1.40 به بعد؛ 1.41 خط‌شکن base64 رو خودش پاک می‌کنه) از چارت همون نماد در لحظه‌ی
 // ورود/خروج معامله اسکرین می‌گیره و اینجا می‌فرسته تا به همون معامله‌ی ژورنال وصل بشه.
@@ -22,7 +23,7 @@ const LIMIT_PER_TOKEN = 30;
 const LIMIT_PER_IP = 300;
 const WINDOW_MS = 60_000;
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   if (!(await checkRateLimit(`mt-shot:${ip}`, LIMIT_PER_IP, WINDOW_MS))) {
     return NextResponse.json({ error: "too many requests" }, { status: 429 });
@@ -71,3 +72,5 @@ export async function POST(req: NextRequest) {
   void publishDataChanged(link.userId, ["trade"]);
   return NextResponse.json({ ok: true, stored: true });
 }
+
+export const POST = withGuard({ policy: "upload", scope: "mtShot" }, handlePOST);

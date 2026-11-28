@@ -5,13 +5,14 @@ import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidEmail } from "@/lib/validate";
 import { sendOtpEmail } from "@/lib/email";
 import { generateEmailOtp, hashEmailOtp, EMAIL_OTP_TTL_MS } from "@/lib/emailOtp";
+import { withGuard } from "@/lib/requestGuard";
 
 // POST /api/auth/email-otp/request  { email }
 // قدم اول ورود بدون رمز — کد رو *بدون چک‌کردن وجود حساب* می‌سازه و
 // می‌فرسته (دقیقا مثل الگوی SignupOtp)، تا لحظه‌ی request هیچ‌جوره فاش
 // نشه این ایمیل حساب داره یا نه. وجودداشتن حساب فقط بعد اثبات مالکیت
 // ایمیل (وارد‌کردن کد درست، توی verify) بررسی می‌شه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const body = await req.json().catch(() => null);
   const rawEmail = body?.email;
@@ -48,3 +49,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withGuard({ policy: "auth", scope: "email-otp/request" }, handlePOST);

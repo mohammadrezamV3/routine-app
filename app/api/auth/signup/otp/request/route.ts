@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone } from "@/lib/validate";
 import { sendOtpSms } from "@/lib/sms";
+import { withGuard } from "@/lib/requestGuard";
 
 function hashCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
@@ -14,7 +15,7 @@ function hashCode(code: string): string {
 // با یک کد ۵رقمی تایید بشه. عمدا چک نمی‌کنه که این شماره از قبل ثبت‌نام
 // کرده یا نه (همون قرارداد ضدenumeration بقیه‌ی سایت) — تکراری‌بودن فقط
 // در انتهای مسیر، موقع ثبت‌نام واقعی، با یک پیام کلی مشخص می‌شه.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const body = await req.json();
   const { phone } = body as { phone: string };
@@ -51,3 +52,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withGuard({ policy: "auth", scope: "signup/otp/request" }, handlePOST);

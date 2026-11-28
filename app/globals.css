@@ -983,25 +983,31 @@ html body .btn .btn-spinner{
   body .theme-switch.theme-switch.theme-switch:focus-visible{
     background:none; border:0; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
     color:var(--text); outline:none; transform:none; border-radius:0;
+    transition:none; -webkit-appearance:none; appearance:none;
   }
   .theme-switch{
     --ts-dir:-1;
     position:relative; display:inline-flex; align-items:center; justify-content:center; gap:10px;
     min-width:44px; min-height:44px; padding:0; margin:0; flex-shrink:0; cursor:pointer;
-    touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none;
+    touch-action:manipulation; -webkit-tap-highlight-color:rgba(0,0,0,0); -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
   }
+  /* iOS: هیچ هایلایت/چهارگوش لمسی روی دکمه و والدهای کشو (گزارش: چهارگوش تیره پشت سوییچ بعد از تپ) */
+  .nav-title, .nav-title *{ -webkit-tap-highlight-color:rgba(0,0,0,0); }
   html[dir="ltr"] .theme-switch{ --ts-dir:1; }
   .theme-switch .ts-track{
     position:relative; flex:none; width:48px; height:28px; border-radius:14px; box-sizing:border-box;
     border:1px solid rgba(190,200,235,.38);
     background:rgba(30,38,76,.55);
-    transition:background-color .3s ease, border-color .3s ease, transform .15s ease;
+    transition:background-color .3s ease, border-color .3s ease;
   }
   body[data-theme="light"] .theme-switch .ts-track{
     border-color:color-mix(in srgb, var(--sun) 70%, transparent);
     background:color-mix(in srgb, var(--sun) 28%, transparent);
   }
-  .theme-switch:active .ts-track{ transform:scale(.95); }
+  /* فشار با scale فقط برای ماوس؛ روی لمسی یک لایه‌ی ترنسفورم داخل کشوی ماسک‌دار iOS چهارگوش می‌ساخت */
+  @media (hover:hover) and (pointer:fine){ .theme-switch:active .ts-track{ transform:scale(.95); } }
+  /* حلقه‌ی فوکوس فقط برای کیبورد و روی خود مسیر (نه روی دکمه‌ی بیرونی) */
+  .theme-switch:focus:not(:focus-visible) .ts-track{ outline:none; }
   .theme-switch:focus-visible .ts-track{ outline:2px solid var(--accent); outline-offset:3px; }
   .theme-switch .ts-knob{
     position:absolute; top:2px; inset-inline-start:2px; width:22px; height:22px; border-radius:50%;
@@ -5987,3 +5993,6 @@ html[dir="ltr"] .mm-menu, html[dir="ltr"] .notif-panel{ transform-origin:var(--m
   border:1px dashed var(--surface-line); color:var(--muted); font-size:13px; line-height:1.6;
 }
 .online-only-note svg{ flex:none; }
+
+/* پیام انتظار کادرهای جستجو وقتی سرور 429/503 می‌ده (lib/useSearchQuery.ts) */
+.search-notice{ font-size:12px; color:var(--muted); padding:8px 2px 2px; }

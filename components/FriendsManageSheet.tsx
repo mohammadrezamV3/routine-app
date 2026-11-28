@@ -1,7 +1,8 @@
 "use client";
 import "./friends.css";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchQuery } from "@/lib/useSearchQuery";
 import { createPortal } from "react-dom";
 import { Star, UserMinus, X } from "lucide-react";
 import { LockBodyScroll } from "./LockBodyScroll";
@@ -206,25 +207,25 @@ function PersonRow({ p, onOpen, star, children }: { p: Omit<Person, "friendshipI
 
 function AddFriend({ onViewing, onChanged }: { onViewing: (id: string) => void; onChanged: () => void }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchUser[] | null>(null);
-  const [searching, setSearching] = useState(false);
+  const [overrides, setOverrides] = useState<Record<string, Partial<SearchUser>>>({});
   const [busy, setBusy] = useState<string | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const run = useCallback(async (q: string) => {
-    const res = await fetch(`/api/friends/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
-    if (res.ok) setResults((await res.json()).users);
-    setSearching(false);
-  }, []);
-
-  useEffect(() => {
-    if (timer.current) clearTimeout(timer.current);
-    const q = query.trim();
-    if (q.length < 2) { setResults(null); setSearching(false); return; }
-    setSearching(true);
-    timer.current = setTimeout(() => run(q), 350);
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [query, run]);
+  // جست‌وجوی زنده با قلاب مشترک: debounce، لغو درخواست کهنه، احترام به Retry-After
+  const { data, loading: searching, notice } = useSearchQuery<SearchUser[]>({
+    query,
+    minLength: 2,
+    debounceMs: 350,
+    buildUrl: (q) => `/api/friends/search?q=${encodeURIComponent(q)}`,
+    parse: (d) => d.users,
+  });
+  useEffect(() => { setOverrides({}); }, [data]);
+  const results = useMemo(() => (data ? data.map((u) => ({ ...u, ...overrides[u.id] })) : null), [data, overrides]);
+  const setResults = (fn: (prev: SearchUser[] | null) => SearchUser[] | null) => {
+    const next = fn(results);
+    if (!next) return;
+    const o: Record<string, Partial<SearchUser>> = {};
+    for (const u of next) o[u.id] = { status: u.status, friendshipId: u.friendshipId };
+    setOverrides(o);
+  };
 
   async function act(u: SearchUser) {
     setBusy(u.id);
@@ -256,7 +257,9 @@ function AddFriend({ onViewing, onChanged }: { onViewing: (id: string) => void; 
         spellCheck={false}
       />
       {q.length >= 2 && (
-        searching && !results ? (
+        notice ? (
+          <div className="search-notice" role="status">{notice}</div>
+        ) : searching && !results ? (
           <div className="fr-search-state"><Spinner size={13} /> {tr("در حال جست‌وجو…", "Searching…")}</div>
         ) : results && results.length === 0 ? (
           <div className="fr-search-state">{tr("کسی با این یوزرنیم پیدا نشد.", "No one found with this username.")}</div>

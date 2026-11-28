@@ -5,7 +5,7 @@
 
 import { pathAllowedIn, type SectionKey } from "./sections";
 
-export type DashArea = "today" | "heat" | "ex" | "cal" | "wheat" | "space" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep" | "tools" | "meds";
+export type DashArea = "today" | "heat" | "ex" | "cal" | "wheat" | "space" | "trade" | "market" | "mentor" | "road" | "inbox" | "sleep" | "tools";
 
 export type DashBlocks = {
   /** کارت‌های برنامه‌ی امروز و نقشه‌ی ثبات */
@@ -77,15 +77,15 @@ export function sectionAreas(has: Set<DashArea>, section: SectionKey): { lg: str
   let order: DashArea[] = [];
 
   if (section === "routine") {
-    order = ["today", "heat", "sleep", "meds", "road", "mentor", "inbox"];
+    order = ["today", "heat", "sleep", "road", "mentor", "inbox"];
     const head = has.has("today");
     // خواب زیر نقشه‌ی ثبات و کنار ستون بلند «برنامه‌های امروز» تا دو طرف هم‌قد بشن (بدون نوار خالی)
     const sleepUnderHeat = head && has.has("heat") && has.has("sleep");
     if (head && sleepUnderHeat) lg.push(q(["today", "heat", "heat"]), q(["today", "sleep", "sleep"]));
     else if (head) lg.push(q(["today", "heat", "heat"]));
     if (head) md.push(q(["heat", "heat"]), q(["today", "today"]));
-    const rest = pick(...(sleepUnderHeat ? [] : ["sleep" as DashArea]), "meds", "road", "mentor", "inbox");
-    const restMd = pick("sleep", "meds", "road", "mentor", "inbox");
+    const rest = pick(...(sleepUnderHeat ? [] : ["sleep" as DashArea]), "road", "mentor", "inbox");
+    const restMd = pick("sleep", "road", "mentor", "inbox");
     lg.push(...packRows(rest, 3));
     md.push(...packRows(restMd, 2));
   } else if (section === "workout") {

@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-detail.css";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -82,7 +83,7 @@ function Body({ parts, onClose }: { parts: SleepScoreParts | null; onClose: () =
   const list = rows();
   return (
     <>
-      <div className="modal-overlay open sli-overlay" onClick={onClose} />
+      <div className="modal-overlay open sli-overlay sleep-ov" onClick={onClose} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel sli-panel" role="dialog" aria-modal="true" aria-label={tr("امتیاز خواب چطور حساب می‌شه؟", "How the sleep score works")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("امتیاز خواب چطور حساب می‌شه؟", "How the sleep score works")}</div>

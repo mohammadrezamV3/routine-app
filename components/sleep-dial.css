@@ -189,6 +189,8 @@ html body .sleep-scope .btn.sld-cta{
   --btn-bg:linear-gradient(90deg, var(--sh-cta-a), var(--sh-cta-b)); --btn-bd:transparent; --btn-fg:var(--sh-cta-fg);
   --btn-h:54px; --btn-fs:16px; font-weight:800;
   box-shadow:0 10px 26px -12px color-mix(in srgb, var(--sh-cta-a) 80%, transparent);
+  /* بوردر شفاف 1px پیش‌فرض گرادیان رو از سر تکرار می‌کرد: لبه‌ی چپ دکمه یک خط روشن (انتهای آبی) نشون می‌داد */
+  background-origin:border-box; background-clip:border-box;
 }
 html body .sleep-scope .btn.sld-cta svg{ width:18px; height:18px; fill:currentColor; }
 html body .sleep-scope .btn.sld-secondary{ --btn-h:54px; --btn-bd:var(--sh-glass-line); --btn-fg:var(--sh-ink); --btn-hover-bd:var(--sh-glass-hover); --btn-hover-fg:var(--sh-ink); }

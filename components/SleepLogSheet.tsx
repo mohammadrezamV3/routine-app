@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-log.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -192,7 +193,7 @@ function SheetBody({ initial, target, existing, onClose, onChanged }: SleepLogSh
 
   return (
     <>
-      <div className="modal-overlay open" onClick={() => { if (!saving) onClose(); }} />
+      <div className="modal-overlay open sleep-ov" onClick={() => { if (!saving) onClose(); }} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={tr("ثبت خواب", "Log sleep")}>
         <div className="modal-head">
           <div className="modal-title">{existing ? tr("ویرایش خواب", "Edit sleep") : tr("ثبت خواب", "Log sleep")}</div>

@@ -10,6 +10,7 @@ import { generateRoadmapGuide, generateStageDetail, STAGE_REGEN_TIMEOUT_MS } fro
 import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizePlan, sanitizeStepProgress } from "@/lib/roadmapPlan";
 import { withLiveSync } from "@/lib/realtime";
+import { withGuard } from "@/lib/requestGuard";
 
 // یک فراخوانی AI تا ۴۵ ثانیه (AI_TIMEOUT_MS) — همان دلیل روت ساخت.
 // یک مرحله با جزئیات کامل (تا ۹۰۰۰ توکن) بیشتر از ۶۰ ثانیه طول می‌کشد؛
@@ -106,4 +107,4 @@ async function handlePOST(req: NextRequest, { params }: { params: { id: string }
 }
 
 // بعد از هر نوشتن موفق، بقیه‌ی دستگاه‌ها/تب‌های همین کاربر با WebSocket خبردار می‌شن (lib/realtime.ts)
-export const POST = withLiveSync(["roadmaps"], handlePOST);
+export const POST = withLiveSync(["roadmaps"], withGuard({ policy: "ai", scope: "roadmapRegen", gate: "ai" }, handlePOST));

@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
 import { isValidIranPhone, isValidEmail, validatePassword } from "@/lib/validate";
+import { withGuard } from "@/lib/requestGuard";
 
 function hashCode(code: string): string {
   return crypto.createHash("sha256").update(code).digest("hex");
@@ -17,7 +18,7 @@ function resolveIdentifier(raw: string): { kind: "phone" | "email"; value: strin
   return null;
 }
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const ip = getClientIp(req.headers);
   const body = await req.json();
   const { identifier: rawIdentifier, code, newPassword } = body as { identifier: string; code: string; newPassword: string };
@@ -72,3 +73,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withGuard({ policy: "auth", scope: "forgot-password/verify" }, handlePOST);

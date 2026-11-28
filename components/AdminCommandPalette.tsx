@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchQuery } from "@/lib/useSearchQuery";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Search, CornerDownLeft } from "lucide-react";
@@ -24,8 +25,6 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
   const router = useRouter();
   const en = useIsEn();
   const [q, setQ] = useState("");
-  const [remote, setRemote] = useState<Remote | null>(null);
-  const [busy, setBusy] = useState(false);
   const [cursor, setCursor] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -49,25 +48,18 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
   }, [access]);
 
   useEffect(() => {
-    if (open) { setQ(""); setRemote(null); setCursor(0); setTimeout(() => inputRef.current?.focus(), 30); }
+    if (open) { setQ(""); setCursor(0); setTimeout(() => inputRef.current?.focus(), 30); }
   }, [open]);
 
   const term = q.trim();
-  useEffect(() => {
-    if (!open) return;
-    if (term.length < 2) { setRemote(null); setBusy(false); return; }
-    setBusy(true);
-    const ac = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/admin/search?q=${encodeURIComponent(term)}`, { signal: ac.signal, cache: "no-store" });
-        if (res.ok) setRemote(await res.json());
-        else setRemote(null);
-      } catch { /* abort یا قطع شبکه */ }
-      if (!ac.signal.aborted) setBusy(false);
-    }, 250);
-    return () => { clearTimeout(t); ac.abort(); };
-  }, [term, open]);
+  const { data: remote, loading: busy, notice: searchNotice } = useSearchQuery<Remote>({
+    query: term,
+    minLength: 2,
+    debounceMs: 250,
+    enabled: open,
+    buildUrl: (v) => `/api/admin/search?q=${encodeURIComponent(v)}`,
+    parse: (d) => d,
+  });
 
   const rows = useMemo<Row[]>(() => {
     const low = term.toLowerCase();
@@ -113,6 +105,7 @@ export function AdminCommandPalette({ open, onClose, access }: { open: boolean; 
         </div>
         <div className="ads-pal-list" id="ads-pal-list" role="listbox" ref={listRef}>
           {rows.length === 0 && <div className="ads-pal-empty">{busy ? tr("در حال جست‌وجو", "Searching…") : tr("نتیجه‌ای پیدا نشد", "No results found")}</div>}
+          {searchNotice && <div className="search-notice" role="status">{searchNotice}</div>}
           {rows.map((r, i) => {
             const head = r.group !== lastGroup ? (lastGroup = r.group) : null;
             return (
