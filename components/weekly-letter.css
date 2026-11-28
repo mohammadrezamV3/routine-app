@@ -428,6 +428,7 @@ section.wl-ch{ padding:0; border-top:none; margin-top:36px; scroll-margin-top:ca
 /* ── بینش‌ها ────────────────────────────────────────────── */
 .wl-ins-grid{ display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
 @media (min-width:760px){ .wl-ins-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; } }
+.wl-conn-note{ margin:12px 0 0; font-size:12px; line-height:1.7; opacity:.7; text-align:start; }
 .wl-root .wl-ins{ --tone:var(--muted); display:flex; gap:12px; align-items:flex-start; }
 .wl-ins.is-good{ --tone:var(--wl-good); }
 .wl-ins.is-bad{ --tone:var(--wl-bad); }
