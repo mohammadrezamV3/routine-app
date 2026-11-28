@@ -25,7 +25,7 @@ function needsOnline(pathname: string): string | null {
 //   /account/general            → «تنظیمات» — فهرست گروه‌بندی‌شده: داشبورد، زبان،
 //                                  اعلان‌ها، روتین، بدنسازی، ترید، بازخورد لمسی،
 //                                  دسترسی مربی‌ها، سابقه‌ی گفت‌وگو (هر کدام صفحه‌ی خودش)
-//   /account/referral           → رفرال و کیف اعتبار
+//   /account/referral           → دعوت دوستان و کیف اعتبار
 //   /account/security           → امنیت و حریم خصوصی
 //   /account/support            → پشتیبانی (تیکت)
 //   /account/subscription       → ریدایرکت به /subscription

@@ -13,7 +13,8 @@ import { isValidIranPhone, isValidUsername, validatePassword, isValidPersianName
 import { passwordTierLabel } from "@/lib/passwordTierLabel";
 import { passwordTier, PASSWORD_TIER_LABELS, PASSWORD_TIER_ORDER, isPasswordAcceptable } from "@/lib/passwordStrength";
 import { loginAndRedirect } from "@/lib/loginRedirect";
-import { captureInviteRef } from "@/lib/invite";
+import { captureInviteRef, readInviteRef } from "@/lib/invite";
+import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/referral";
 import { TickButton } from "@/components/TickButton";
 import { tr, isEn } from "@/lib/i18n";
 
@@ -54,7 +55,8 @@ export default function SignupPage() {
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   // با لینک دعوت یه دوست اومده؟ (lib/invite.ts) — فقط یادآوری تخفیف؛ خود کد موقع خرید پر می‌شه
-  useEffect(() => { captureInviteRef(); }, []);
+  const [invitedRef, setInvitedRef] = useState(false);
+  useEffect(() => { captureInviteRef(); setInvitedRef(!!readInviteRef()); }, []);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -347,6 +349,11 @@ export default function SignupPage() {
 
       {error && <div className="field-error-msg" style={{ display: "block", marginTop: 8 }}>{error}</div>}
 
+      {invitedRef && (
+        <p className="auth-invite-note" role="note">
+          {tr(`دوستت دعوتت کرده: ${REFERRAL_DISCOUNT_PERCENT}٪ تخفیف اولین خریدت منتظرته`, `A friend invited you: ${REFERRAL_DISCOUNT_PERCENT}% off your first purchase is waiting`)}
+        </p>
+      )}
       <button type="submit" className="auth-full-btn" disabled={loading} data-anim-field style={{ marginTop: 16 }}>
         {loading ? tr("در حال ثبت‌نام…", "Signing up…") : tr("ساخت حساب", "Create account")}
       </button>

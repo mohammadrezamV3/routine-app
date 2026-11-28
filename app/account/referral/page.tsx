@@ -6,6 +6,7 @@ import { AccountPageHead, AccountBlock, AccountSkeleton } from "@/components/Acc
 import { toJalali, jMonthName } from "@/lib/jalali";
 import { walletDescriptionText } from "@/lib/subscriptionI18n";
 import { tr, isEn } from "@/lib/i18n";
+import { buildInviteUrl } from "@/lib/inviteLink";
 
 type InviteStatus = "PENDING" | "REWARDED" | "REVOKED";
 type Invite = {
@@ -58,7 +59,7 @@ function formatInviteDate(iso: string): string {
   return `${jd} ${jMonthName(jm - 1)} ${jy}`;
 }
 
-// صفحه‌ی رفرال — دعوت دوستان با کد/لینک شخصی؛ وقتی دوست اولین خریدش رو
+// صفحه‌ی دعوت دوستان — دعوت دوستان با کد/لینک شخصی؛ وقتی دوست اولین خریدش رو
 // انجام بده، 10٪ از مبلغ واقعا پرداخت‌شده به‌صورت اعتبار درون‌اپی به کیف
 // دعوت‌کننده اضافه می‌شه. این صفحه مثل بقیه‌ی زیرصفحه‌های /account خودش
 // چک auth نمی‌کنه — همون گیت app/account/layout.tsx قبلش نشسته.
@@ -77,7 +78,7 @@ export default function ReferralPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const title = tr("رفرال", "Referral");
+  const title = tr("دعوت دوستان", "Invite friends");
 
   if (!data) {
     return (
@@ -86,8 +87,8 @@ export default function ReferralPage() {
         {failed ? (
           <div className="ap-card account-card">
             <div className="ap-empty">
-              <div>{tr("اطلاعات رفرال باز نشد", "Could not load your referral details")}</div>
-              <button type="button" className="btn btn-outline btn-sm" style={{ marginTop: 12 }} onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
+              <div>{tr("اطلاعات دعوت دوستان باز نشد", "Could not load your invite details")}</div>
+              <button type="button" className="btn btn-outline btn-sm" onClick={load}>{tr("تلاش دوباره", "Try again")}</button>
             </div>
           </div>
         ) : <AccountSkeleton blocks={3} />}
@@ -95,9 +96,11 @@ export default function ReferralPage() {
     );
   }
 
+  const shareUrl = buildInviteUrl(typeof window !== "undefined" ? window.location.origin : "", data.code) || data.shareUrl;
+
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(data!.shareUrl);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -110,7 +113,7 @@ export default function ReferralPage() {
 
   async function shareLink() {
     try {
-      await (navigator as any).share({ title: tr("رفرال", "Referral"), url: data!.shareUrl });
+      await (navigator as any).share({ title: tr("دعوت دوستان", "Invite friends"), url: shareUrl });
     } catch {
       // کاربر شیت اشتراک‌گذاری رو کنسل کرده یا مرورگر ساپورت نمی‌کرده — نیازی
       // به نشان‌دادن خطا نیست.
@@ -123,7 +126,7 @@ export default function ReferralPage() {
     <section>
       <AccountPageHead
         title={title}
-        hint={tr("دوستت رو با لینک رفرال خودت دعوت کن — وقتی اولین خرید پلنش رو انجام بده، 10% از مبلغی که واقعا پرداخت کرده به‌صورت اعتبار به کیف تو اضافه می‌شه. این اعتبار فقط داخل همین اپ و فقط برای کم‌کردن قیمت خرید پلن‌های بعدی قابل‌استفاده‌ست — هیچ‌وقت قابل‌برداشت یا قابل‌استفاده‌ی بیرون از اپ نیست.", "Invite a friend with your referral link. When they make their first plan purchase, 10% of the amount they actually paid is added to your wallet as credit. This credit can only be used inside the app, only to reduce the price of future plan purchases, and can never be withdrawn or used outside the app.")}
+        hint={tr("دوستت رو با لینک دعوت خودت دعوت کن — وقتی اولین خرید پلنش رو انجام بده، 10% از مبلغی که واقعا پرداخت کرده به‌صورت اعتبار به کیف تو اضافه می‌شه. این اعتبار فقط داخل همین اپ و فقط برای کم‌کردن قیمت خرید پلن‌های بعدی قابل‌استفاده‌ست — هیچ‌وقت قابل‌برداشت یا قابل‌استفاده‌ی بیرون از اپ نیست.", "Invite a friend with your invite link. When they make their first plan purchase, 10% of the amount they actually paid is added to your wallet as credit. This credit can only be used inside the app, only to reduce the price of future plan purchases, and can never be withdrawn or used outside the app.")}
       />
 
       {/* کیف پول */}
@@ -153,7 +156,7 @@ export default function ReferralPage() {
             </button>
           </div>
         </div>
-        <span className="ap-invite-link mono" dir="ltr">{data.shareUrl}</span>
+        <span className="ap-invite-link mono" dir="ltr">{shareUrl}</span>
       </AccountBlock>
 
       {/* دعوت‌ها */}
@@ -178,7 +181,7 @@ export default function ReferralPage() {
                       <span className="ap-row-label">{inv.inviteeName || tr("کاربر", "User")}</span>
                       <span className="ap-row-desc mono" dir="ltr">{formatInviteDate(inv.createdAt)}</span>
                     </span>
-                    <span className="ap-row-end" style={{ flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                    <span className="ap-row-end is-stack">
                       <span className={`ap-status is-${inv.status.toLowerCase()}`}>{inviteStatusLabels()[inv.status]}</span>
                       {inv.status === "REWARDED" && inv.rewardAmount != null && (
                         <span className="ap-amount mono" dir="ltr">+{formatMoney(inv.rewardAmount, data.currency)}</span>
