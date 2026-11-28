@@ -25,17 +25,10 @@ export const dynamic = "force-dynamic";
  * «امروز» از منطقه‌ی زمانی حساب کاربر حساب می‌شه؛ اگه با مرورگر فرق کنه،
  * کلاینت خودش یک بار با تاریخ مرورگر دوباره می‌گیره.
  */
-export default async function DashboardPage({ searchParams }: { searchParams?: { tab?: string | string[] } }) {
+export default async function DashboardPage() {
   const session = await getSessionFast();
   const userId = (session?.user as { id?: string } | undefined)?.id;
   if (!userId) return <DashboardClient gate="guest" initial={null} />;
-
-  // بخش ورزش داشبورد نداره: برنامه تمرینی (/exercise) و کالری‌شمار (/calorie) دو صفحه‌ی کامل جدان
-  if (getSection() === "workout") {
-    const tab = Array.isArray(searchParams?.tab) ? searchParams?.tab[0] : searchParams?.tab;
-    if (tab === "calorie" && (await isFeatureEnabled("calorie", userId))) redirect("/calorie");
-    redirect(await serverHomePath(userId));
-  }
 
   // فلگ برای این کاربر خاموشه (ادمین عمدا خاموشش کرده) → صفحه‌ی اصلی قبلی، نه
   // صفحه‌ی قفل؛ چون /dashboard حالا مقصد پیش‌فرض بعد از ورود و fallback

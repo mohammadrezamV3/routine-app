@@ -89,12 +89,11 @@ export function sectionAreas(has: Set<DashArea>, section: SectionKey): { lg: str
     lg.push(...packRows(rest, 3));
     md.push(...packRows(restMd, 2));
   } else if (section === "workout") {
-    // «فضای تمرین» (پنل‌های واقعی تمرین و تغذیه) جای دو کارت خلاصه‌ی ex/cal: ردیف تمام‌عرض اول
-    order = ["space", "sleep"];
-    if (has.has("space")) { lg.push(q(["space", "space", "space"])); md.push(q(["space", "space"])); }
-    const rest = pick("sleep");
-    lg.push(...packRows(rest, 3));
-    md.push(...packRows(rest, 2));
+    // داشبورد واقعی ورزش: تمرین امروز، کالری، خواب، مربی‌ها (ردیف‌های متوازن)
+    order = ["ex", "cal", "sleep", "mentor"];
+    const all = pick(...order);
+    lg.push(...packRows(all, 3));
+    md.push(...packRows(all, 2));
   } else {
     // ترید: عملکرد و بازار، بعد ابزارها (کارت مربی و اعلان‌ها فقط مال روتینه)
     order = ["trade", "market", "tools"];

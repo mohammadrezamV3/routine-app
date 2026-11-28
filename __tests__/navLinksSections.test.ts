@@ -32,10 +32,9 @@ describe("getVisibleLinks per section", () => {
 
   const topHrefs = (items: NavItem[]) => items.map((i) => (isGroup(i) ? i.icon : i.href));
 
-  it("workout has no dashboard: plan and calorie are separate top-level pages", () => {
+  it("workout: dashboard first, then plan, calorie and sleep as separate pages", () => {
     const items = getVisibleLinks(null, "workout");
-    expect(topHrefs(items)).toEqual(["/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"]);
-    expect(hrefs(items)).not.toContain("/dashboard");
+    expect(topHrefs(items)).toEqual(["/dashboard", "/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "more"]);
     expect(hrefs(items)).not.toContain("/weekly");
     expect(hrefs(items)).not.toContain("/roadmaps");
     expect(hrefs(items).some((h) => h.includes("?tab="))).toBe(false);
@@ -52,7 +51,7 @@ describe("getVisibleLinks per section", () => {
 
   it("a group that collapses to one link keeps its position", () => {
     const items = rawVisible({ ...ALL_ON, blog: false }, "workout");
-    expect(topHrefs(items)).toEqual(["/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "/about"]);
+    expect(topHrefs(items)).toEqual(["/dashboard", "/exercise", "/calorie", "/sleep", "/analysis/weekly", "mentors", "/about"]);
     const noMentorsKid = rawVisible(ALL_ON, "routine");
     expect(noMentorsKid.findIndex((i) => isGroup(i) && i.icon === "mentors")).toBe(5);
   });

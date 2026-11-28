@@ -32,7 +32,6 @@ import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardSleep } from "./DashboardSleep";
 import { DashboardMedication } from "./DashboardMedication";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
-import { DashboardWorkoutSpace } from "./DashboardWorkoutSpace";
 import { DashboardModuleLock } from "./DashboardModuleLock";
 import { useSection } from "./SectionProvider";
 import { dashboardBlocks, sectionAreas, type DashArea } from "@/lib/dashboardSection";
@@ -176,9 +175,8 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     // دارو: فقط بخش روتین، با ماژول روتین فعال و گزینه‌ی «کارت دارو» در تنظیمات داشبورد
     if ((!section || section === "routine") && routineOn && prefs.showMedications && modules?.has("ROUTINE")) set.add("meds");
     if (blocks.fitness) {
-      // ورزش: «فضای تمرین» (پنل‌های واقعی)؛ ماژول خریده‌نشده رو ModuleGate داخل خودش نشون می‌ده، پس کارت قفل جدا نداریم
-      if (section === "workout") { if (on("exercise") || on("calorie")) set.add("space"); }
-      else { paid("ex", "EXERCISE", "exercise"); paid("cal", "CALORIE", "calorie"); }
+      paid("ex", "EXERCISE", "exercise");
+      paid("cal", "CALORIE", "calorie");
     }
     if (blocks.trade) {
       paid("trade", "TRADE", "tradeJournal");
@@ -186,7 +184,7 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
       // ابزارهای ترید (جای هاب قدیمی /trade): فقط با ماژول و حداقل یک ابزار روشن
       if (section === "trade" && owns("TRADE") && TRADE_TOOL_FLAGS.some(on)) set.add("tools");
     }
-    if (section === "routine" && on("mentors")) set.add("mentor");
+    if ((section === "routine" || section === "workout") && on("mentors")) set.add("mentor");
     if (blocks.roadmaps && owns("ROADMAP") && features?.roadmaps === true) set.add("road");
     return { has: set, locked: lock };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,7 +227,6 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
         )}
         {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} onChanged={refreshNow} />}
         {has.has("meds") && <DashboardMedication />}
-        {has.has("space") && <DashboardWorkoutSpace features={features} />}
         {has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}
         {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
         {has.has("trade") && (locked.has("trade") ? <DashboardModuleLock area="trade" /> : <DashboardTrade trade={data?.trade ?? null} loading={loading} />)}

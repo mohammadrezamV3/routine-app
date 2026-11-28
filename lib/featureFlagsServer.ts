@@ -56,13 +56,9 @@ export async function serverHomePath(userId: string | undefined): Promise<string
   const m = await resolveFeaturesFor(userId);
   // روی زیردامنه‌ی یک بخش به صفحه‌ی خود همون بخش می‌ره (ریدایرکت به بخش دیگه ممنوعه)
   const section = getSection();
-  // بخش ورزش داشبورد نداره: برنامه تمرینی، بعد کالری‌شمار
-  if (section === "workout") {
-    if (m.exercise) return "/exercise";
-    if (m.calorie) return "/calorie";
-    return "/account";
-  }
   if (m.dashboard) return "/dashboard";
+  // داشبورد خاموش در بخش ورزش: برنامه تمرینی، بعد کالری‌شمار
+  if (section === "workout") return m.exercise ? "/exercise" : m.calorie ? "/calorie" : "/account";
   if (section === "trade" && m.trade) return "/trade";
   if (m.routine && (!section || section === "routine")) return "/weekly";
   return "/account";

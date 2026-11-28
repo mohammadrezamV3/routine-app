@@ -26,7 +26,6 @@ import { readTyped, type LimitKey } from "@/lib/numberLimits";
 import { reportLiveError, useLiveRefresh } from "@/lib/liveSync";
 import { Spinner } from "./Spinner";
 import { tr } from "@/lib/i18n";
-import { clearWorkoutRing, publishWorkoutRing } from "@/lib/workoutRing";
 import dynamic from "next/dynamic";
 // تنبل: فقط با کنش کاربر باز می‌شه و کدش توی باندل اولیه نیست
 const CalorieTutorial = dynamic(() => import("./CalorieTutorial").then((m) => m.CalorieTutorial), { ssr: false });
@@ -243,22 +242,6 @@ export function CaloriePanel({ inSpace = false }: { inSpace?: boolean } = {}) {
     loadHistory();
   }
 
-  // حلقه‌ی بالای صفحه (WorkoutRingHero): کالری امروز نسبت به هدف. فقط وقتی روز امروز
-  // انتخابه منتشر می‌شه (لیست روز دیگه مال امروز نیست)؛ بدون هدف حلقه‌ای نیست.
-  const kcalToday = useMemo(() => entries.reduce((s, e) => s + e.customCalories, 0), [entries]);
-  const targetKcal = target?.dailyTargetKcal ?? 0;
-  useEffect(() => {
-    if (!targetKcal) { clearWorkoutRing("calorie"); return; }
-    if (!isSelectedToday) return;
-    publishWorkoutRing({
-      kind: "calorie",
-      value: Math.min(1, kcalToday / targetKcal),
-      display: faNum(Math.round(kcalToday)),
-      label: tr(`از ${faNum(Math.round(targetKcal))} کالری`, `of ${faNum(Math.round(targetKcal))} kcal`),
-      over: kcalToday > targetKcal,
-    });
-  }, [targetKcal, kcalToday, isSelectedToday]);
-  useEffect(() => () => clearWorkoutRing("calorie"), []);
 
   if (status === "unauthenticated") {
     return <AuthGate message={tr("برای استفاده از این سرویس وارد شوید", "Sign in to use this service")} />;
