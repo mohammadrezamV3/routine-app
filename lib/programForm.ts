@@ -44,6 +44,26 @@ export function rowDurationMin(row: Pick<TimeRow, "start" | "end">): number | nu
   return dur;
 }
 
+/**
+ * اعتبارسنجی ساعت یک ردیف. «بدون ساعت» (noTime) یعنی هیچ خطایی نیست و برنامه
+ * با time خالی ذخیره می‌شه. تداخل زمانی هیچ‌وقت اینجا خطا نیست (فقط هشدار زنده).
+ */
+export function rowTimeErrors(
+  row: Pick<TimeRow, "start" | "end">,
+  noTime = false
+): { start?: boolean; end?: boolean; order?: boolean } {
+  if (noTime) return {};
+  const e: { start?: boolean; end?: boolean; order?: boolean } = {};
+  if (!row.start.trim()) e.start = true;
+  if (!row.end.trim()) e.end = true;
+  if (!e.start && !e.end) {
+    const s = parseTimeToMinutes(row.start);
+    const en = parseTimeToMinutes(row.end);
+    if (s !== null && en !== null && en <= s) e.order = true;
+  }
+  return e;
+}
+
 /** «1 ساعت و 30 دقیقه» */
 export function durationText(min: number): string {
   if (min < 60) {
@@ -92,8 +112,9 @@ export function matchDayPreset(jsDays: number[]): DayPresetKey | null {
 export function describeSchedule(
   kind: ProgramKind,
   rows: TimeRow[],
-  opts: { onceIso?: string | null; periodFromIso?: string | null; periodToIso?: string | null } = {}
+  opts: { onceIso?: string | null; periodFromIso?: string | null; periodToIso?: string | null; noTime?: boolean } = {}
 ): string {
+  if (opts.noTime) return describeNoTime(kind, rows, opts);
   // فقط ردیف‌های کاملی که start/end معتبر دارن و برای اقسام غیر "once" روزها معین باشن
   const validRows = rows.filter((row) => {
     const startMin = parseTimeToMinutes(row.start);
@@ -153,6 +174,32 @@ export function describeSchedule(
   });
 
   return descriptions.join(" · ");
+}
+
+/** خلاصه‌ی برنامه‌ی بدون ساعت: «هر شنبه و دوشنبه، بدون ساعت» */
+function describeNoTime(
+  kind: ProgramKind,
+  rows: TimeRow[],
+  opts: { onceIso?: string | null; periodFromIso?: string | null; periodToIso?: string | null }
+): string {
+  const label = tr("بدون ساعت", "no set time");
+  if (kind === "once") {
+    if (!opts.onceIso) return "";
+    const [y, mo, d] = opts.onceIso.split("-").map((x) => parseInt(x, 10));
+    const [, jm, jd] = toJalali(y, mo, d);
+    return tr(`فقط ${jd} ${jMonthName(jm - 1)}، ${label}`, `Only ${jd} ${jMonthName(jm - 1)}, ${label}`);
+  }
+  const days = rows[0]?.jsDays ?? [];
+  if (days.length === 0) return "";
+  let result = tr(`${formatDaysText(days)}، ${label}`, `${formatDaysText(days)}, ${label}`);
+  if (kind === "period" && opts.periodFromIso && opts.periodToIso) {
+    const [fy, fm, fd] = opts.periodFromIso.split("-").map((x) => parseInt(x, 10));
+    const [ty, tm, td] = opts.periodToIso.split("-").map((x) => parseInt(x, 10));
+    const [, fjm, fjd] = toJalali(fy, fm, fd);
+    const [, tjm, tjd] = toJalali(ty, tm, td);
+    result += tr(` · از ${fjd} ${jMonthName(fjm - 1)} تا ${tjd} ${jMonthName(tjm - 1)}`, ` · from ${fjd} ${jMonthName(fjm - 1)} to ${tjd} ${jMonthName(tjm - 1)}`);
+  }
+  return result;
 }
 
 /** تبدیل ساعت به "HH:mm" لاتین؛ null اگه نامعتبر */

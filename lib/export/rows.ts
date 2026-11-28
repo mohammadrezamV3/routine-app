@@ -71,7 +71,7 @@ export function sleepTable(list: {
 }
 
 // ── تمرین ─────────────────────────────────────────────────────────────
-export const EXERCISE_COLUMNS = ["date", "jalali_date", "plan_id", "plan_goal", "plan_level", "completed", "started_at", "completed_items", "notes"];
+export const EXERCISE_COLUMNS = ["date", "jalali_date", "plan_id", "plan_goal", "plan_level", "session", "completed", "started_at", "completed_items", "notes"];
 
 /** completedItems می‌تونه آرایه‌ی نام یا نگاشت { نام: true } باشه */
 export function completedItemNames(v: unknown): string[] {
@@ -80,7 +80,7 @@ export function completedItemNames(v: unknown): string[] {
 }
 
 export function exerciseTable(list: {
-  date: Date; planId: string | null; completed: boolean; completedItems: unknown; startedAt: Date | null; notes: string | null;
+  date: Date; planId: string | null; sessionNo?: number; completed: boolean; completedItems: unknown; startedAt: Date | null; notes: string | null;
   plan: { goal: string | null; level: string } | null;
 }[]): Table {
   return {
@@ -88,7 +88,7 @@ export function exerciseTable(list: {
     rows: list.map((l) => ({
       date: isoDay(l.date), jalali_date: jalaliDay(l.date), plan_id: l.planId,
       plan_goal: l.plan?.goal ?? null, plan_level: l.plan?.level ?? null,
-      completed: l.completed, started_at: isoTime(l.startedAt),
+      session: l.sessionNo ?? 1, completed: l.completed, started_at: isoTime(l.startedAt),
       completed_items: completedItemNames(l.completedItems), notes: l.notes,
     })),
   };

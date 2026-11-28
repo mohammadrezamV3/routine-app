@@ -2,6 +2,12 @@
    هیچ بک‌گراندی اضافه نشده؛ انیمیشن فقط transform. */
 .sns-panel.modal-panel{ max-width:460px; }
 .sns-grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+.sns-cats{ margin:0 0 12px; }
+.sns-cats .auth-tab{ padding-inline:2px; font-size:12.5px; white-space:nowrap; }
+.sns-mix{ margin-top:14px; gap:4px; }
+.sns-mix-row{ display:flex; align-items:center; gap:12px; min-height:34px; }
+.sns-mix-name{ flex:none; width:110px; font-size:12.5px; font-weight:700; color:var(--text); line-height:1.4; }
+.sns-mix-row .sns-range{ flex:1; min-width:0; }
 .sns-card{
   display:flex; flex-direction:column; align-items:flex-start; gap:14px; min-width:0;
   padding:12px; border-radius:18px; border:1px solid var(--box-line); color:var(--text); text-align:start;

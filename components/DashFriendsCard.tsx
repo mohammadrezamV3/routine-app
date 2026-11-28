@@ -54,9 +54,9 @@ export function DashFriendsCard(props: { delay?: number; module?: "exercise" | "
   return <DashFriendsCardInner {...props} />;
 }
 
-// کارت «دوستان» — فهرست آرام دوستان: آواتار داخل حلقه‌ی پیشرفت امروز، نام
+// کارت «دوستان» — فهرست آرام دوستان: آواتار ساده با حلقه‌ی پیشرفت امروز جدا، نام
 // طلایی/بنفش و شعله‌ی استریک. بدون رتبه‌بندی و بدون صفحه‌ی جدا؛ مدیریت (افزودن/
-// درخواست‌ها/حذف/فیوریت) از دکمه‌ی سرتیتر در پنجره‌ی FriendsManageSheet باز می‌شه.
+// درخواست‌ها/حذف/علاقه‌مندی) از دکمه‌ی سرتیتر در پنجره‌ی FriendsManageSheet باز می‌شه.
 function DashFriendsCardInner({ delay, module }: { delay?: number; module?: "exercise" | "calorie" }) {
   const { status } = useSession();
   const [friends, setFriends] = useState<FriendListItem[] | null>(null);

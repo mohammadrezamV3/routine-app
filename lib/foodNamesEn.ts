@@ -1,8 +1,8 @@
-// نام انگلیسی غذاهای کاتالوگ داخلی (lib/foodSeed.ts) — فقط برای نمایش و جستجو.
+// نام انگلیسی غذاهای کاتالوگ داخلی (lib/foodSeed.ts) — فقط سمت سرور (هیچ‌وقت وارد باندل کلاینت نشه).
 // کلید = همون نام فارسی؛ نام فارسی ذخیره‌شده در ثبت‌های کاربر (customName) عوض نمی‌شه.
-import { isEn } from "./i18n";
+import { CATALOG_ITEMS } from "./foodCatalog";
 
-export const FOOD_NAME_EN: Record<string, string> = {
+const LEGACY_FOOD_NAME_EN: Record<string, string> = {
   "برنج پخته": "Cooked rice",
   "برنج قهوه‌ای پخته": "Cooked brown rice",
   "نان لواش": "Lavash bread",
@@ -269,22 +269,30 @@ export const FOOD_NAME_EN: Record<string, string> = {
   "کیک اسفنجی خانگی": "Homemade sponge cake",
 };
 
-/** نام غذا برای نمایش: در انگلیسی نام انگلیسی کاتالوگ (اگه بود)، وگرنه همون نام ذخیره‌شده. */
-export function foodNameDisplay(nameFa: string, nameEn?: string | null): string {
-  if (!isEn()) return nameFa;
-  return nameEn || FOOD_NAME_EN[nameFa] || nameFa;
+/** نام انگلیسی همه‌ی آیتم‌ها: آیتم‌های قدیمی + کاتالوگ بزرگ (lib/foodCatalog). */
+export const FOOD_NAME_EN: Record<string, string> = {
+  ...Object.fromEntries(CATALOG_ITEMS.map((c) => [c.name, c.nameEn])),
+  ...LEGACY_FOOD_NAME_EN,
+};
+
+/** نام انگلیسی یک غذا با کلید نام فارسی (O(1)؛ فقط سمت سرور، جدول بزرگه و به کلاینت نمیره). */
+export function foodNameEnOf(nameFa: string): string | undefined {
+  return FOOD_NAME_EN[nameFa];
 }
 
-/** جستجوی انگلیسی در نام غذاها (سمت کلاینت)؛ خروجی نام‌های فارسی کلید. */
+type EnRow = { fa: string; lower: string };
+let enRows: EnRow[] | null = null;
+
+/** جستجوی انگلیسی در نام غذاها (سمت سرور)؛ خروجی نام‌های فارسی کلید، شروع‌شونده‌ها اول. */
 export function searchFoodNamesEn(query: string, limit = 10): string[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  const out: string[] = [];
-  for (const fa of Object.keys(FOOD_NAME_EN)) {
-    if (FOOD_NAME_EN[fa].toLowerCase().includes(q)) {
-      out.push(fa);
-      if (out.length >= limit) break;
-    }
+  enRows ||= Object.keys(FOOD_NAME_EN).map((fa) => ({ fa, lower: FOOD_NAME_EN[fa].toLowerCase() }));
+  const starts: string[] = [];
+  const rest: string[] = [];
+  for (const r of enRows) {
+    if (r.lower.startsWith(q)) starts.push(r.fa);
+    else if (r.lower.includes(q)) rest.push(r.fa);
   }
-  return out;
+  return [...starts, ...rest].slice(0, limit);
 }

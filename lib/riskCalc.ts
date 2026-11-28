@@ -295,6 +295,103 @@ export function simplePipCalc(inp: SimplePipInput): SimplePipResult | RiskFailur
   return { ok: true, spec, pipValuePerLot: value, pipValueForLots: value * inp.lots, total, percent, approxQuoteRate: approx };
 }
 
+export type PositionSizeInput = {
+  symbol: string;
+  balance: number;
+  /** درصد ریسک از موجودی، مثلا 1.5 */
+  riskPercent: number;
+  /** فاصله‌ی حد ضرر به پیپ/پوینت؛ اگر نبود از entry و stopLoss حساب می‌شود */
+  slPips?: number | null;
+  entry?: number | null;
+  stopLoss?: number | null;
+  /** ارزش هر پیپ برای 1 لات به دلار (جایگزین محاسبه‌ی خودکار) */
+  pipValueOverride?: number | null;
+  /** نسبت‌های ریسک به سود برای نمایش هدف، مثلا [1, 2, 3] */
+  rewardRatios?: number[];
+};
+
+export type PositionSizeResult = {
+  ok: true;
+  spec: SymbolSpec;
+  slPips: number;
+  pipValue: number;
+  /** ارزش پیپ تقریبی است (نرخ ارز یا قیمت ورود نامشخص) */
+  approx: boolean;
+  riskWanted: number;
+  lotsRaw: number;
+  /** لات گردشده به پایین (گام 0.01) */
+  lots: number;
+  /** ریسک واقعی با لات گردشده، دلار */
+  riskAmount: number;
+  rewards: { ratio: number; pips: number; profit: number; /** فقط با قیمت ورود و حد ضرر */ price: number | null }[];
+  warnings: string[];
+};
+
+/**
+ * ماشین‌حساب ساده‌ی حجم پوزیشن: لات = (موجودی × درصد ریسک) / (پیپ حد ضرر × ارزش پیپ).
+ * جهت از روی سمت حد ضرر نسبت به ورود تشخیص داده می‌شود (SL پایین‌تر = خرید).
+ */
+export function positionSize(inp: PositionSizeInput): PositionSizeResult | RiskFailure {
+  if (!inp.symbol.trim()) return { ok: false, error: tr("نماد را انتخاب کن", "Select a symbol") };
+  if (!fin(inp.balance) || inp.balance <= 0) return { ok: false, error: tr("موجودی حساب را وارد کن", "Enter the account balance") };
+  if (!fin(inp.riskPercent) || inp.riskPercent <= 0) return { ok: false, error: tr("درصد ریسک را وارد کن", "Enter the risk percentage") };
+  const bad =
+    outOfLimit(inp.balance, "accountBalance") || outOfLimit(inp.riskPercent, "riskPercent") ||
+    outOfLimit(inp.slPips ?? undefined, "pips") || outOfLimit(inp.entry ?? undefined, "tradePrice") ||
+    outOfLimit(inp.stopLoss ?? undefined, "tradePrice") || outOfLimit(inp.pipValueOverride ?? undefined, "quoteRate");
+  if (bad) return bad;
+
+  const spec = symbolSpec(inp.symbol);
+  const hasEntry = fin(inp.entry) && inp.entry > 0;
+  let slPips: number;
+  let dirSign = 0; // +1 خرید، -1 فروش، 0 نامشخص
+  if (fin(inp.slPips) && inp.slPips > 0) {
+    slPips = inp.slPips;
+  } else if (hasEntry && fin(inp.stopLoss) && inp.stopLoss > 0) {
+    if (inp.stopLoss === inp.entry) return { ok: false, error: tr("حد ضرر نمی‌تواند با قیمت ورود برابر باشد", "Stop loss cannot be equal to the entry price") };
+    slPips = Math.abs(inp.entry! - inp.stopLoss) / spec.pipSize;
+    dirSign = inp.stopLoss < inp.entry! ? 1 : -1;
+  } else {
+    return { ok: false, error: tr("حد ضرر را وارد کن", "Enter the stop loss") };
+  }
+
+  let pipValue: number;
+  let approx = false;
+  if (fin(inp.pipValueOverride) && inp.pipValueOverride > 0) {
+    pipValue = inp.pipValueOverride;
+  } else if (spec.base === "USD" && !hasEntry) {
+    // USDJPY و مشابه: بدون قیمت ورود از نرخ تقریبی ارز دوم استفاده می‌شود
+    const q = APPROX_QUOTE_USD[spec.quote || ""];
+    pipValue = q ? (spec.pipSize * spec.contractSize) * q : 0;
+    approx = true;
+  } else {
+    const pv = pipValuePerLot(spec, hasEntry ? inp.entry! : 0);
+    pipValue = pv.value;
+    approx = pv.approx;
+  }
+  if (!(pipValue > 0)) return { ok: false, error: tr("ارزش پیپ این نماد قابل محاسبه نیست", "The pip value of this symbol cannot be calculated") };
+
+  const riskWanted = (inp.balance * inp.riskPercent) / 100;
+  const lotsRaw = riskWanted / (slPips * pipValue);
+  const lots = Number((Math.floor(lotsRaw / 0.01 + 1e-9) * 0.01).toFixed(2));
+  if (!fin(lots) || lots > NUMBER_LIMITS.tradeVolumeLot.max) return { ok: false, error: limitError("tradeVolumeLot") };
+  const riskAmount = lots * slPips * pipValue;
+
+  const rewards = (inp.rewardRatios || []).filter((r) => fin(r) && r > 0).map((ratio) => {
+    const pips = slPips * ratio;
+    return {
+      ratio, pips, profit: lots * pips * pipValue,
+      price: dirSign !== 0 ? inp.entry! + dirSign * pips * spec.pipSize : null,
+    };
+  });
+
+  const warnings: string[] = [];
+  if (lots <= 0) warnings.push(tr("با این ریسک و فاصله‌ی حد ضرر، لات از حداقل (0.01) کمتر می‌شود", "With this risk and stop loss distance, the lot size is below the minimum (0.01)"));
+  if (approx) warnings.push(tr("ارزش پیپ تقریبی است (فرض حساب دلاری) — برای عدد دقیق قیمت ورود یا ارزش پیپ را وارد کن", "Pip value is approximate (USD account assumed). Enter the entry price or the pip value for an exact result"));
+  if (inp.riskPercent > 5) warnings.push(tr("ریسک بیشتر از 5 درصد در هر معامله خطرناک است", "Risking more than 5% per trade is dangerous"));
+  return { ok: true, spec, slPips, pipValue, approx, riskWanted, lotsRaw, lots, riskAmount, rewards, warnings };
+}
+
 /** رقم اعشار مناسب برای نمایش قیمت */
 export function priceDecimals(symbol: string): number {
   return symbolSpec(symbol).decimals;

@@ -15,7 +15,7 @@ import { parseIsoDate } from "@/lib/validate";
 import { saveSleepEntry } from "@/lib/sleepWrite";
 import { createFoodLog, parseFoodLogInput } from "@/lib/foodLogWrite";
 import { saveDailyTasks, sanitizeTaskMap } from "@/lib/dailyTasksWrite";
-import { upsertExerciseLog } from "@/lib/exerciseLogWrite";
+import { setDayDone } from "@/lib/exerciseLogWrite";
 import { createTradeEntryFromBody } from "@/lib/tradeCreate";
 import { tr } from "@/lib/i18n";
 import {
@@ -108,7 +108,8 @@ export async function buildNomoContext(userId: string, todayIso: string, allowed
   }
   if (allowed.has("EXERCISE") && date) {
     const plan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { updatedAt: "desc" }, select: { id: true } });
-    const log = plan ? await prisma.exerciseLog.findUnique({ where: { userId_planId_date: { userId, planId: plan.id, date } }, select: { completed: true } }) : null;
+    // چند جلسه در روز: انجام‌شده = هر جلسه‌ای پایان خورده باشد
+    const log = plan ? await prisma.exerciseLog.findFirst({ where: { userId, planId: plan.id, date, completed: true }, select: { completed: true } }) : null;
     lines.push(`workout_today: ${plan ? (log?.completed ? "done" : "not done") : "no active plan"}`);
   }
   if (allowed.has("TRADE")) {
@@ -179,7 +180,7 @@ export async function applyNomoOps(
         const date = parseIsoDate(op.date);
         const plan = await prisma.exercisePlan.findFirst({ where: { userId, isActive: true }, orderBy: { updatedAt: "desc" }, select: { id: true } });
         if (!date || !plan) { fail(tr("برنامه‌ی تمرینی فعالی نداری.", "You have no active workout plan.")); continue; }
-        await upsertExerciseLog(userId, plan.id, date, op.done);
+        await setDayDone(userId, plan.id, date, op.done);
         changed.add("exercise");
       } else if (op.type === "trade.add") {
         const accounts = await prisma.tradeAccount.findMany({ where: { userId, archived: false }, orderBy: { order: "asc" }, take: 20, select: { id: true, name: true } });

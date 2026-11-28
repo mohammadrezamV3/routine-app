@@ -32,6 +32,7 @@ import { WeeklyLetterWeekPicker } from "./WeeklyLetterWeekPicker";
 import { WeeklyLetterMatrix } from "./WeeklyLetterMatrix";
 import { WeeklyLetterSleep } from "./WeeklyLetterSleep";
 import { WeeklyLetterEmpty } from "./WeeklyLetterEmpty";
+import { WeeklyLetterConnections, connectionsShown } from "./WeeklyLetterConnections";
 import { WeeklyLetterTradeCurve } from "./WeeklyLetterTradeCurve";
 import { WeeklyLetterTradeWhere, tradeWhereHasData } from "./WeeklyLetterTradeWhere";
 import { WeeklyLetterTradeMind, tradeMindHasData } from "./WeeklyLetterTradeMind";
@@ -171,6 +172,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
   const fitTrainOn = fitTrainingShown(fit);
   const fitFuelOn = fitFuelShown(fit);
   const fitRecOn = fitRecoveryShown(fit);
+  const connOn = connectionsShown(letter.connections);
   const hasCoach = !!analysis.ai || (analysis.aiAvailable && analysis.overall.score !== null);
 
   // ترتیب و شماره‌ی فصل‌ها؛ شرط هر فصل همون شرط نمایش خود فصله
@@ -186,6 +188,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       { id: "wl-domains", label: tr("بخش‌ها", "Areas"), show: hasData && letter.domains.length > 0 },
       { id: "matrix", label: tr("نقشه‌ی هفته", "Week map"), show: hasMatrix },
       { id: "wl-numbers", label: tr("عددها و روند", "Numbers and trend"), show: hasData && (numbers.length > 0 || letter.trend.length > 1) },
+      { id: "connections", label: tr("ارتباط‌ها", "Connections"), show: connOn },
       { id: "wl-insights", label: tr("بینش‌ها", "Insights"), show: letter.insights.length > 0 },
       { id: "wl-wins", label: tr("بردها", "Wins"), show: wins.length > 0 || letter.improve.length > 0 },
       { id: "coach", label: tr("حرف مربی", "Coach's note"), show: hasCoach },
@@ -194,7 +197,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
       { id: "sleep", label: tr("خواب", "Sleep"), show: sleepOn },
     ];
     return c.filter((x) => x.show);
-  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, sleepOn, tradeCurveOn, tradeWhereOn, tradeMindOn, fitTrainOn, fitFuelOn, fitRecOn]);
+  }, [letter, numbers, wins, data.isCurrent, hasData, hasMatrix, hasCoach, sleepOn, connOn, tradeCurveOn, tradeWhereOn, tradeMindOn, fitTrainOn, fitFuelOn, fitRecOn]);
   const no = (id: string) => chapters.findIndex((c) => c.id === id) + 1;
   const has = (id: string) => chapters.some((c) => c.id === id);
 
@@ -256,6 +259,7 @@ function LetterBody({ data, onGo, reload }: { data: LiveWeekPayload; onGo: (w: s
             <WeeklyLetterNumbers numbers={numbers} trend={letter.trend} onJumpWeek={onGo} />
           </Chapter>
         )}
+        {has("connections") && connectionsShown(letter.connections) && <WeeklyLetterConnections connections={letter.connections} no={no("connections")} />}
         {has("wl-insights") && (
           <Chapter id="wl-insights" no={no("wl-insights")} icon={CH_ICONS["wl-insights"]} title={tr("بینش‌ها", "Insights")}>
             <WeeklyLetterInsights insights={letter.insights} />

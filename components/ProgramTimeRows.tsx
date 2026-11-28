@@ -30,13 +30,15 @@ export type ProgramTimeRowsProps = {
   conflicts: Record<string, string | null>;
   /** کاربر روی یک ردیف دست برد → خطای همون ردیف پاک بشه */
   onClearError: (rowId: string) => void;
+  /** بدون ساعت: فقط روزها، بدون فیلد ساعت (ردیف تکی) */
+  noTime?: boolean;
 };
 
-export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onClearError }: ProgramTimeRowsProps) {
+export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onClearError, noTime = false }: ProgramTimeRowsProps) {
   const reduce = useReducedMotion();
   const once = kind === "once";
   const visible = once ? rows.slice(0, 1) : rows;
-  const canRemove = !once && rows.length > 1;
+  const canRemove = !once && !noTime && rows.length > 1;
 
   const patch = (id: string, p: Partial<TimeRow>) => {
     onChange(rows.map((r) => (r.id === id ? { ...r, ...p } : r)));
@@ -126,7 +128,7 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
                   </>
                 )}
 
-                <div className="ptr-times">
+                {!noTime && (<div className="ptr-times">
                   <div className={"time-field" + (err.start ? " is-err" : "")}>
                     <span className="time-field-label">{tr("شروع", "Start")}</span>
                     <TimeInput value={row.start} onChange={(v) => patch(row.id, { start: v })} />
@@ -135,9 +137,9 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
                     <span className="time-field-label">{tr("پایان", "End")}</span>
                     <TimeInput value={row.end} onChange={(v) => patch(row.id, { end: v })} />
                   </div>
-                </div>
+                </div>)}
 
-                {orderBad ? (
+                {noTime ? null : orderBad ? (
                   <p className="ptr-dur is-err">{tr("پایان باید بعد از شروع باشه", "End must be after start")}</p>
                 ) : dur !== null ? (
                   <p className="ptr-dur">{durationText(dur)}</p>
@@ -157,7 +159,7 @@ export function ProgramTimeRows({ kind, rows, onChange, errors, conflicts, onCle
         })}
       </AnimatePresence>
 
-      {!once && (
+      {!once && !noTime && (
         <button type="button" className="ptr-add" onClick={() => onChange([...rows, newTimeRow()])}>
           <Plus size={15} />
           <span>{tr("ساعت دیگه برای روزهای دیگه", "Another time for other days")}</span>

@@ -87,7 +87,7 @@ describe("offline reducers — تمرین", () => {
     ];
     const r = reduceMutation(mut({ method: "POST", path: "/api/exercise/log", body: { planId: "p1", date: "2026-10-24", completed: false, completedItems: ["a"] } }), cached)!;
     let m = apply(cached, r.updates);
-    expect(m.get("/api/exercise/log?date=2026-10-24&planId=p1")).toEqual({ completed: false, completedItems: ["a"], started: false });
+    expect(m.get("/api/exercise/log?date=2026-10-24&planId=p1")).toMatchObject({ completed: false, completedItems: ["a"], started: true });
     expect(m.get("/api/exercise/log/range?end=2026-10-31&planId=p1&start=2026-10-01").logs["2026-10-24"].completedItems).toEqual(["a"]);
     expect(m.get("/api/exercise/log/range?end=2026-10-31&planId=p2&start=2026-10-01").logs).toEqual({});
     const cached2 = r.updates;
@@ -95,6 +95,22 @@ describe("offline reducers — تمرین", () => {
     m = apply(cached2, s.updates);
     expect(m.get("/api/exercise/log?date=2026-10-24&planId=p1")).toMatchObject({ started: true, completedItems: ["a"] });
     expect(synthExerciseLog("p1", "2026-10-05", cached)).toEqual({ completed: false, completedItems: [], started: false });
+  });
+
+  it("چند جلسه در یک روز: جلسه‌ی تازه، اجتماع روز و جلسه‌ی کامل دوباره باز نمی‌شود", () => {
+    const url = "/api/exercise/log?date=2026-10-24&planId=p1";
+    const body = (b: object) => ({ planId: "p1", date: "2026-10-24", ...b });
+    let c: CachedJson[] = [];
+    const run = (b: object) => { const r = reduceMutation(mut({ method: "POST", path: "/api/exercise/log", body: body(b) }), c)!; const mm = apply(c, r.updates); c = Array.from(mm, ([u, json]) => ({ url: u, json })); return mm.get(url); };
+    run({ session: 1, completed: true, completedItems: ["a", "b"], plannedCount: 2 });
+    const two = run({ session: 2, started: true });
+    expect(two.sessions.map((x: any) => x.no)).toEqual([1, 2]);
+    expect(two.completed).toBe(true); // روز: جلسه‌ی 1 کامل شده
+    const three = run({ session: 2, completed: false, completedItems: ["c"] });
+    expect(three.completedItems).toEqual(["a", "b", "c"]);
+    // شروع دوباره‌ی جلسه‌ی کامل کش را عوض نمی‌کند (سرور 409 می‌دهد)
+    const again = run({ session: 1, started: true });
+    expect(again.sessions[0]).toMatchObject({ no: 1, completed: true });
   });
 });
 

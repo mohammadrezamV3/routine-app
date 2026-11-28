@@ -5,6 +5,7 @@ import { requireModule } from "@/lib/moduleAccess";
 import { ModuleKey } from "@prisma/client";
 import { isoLocal } from "@/lib/jalali";
 import { parseDateRange } from "@/lib/validate";
+import { foldSessions, rowToSession, SessionEntry, DayEntry } from "@/lib/exerciseSessions";
 import { sessionFeatureBlocked } from "@/lib/featureFlagsServer";
 
 // GET /api/exercise/log/range?planId=...&start=2026-07-01&end=2026-07-31
@@ -26,14 +27,15 @@ export async function GET(req: NextRequest) {
     where: { userId, planId, date: { gte: range.from, lte: range.to } },
   });
 
-  const byDate: Record<string, { completed: boolean; completedItems: string[]; started: boolean }> = {};
+  const perDay = new Map<string, SessionEntry[]>();
   for (const log of logs) {
-    byDate[isoLocal(log.date)] = {
-      completed: log.completed,
-      completedItems: (log.completedItems as string[] | null) ?? [],
-      started: !!log.startedAt,
-    };
+    const iso = isoLocal(log.date);
+    const arr = perDay.get(iso) ?? [];
+    arr.push(rowToSession(log));
+    perDay.set(iso, arr);
   }
+  const byDate: Record<string, DayEntry> = {};
+  perDay.forEach((sessions, iso) => { byDate[iso] = foldSessions(sessions); });
 
   return NextResponse.json({ logs: byDate });
 }

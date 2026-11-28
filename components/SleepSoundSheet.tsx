@@ -4,31 +4,32 @@ import "./sleep-log.css";
 import "./sleep-sound.css";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CloudRain, Cloud, Fan, Mountain, Pause, Play, Waves, Wind, type LucideIcon } from "lucide-react";
+import {
+  AudioLines, Bell, Building2, Cloud, CloudDrizzle, CloudLightning, CloudRain, CloudRainWind, Coffee, Fan, Flame, HeartPulse,
+  House, Moon, Mountain, Pause, Play, Plane, Snowflake, TrainFront, Trees, Waves, Wind, Droplets, type LucideIcon,
+} from "lucide-react";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import { useSheetFocus } from "@/lib/useSheetFocus";
 import { isEn, tr } from "@/lib/i18n";
+import { SLEEP_SOUND_TIMERS, formatRemaining, remainingMs, useSleepSound } from "@/lib/sleepSound";
 import {
-  SLEEP_SOUND_KINDS, SLEEP_SOUND_TIMERS, formatRemaining, remainingMs, useSleepSound, type SleepSoundKind,
-} from "@/lib/sleepSound";
+  MAX_SOUND_LAYERS, SLEEP_SOUND_CATALOG, SLEEP_SOUND_CATEGORIES, soundCategoryName, soundName, soundsOfCategory,
+  type SleepSoundCategory, type SleepSoundKind,
+} from "@/lib/sleepSoundCatalog";
 
-// پنجره‌ی صداهای خواب: کارت‌های صدا، حجم، تایمر خاموشی و یک دکمه‌ی پخش/توقف.
+// پنجره‌ی صداهای خواب: دسته‌ها، کاشی‌های صدا (ترکیب تا 3 صدا با بلندی جدا)، بلندی کل، تایمر خاموشی و پخش/توقف.
 // پخش در موتور ماژولی می‌مونه و با بسته‌شدن پنجره قطع نمی‌شه.
 
 export type SleepSoundSheetProps = { open: boolean; onClose: () => void };
 
 const ICONS: Record<SleepSoundKind, LucideIcon> = {
-  rain: CloudRain, ocean: Waves, fan: Fan, white: Wind, pink: Cloud, brown: Mountain,
+  white: Wind, pink: Cloud, brown: Mountain,
+  rain: CloudDrizzle, rainHeavy: CloudRain, rainRoof: House, storm: CloudLightning, ocean: Waves,
+  stream: Droplets, wind: CloudRainWind, forest: Trees, fire: Flame,
+  fan: Fan, ac: Snowflake, cabin: Plane, train: TrainFront, city: Building2, cafe: Coffee,
+  heartbeat: HeartPulse, bowl: Bell, drone: Moon, chimes: AudioLines,
 };
-const soundName = (k: SleepSoundKind): string => ({
-  rain: tr("باران", "Rain"),
-  ocean: tr("اقیانوس", "Ocean"),
-  fan: tr("پنکه", "Fan"),
-  white: tr("نویز سفید", "White noise"),
-  pink: tr("نویز صورتی", "Pink noise"),
-  brown: tr("نویز قهوه‌ای", "Brown noise"),
-})[k];
 
 export function SleepSoundSheet(props: SleepSoundSheetProps) {
   if (!props.open || typeof document === "undefined") return null;
@@ -41,6 +42,7 @@ function SheetBody({ onClose }: { onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
   useSheetFocus(panelRef);
   const [now, setNow] = useState(() => Date.now());
+  const [cat, setCat] = useState<SleepSoundCategory>(() => SLEEP_SOUND_CATALOG[snd.kind]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -71,10 +73,18 @@ function SheetBody({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="slg-body">
+          <SegmentedTabs
+            className="sns-cats seg-flush"
+            ariaLabel={tr("دسته‌ی صدا", "Sound category")}
+            options={SLEEP_SOUND_CATEGORIES.map((c) => ({ value: c, label: soundCategoryName(c) }))}
+            active={cat}
+            onChange={(v) => setCat(v as SleepSoundCategory)}
+          />
+
           <div className="sns-grid" role="group" aria-label={tr("انتخاب صدا", "Choose a sound")}>
-            {SLEEP_SOUND_KINDS.map((k) => {
+            {soundsOfCategory(cat).map((k) => {
               const Icon = ICONS[k];
-              const on = snd.kind === k;
+              const on = snd.layers.some((l) => l.kind === k);
               const live = on && snd.playing;
               return (
                 <button
@@ -82,7 +92,7 @@ function SheetBody({ onClose }: { onClose: () => void }) {
                   type="button"
                   className={`sns-card${on ? " active" : ""}`}
                   aria-pressed={on}
-                  onClick={() => snd.play(k)}
+                  onClick={() => snd.toggleLayer(k)}
                 >
                   <span className="sns-card-top">
                     <Icon size={22} aria-hidden />
@@ -96,9 +106,30 @@ function SheetBody({ onClose }: { onClose: () => void }) {
             })}
           </div>
 
+          <div className="slg-block sns-mix">
+            <div className="slg-block-head">
+              <span className="slg-label">{tr("ترکیب فعلی", "Current mix")}</span>
+              <span className="sns-vol-num" dir="ltr">{snd.layers.length}/{MAX_SOUND_LAYERS}</span>
+            </div>
+            {snd.layers.map((l) => (
+              <div key={l.kind} className="sns-mix-row">
+                <label className="sns-mix-name" htmlFor={`sns-l-${l.kind}`}>{soundName(l.kind)}</label>
+                <input
+                  id={`sns-l-${l.kind}`}
+                  type="range" min={0} max={100} step={1}
+                  value={Math.round(l.volume * 100)}
+                  onChange={(e) => snd.setLayerVolume(l.kind, Number(e.target.value) / 100)}
+                  className="sns-range"
+                  style={{ ["--sns-fill" as string]: `${Math.round(l.volume * 100)}%` }}
+                  data-noswipe
+                />
+              </div>
+            ))}
+          </div>
+
           <div className="slg-block">
             <div className="slg-block-head">
-              <label className="slg-label" htmlFor="sns-vol">{tr("بلندی صدا", "Volume")}</label>
+              <label className="slg-label" htmlFor="sns-vol">{tr("بلندی کل", "Master volume")}</label>
               <span className="sns-vol-num" dir="ltr">{Math.round(snd.volume * 100)}%</span>
             </div>
             <input

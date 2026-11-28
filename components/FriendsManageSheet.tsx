@@ -22,7 +22,7 @@ type SearchUser = Omit<Person, "friendshipId"> & { status: SearchStatus; friends
 type Manageable = FriendRowData & { friendshipId: string };
 
 // پنجره‌ی مدیریت دوستان (از سرتیتر کارت دوستان): جست‌وجو با یوزرنیم و افزودن،
-// درخواست‌های دریافتی (قبول/رد) و ارسالی (لغو)، فیوریت و حذف با تایید.
+// درخواست‌های دریافتی (قبول/رد) و ارسالی (لغو)، علاقه‌مندی و حذف با تایید.
 // بخش دوستان صفحه‌ی جدا و رتبه‌بندی نداره.
 export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: Manageable[]; onClose: () => void; onChanged: () => void }) {
   const [mounted, setMounted] = useState(false);
@@ -143,7 +143,7 @@ export function FriendsManageSheet({ friends, onClose, onChanged }: { friends: M
                   <TradeKebabMenu
                     label={tr(`گزینه‌های ${f.name}`, `Options for ${iso(f.name)}`)}
                     actions={[
-                      { label: f.favorite ? tr("حذف از فیوریت‌ها", "Remove from favorites") : tr("افزودن به فیوریت‌ها", "Add to favorites"), icon: <Star size={14} />, onClick: () => toggleFavorite(f) },
+                      { label: f.favorite ? tr("حذف از علاقه‌مندی‌ها", "Remove from favorites") : tr("افزودن به علاقه‌مندی‌ها", "Add to favorites"), icon: <Star size={14} />, onClick: () => toggleFavorite(f) },
                       { label: tr("حذف از دوستان", "Remove friend"), icon: <UserMinus size={14} />, danger: true, onClick: () => setConfirmRemove(f) },
                     ]}
                   />
@@ -194,7 +194,7 @@ function PersonRow({ p, onOpen, star, children }: { p: Omit<Person, "friendshipI
         <span className="fr-person-text">
           <span className="fr-name-line">
             <span className="fr-name"><GoldenName golden={p.golden} staff={p.staff}>{p.name}</GoldenName></span>
-            {star && <Star size={11} className="fr-fav" fill="currentColor" aria-label={tr("فیوریت", "Favorite")} />}
+            {star && <Star size={11} className="fr-fav" fill="currentColor" aria-label={tr("علاقه‌مندی", "Favorite")} />}
           </span>
           {p.username && <span className="fr-person-handle mono">@{p.username}</span>}
         </span>

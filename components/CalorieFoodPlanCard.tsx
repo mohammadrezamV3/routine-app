@@ -10,9 +10,9 @@ import dynamic from "next/dynamic";
 const CalorieAddEntryModal = dynamic(() => import("./CalorieAddEntryModal").then((m) => m.CalorieAddEntryModal), { ssr: false });
 import type { Target } from "./CaloriePanel";
 import { tr, isEn } from "@/lib/i18n";
-import { foodNameDisplay, useFoodNamesEn } from "@/lib/foodNamesEnLazy";
+import { foodNameDisplay } from "@/lib/foodNameDisplay";
 
-type Entry = { id: string; customName: string; customCalories: number; grams: number; date?: string };
+type Entry = { id: string; customName: string; nameEn?: string; customCalories: number; grams: number; date?: string };
 
 // «برنامه غذایی» — کارت اصلی ستون راست، هم‌قاعده‌ی اندازه‌ی
 // ExerciseTaskList داشبورد بدنسازی: با h-full توی گرید items-stretch
@@ -48,7 +48,6 @@ export function CalorieFoodPlanCard({
   onEditGoal: () => void;
   delay?: number;
 }) {
-  useFoodNamesEn();
   const [addOpen, setAddOpen] = useState(false);
   const overGoal = pct > 100;
   const barColor = overGoal ? "#E05252" : "var(--accent)";
@@ -101,7 +100,7 @@ export function CalorieFoodPlanCard({
             entries.map((e) => (
               <div key={e.id} className="calorie-glass-field flex items-center justify-between gap-2.5 border px-4 py-2.5" style={{ borderRadius: 9999 }}>
                 <div className="flex min-w-0 items-baseline gap-1.5">
-                  <span className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{foodNameDisplay(e.customName)}</span>
+                  <span className="truncate text-[11.5px] font-bold text-dash-text sm:text-[12.5px]">{foodNameDisplay(e.customName, e.nameEn)}</span>
                   <span className="mono shrink-0 text-[10px] text-dash-muted sm:text-[11px]">{faNum(e.grams)}{tr(" گرم", " g")}</span>
                 </div>
                 <span className="flex shrink-0 items-center gap-2.5">

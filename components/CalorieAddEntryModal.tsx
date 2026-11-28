@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { Check, ChevronDown } from "lucide-react";
-import type { FoodSeedItem } from "@/lib/foodSeed";
+import type { FoodSearchResult as FoodSeedItem } from "@/lib/foodCatalogServer";
 import { FoodUnit, UNIT_LABELS, UNIT_TO_GRAMS } from "@/lib/calorieCalc";
 import { SegmentedTabs } from "./SegmentedTabs";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
@@ -11,7 +11,7 @@ import { NumberInput } from "./NumberInput";
 import { Spinner } from "./Spinner";
 import { isEn, tr } from "@/lib/i18n";
 import { limitError, NUMBER_LIMITS, readTyped } from "@/lib/numberLimits";
-import { foodNameDisplay, loadFoodNamesEn, searchFoodNamesEn, useFoodNamesEn } from "@/lib/foodNamesEnLazy";
+import { foodNameDisplay } from "@/lib/foodNameDisplay";
 
 const LAST_UNIT_KEY = "arion-calorie-last-unit";
 
@@ -37,7 +37,6 @@ export function CalorieAddEntryModal({
   onAdded: () => void;
 }) {
   useLockBodyScroll();
-  useFoodNamesEn();
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<FoodSeedItem[]>([]);
   const [selectedFood, setSelectedFood] = useState<FoodSeedItem | null>(null);
@@ -63,14 +62,7 @@ export function CalorieAddEntryModal({
 
   useEffect(() => {
     const id = setTimeout(() => {
-      // جستجوی لاتین در حالت انگلیسی: روی نام‌های انگلیسی کاتالوگ (سمت کلاینت)
-      if (isEn() && /[a-z]/i.test(query)) {
-        Promise.all([import("@/lib/foodSeed"), loadFoodNamesEn()]).then(([{ FOOD_SEED }]) => {
-          const names = searchFoodNamesEn(query);
-          setSuggestions(names.map((n) => FOOD_SEED.find((f) => f.name === n)).filter((f): f is FoodSeedItem => !!f));
-        });
-        return;
-      }
+      // جستجو (فارسی و لاتین) کامل سمت سرور؛ هر نتیجه nameEn داره
       fetch(`/api/calorie/foods?q=${encodeURIComponent(query)}`)
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => setSuggestions(d?.results || []))
@@ -113,6 +105,7 @@ export function CalorieAddEntryModal({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         date, customName: name, customCalories: totalKcal, grams: g, mealType,
+        ...(selectedFood?.nameEn ? { nameEn: selectedFood.nameEn } : {}),
         ...(hasMacros ? { proteinG: +proteinG || 0, carbsG: +carbsG || 0, fatG: +fatG || 0 } : {}),
       }),
     });
@@ -156,10 +149,10 @@ export function CalorieAddEntryModal({
                   {suggestions.map((f) => (
                     <div
                       key={f.name}
-                      onClick={() => { setSelectedFood(f); setQuery(foodNameDisplay(f.name)); setCustomPer100(""); }}
+                      onClick={() => { setSelectedFood(f); setQuery(foodNameDisplay(f.name, f.nameEn)); setCustomPer100(""); }}
                       className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-dash-border bg-white/[0.02] px-3 py-2 transition hover:border-dash-green/40"
                     >
-                      <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">{foodNameDisplay(f.name)}</span>
+                      <span className="text-[11.5px] font-semibold text-dash-text sm:text-[12.5px]">{foodNameDisplay(f.name, f.nameEn)}</span>
                       <span className="mono text-[10.5px] text-dash-muted sm:text-[11.5px]" dir="ltr">{f.caloriesPer100g} kcal/100g</span>
                     </div>
                   ))}

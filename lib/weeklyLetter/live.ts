@@ -23,16 +23,18 @@ export async function buildLiveWeek(
   const section = opts.section ?? null;
   // روی زیردامنه فقط دامنه‌های همون بخش محاسبه می‌شن (نه محاسبه و بعد پنهان‌کردن)
   const full = await getWeeklyAnalysis(userId, {
-    timezone: tz, offset: opts.offset, isSuperAdmin: opts.isSuperAdmin, now, withUnreadLetter: false, domains: sectionDomains(section),
+    timezone: tz, offset: opts.offset, isSuperAdmin: opts.isSuperAdmin, now, withUnreadLetter: false, withHistory: true, domains: sectionDomains(section),
   });
+  // history فقط برای ساخت فصل ارتباط‌هاست و به کلاینت نمی‌ره
+  const { history, ...fullNoHistory } = full;
   const analysis = section
     ? {
-        ...full,
+        ...fullNoHistory,
         goals: full.goals.filter((g) => goalInSection(g, section)),
         nextWeekGoals: full.nextWeekGoals.filter((g) => goalInSection(g, section)),
         ai: aiForSection(full.ai, section),
       }
-    : { ...full, ai: aiForSection(full.ai, null) };
+    : { ...fullNoHistory, ai: aiForSection(full.ai, null) };
   const weekStart = isoToUtcDate(analysis.weekStart);
 
   const row = await prisma.weeklyLetter.findUnique({
@@ -42,7 +44,7 @@ export async function buildLiveWeek(
   const stored = row && row.status === "READY" ? row : null;
   const issue = stored ? stored.issueNo : null;
 
-  const extras = await gatherLetterExtras(userId, analysis, { timezone: tz, issueNo: issue ?? 0, now, section });
+  const extras = await gatherLetterExtras(userId, { ...analysis, history }, { timezone: tz, issueNo: issue ?? 0, now, section });
   const letter = buildLetterData(analysis, extras);
 
   // خوندن شماره‌ی ثبت‌شده = خوانده‌شده (و اعلان زنگوله‌ی همون هفته)
