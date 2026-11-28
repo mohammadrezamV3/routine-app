@@ -98,4 +98,4 @@ html[data-perf-weak] .lg:not(.lg-static){
 .lgp-sheet{ margin-top:auto; padding:14px 16px 18px; color:#fff; display:flex; flex-direction:column; gap:10px; }
 .lgp-handle{ width:44px; height:5px; border-radius:3px; background:rgba(255,255,255,.7); margin:0 auto; }
 .lgp-hud{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
-.lgp-seg{ min-width:240px; }
+.lgp-hud .auth-tabs.lgp-seg{ flex:0 0 240px; inline-size:240px; min-inline-size:240px; margin-top:0; }
