@@ -32,7 +32,6 @@ import { WorkoutHeatBento } from "./WorkoutHeatCard";
 import { DashboardRoutineLock } from "./DashboardRoutineLock";
 import { DashboardCalorie, DashboardExercise } from "./DashboardFitness";
 import { DashboardSleep } from "./DashboardSleep";
-import { DashboardMedication } from "./DashboardMedication";
 import { useDashboardPrefs } from "@/lib/dashboardPrefs";
 import { DashboardModuleLock } from "./DashboardModuleLock";
 import { useSection } from "./SectionProvider";
@@ -201,8 +200,6 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
     };
     if (blocks.routine && routineOn) { set.add("today"); set.add("heat"); }
     if (blocks.sleep && on("sleep")) set.add("sleep");
-    // دارو: فقط بخش روتین، با ماژول روتین فعال و گزینه‌ی «کارت دارو» در تنظیمات داشبورد
-    if ((!section || section === "routine") && routineOn && prefs.showMedications && modules?.has("ROUTINE")) set.add("meds");
     if (blocks.fitness) {
       paid("ex", "EXERCISE", "exercise");
       paid("cal", "CALORIE", "calorie");
@@ -252,13 +249,12 @@ function DashboardBody({ initial }: { initial: { key: string; data: DashboardDat
           </>
         ) : (
           <>
-            <DashboardToday ready={routine.ready} tasks={routine.tasks} stats={routine.stats} week={routine.heat.length ? routine.heat[routine.heat.length - 1] : null} onToggle={routine.toggle} />
+            <DashboardToday ready={routine.ready} tasks={routine.tasks} stats={routine.stats} week={routine.heat.length ? routine.heat[routine.heat.length - 1] : null} onToggle={routine.toggle} showMeds={(!section || section === "routine") && prefs.showMedications && !!modules?.has("ROUTINE")} />
             <DashboardHeatmap heat={routine.heat} streak={routine.streak} ready={routine.ready && routine.rangeLoaded} memberSince={data?.user.memberSince} />
           </>
         )}
         {has.has("wheat") && <WorkoutHeatBento exercise={data?.exercise?.heat ?? null} calorie={data?.calorie?.heat ?? null} loading={loading} />}
         {has.has("sleep") && <DashboardSleep sleep={data?.sleep ?? null} loading={loading} onChanged={refreshNow} />}
-        {has.has("meds") && <DashboardMedication />}
         {has.has("ex") && (locked.has("ex") ? <DashboardModuleLock area="ex" /> : <DashboardExercise ex={data?.exercise ?? null} loading={loading} />)}
         {has.has("cal") && (locked.has("cal") ? <DashboardModuleLock area="cal" /> : <DashboardCalorie cal={data?.calorie ?? null} loading={loading} />)}
         {has.has("trade") && (locked.has("trade") ? <DashboardModuleLock area="trade" /> : <DashboardTrade trade={data?.trade ?? null} loading={loading} />)}
