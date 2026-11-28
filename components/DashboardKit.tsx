@@ -10,6 +10,8 @@
 //   • همه‌ی حرکت‌ها با MotionConfig reducedMotion="user" (در DashboardClient)
 //     برای کسی که «کاهش حرکت» رو روشن کرده خاموش می‌شن.
 
+import { useGlassTier } from "./LiquidGlass";
+import { useGlassFilter } from "@/lib/useGlassFilter";
 import { SmartLink as Link } from "@/components/SmartLink";
 import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { animate, m as motion, useInView, useMotionValue, useReducedMotion, useTransform, type Variants } from "framer-motion";
@@ -48,6 +50,9 @@ export function BentoCard({
   label?: string;
 }) {
   const ref = useRef<HTMLElement>(null);
+  // شیشه‌ی full دسکتاپ: فیلتر SVG مشترک هم‌دسته‌ی اندازه (فقط داخل داشبوردی که data-lg-tier داره)
+  const glass = useGlassTier();
+  useGlassFilter(ref, glass === "full", 22, "subtle", ".db-page[data-lg-tier]");
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof window === "undefined") return;

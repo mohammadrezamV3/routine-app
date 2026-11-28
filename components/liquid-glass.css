@@ -36,7 +36,7 @@ body[data-theme="light"] .lg-strong{ --lg-fill:.42; }
 }
 
 /* ردیف full: وقتی نقشه آماده شد، فیلتر SVG پشت blur */
-.lg-full.lg-ready{
+.lg-full[data-lg-ready]{
   -webkit-backdrop-filter:blur(calc(var(--lg-blur) * .35)) var(--lg-filter) saturate(var(--lg-sat));
   backdrop-filter:blur(calc(var(--lg-blur) * .35)) var(--lg-filter) saturate(var(--lg-sat));
 }
@@ -64,8 +64,9 @@ body[data-theme="light"] .lg-static{
   background:linear-gradient(135deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.34) 50%, rgba(255,255,255,.52) 100%);
 }
 html[data-perf-weak] .lg, .lg-static{ transition:none; }
+/* دستگاه ضعیف = ارزان‌ترین lite (بلور کوچک، بدون شکست)، نه بدون شیشه */
 html[data-perf-weak] .lg:not(.lg-static){
-  -webkit-backdrop-filter:none; backdrop-filter:none;
+  -webkit-backdrop-filter:blur(6px) saturate(1.2); backdrop-filter:blur(6px) saturate(1.2);
 }
 @media (prefers-reduced-transparency:reduce){
   .lg{ -webkit-backdrop-filter:none; backdrop-filter:none; }
