@@ -4,20 +4,22 @@ import "./sleep-dial.css";
 import "./sleep-charts.css";
 import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { SleepNightDetail, longDate } from "./SleepNightDetail";
+import { SleepNightSheet } from "./SleepNightSheet";
+import { longDate } from "./SleepNightDetail";
 import { weekdayShort, faNum } from "@/lib/jalali";
 import { tr } from "@/lib/i18n";
 import { scoreBandLabel, type SleepInsights, type SleepRecord } from "@/lib/sleep";
-import { barHeight, bestNight, buildWeekNights, lastLogged, weekAverage } from "@/lib/sleepWeekStats";
+import { barHeight, bestNight, buildWeekNights, weekAverage } from "@/lib/sleepWeekStats";
 
 // هفت شب آخر به‌صورت هفت ستون ساده: ارتفاع ستون = مدت خواب (سقف 10 ساعت)،
 // رنگ = امتیاز، خط‌چین = هدف. زدن ستون یک شب ثبت‌شده، جزئیاتش رو همون‌جا
-// نشون می‌ده (با دکمه‌ی ویرایش)؛ زدن شب خالی مستقیم ثبت رو باز می‌کنه.
+// توی یک پنجره‌ی جمع‌وجور (SleepNightSheet) نشون می‌ده، نه داخل خود کارت، تا کارت
+// بلند نشه و صفحه توی یک صفحه جا بشه؛ زدن شب خالی مستقیم ثبت رو باز می‌کنه.
 // ستون‌ها SVG‌ان (fill، نه بک‌گراند CSS). تاریخچه‌ی بلندتر در آنالیز هفتگیه.
 
 const MAX_MIN = 10 * 60;
-const BAR_H = 124;
-const BAR_W = 14;
+// ارتفاع میله درصدی از شیار (ارتفاع شیار از CSS و وابسته به ارتفاع صفحه‌ست)
+const BAR_MIN_PCT = 10;
 
 function hm(min: number): string {
   const h = Math.floor(min / 60), m = Math.round(min % 60);
@@ -41,11 +43,9 @@ export function SleepWeek({
   const nights = useMemo(() => buildWeekNights(todayIso, entries, insights.scores, insights.goalMin), [todayIso, entries, insights.scores, insights.goalMin]);
   const avg = useMemo(() => weekAverage(nights), [nights]);
   const best = useMemo(() => bestNight(nights), [nights]);
-  const latest = useMemo(() => lastLogged(nights), [nights]);
-  const goalY = BAR_H - Math.min(1, insights.goalMin / MAX_MIN) * BAR_H;
+  const goalFrac = Math.min(1, insights.goalMin / MAX_MIN);
 
-  const activeIso = sel && nights.some((n) => n.iso === sel && n.rec) ? sel : latest?.iso ?? null;
-  const active = nights.find((n) => n.iso === activeIso) ?? null;
+  const active = sel ? nights.find((n) => n.iso === sel && n.rec) ?? null : null;
   const streak = insights.goalStreak;
   const bestDay = best ? weekdayShort(new Date(Number(best.iso.slice(0, 4)), Number(best.iso.slice(5, 7)) - 1, Number(best.iso.slice(8, 10))).getDay()) : "";
 
@@ -55,22 +55,21 @@ export function SleepWeek({
         <h3 className="sl-card-title">{tr("هفت شب اخیر", "Last 7 nights")}</h3>
       </div>
       <div className="slw-grid">
-        <span className="slw-goal" style={{ top: `calc(var(--slw-top) + ${goalY}px)` }} aria-hidden="true">
+        <span className="slw-goal" style={{ top: `calc(var(--slw-top) + var(--slw-h) * ${1 - goalFrac})` }} aria-hidden="true">
           <em>{tr("هدف", "Goal")} <bdi dir="ltr">{faNum(hm(insights.goalMin))}</bdi></em><i />
         </span>
         {nights.map((n, i) => {
           const [y, m, d] = n.iso.split("-").map(Number);
           const wd = weekdayShort(new Date(y, m - 1, d).getDay());
           const isToday = n.iso === todayIso;
-          const h = barHeight(n.min, MAX_MIN, BAR_H, BAR_W);
-          const isSel = n.iso === activeIso;
+          const h = barHeight(n.min, MAX_MIN, 100, BAR_MIN_PCT);
           return (
             <button
               key={n.iso}
               type="button"
-              className={`slw-col${isToday ? " is-today" : ""}${n.rec ? "" : " is-empty"}${isSel ? " is-sel" : ""}`}
+              className={`slw-col${isToday ? " is-today" : ""}${n.rec ? "" : " is-empty"}`}
               onClick={() => (n.rec ? setSel(n.iso) : onPick(n.iso))}
-              aria-pressed={n.rec ? isSel : undefined}
+              aria-haspopup={n.rec ? "dialog" : undefined}
               aria-label={n.rec ? tr(`${wd}: ${hm(n.min)} خواب${n.score != null ? `، امتیاز ${n.score}` : ""}`, `${wd}: ${hm(n.min)} asleep${n.score != null ? `, score ${n.score}` : ""}`) : tr(`${wd}: ثبت نشده، برای ثبت بزن`, `${wd}: not logged, tap to log`)}
             >
               <span className="slw-val">{n.rec ? faNum(hm(n.min)) : <Plus aria-hidden />}</span>
@@ -78,7 +77,7 @@ export function SleepWeek({
                 {n.rec && (
                   <span
                     className={`slw-fill slw-grow${n.band ? ` slp-c-${n.band}` : ""}`}
-                    style={{ height: h, ["--d" as string]: `${i * 60}ms` } as React.CSSProperties}
+                    style={{ height: `${h}%`, ["--d" as string]: `${i * 60}ms` } as React.CSSProperties}
                   />
                 )}
               </span>
@@ -89,16 +88,15 @@ export function SleepWeek({
       </div>
 
       {active && active.rec && (
-        <div className="slw-detail" key={active.iso} aria-live="polite">
-          <SleepNightDetail
-            rec={active.rec}
-            goalMin={insights.goalMin}
-            targetBed={target?.sleep ?? null}
-            title={longDate(active.iso)}
-            badge={active.iso === todayIso ? tr("دیشب", "Last night") : null}
-            onEdit={() => onPick(active.iso)}
-          />
-        </div>
+        <SleepNightSheet
+          rec={active.rec}
+          goalMin={insights.goalMin}
+          targetBed={target?.sleep ?? null}
+          title={longDate(active.iso)}
+          badge={active.iso === todayIso ? tr("دیشب", "Last night") : null}
+          onClose={() => setSel(null)}
+          onEdit={() => { setSel(null); onPick(active.iso); }}
+        />
       )}
 
       {avg === null ? (

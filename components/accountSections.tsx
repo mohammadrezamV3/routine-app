@@ -39,7 +39,7 @@ export function getAccountSections(section: SectionKey | null = null): AccountSe
   return [
     { href: "/account/profile", group: "account", label: tr("پروفایل", "Profile"), desc: profileDesc, icon: <User size={17} />, match: (p) => p.startsWith("/account/profile") },
     { href: "/account/security", group: "account", label: tr("امنیت", "Security"), desc: tr("رمز عبور، ورود دومرحله‌ای و دستگاه‌ها", "Password, two-step login and devices"), icon: <ShieldCheck size={17} />, match: (p) => p.startsWith("/account/security") },
-    { href: "/account/referral", group: "account", label: tr("رفرال", "Referral"), desc: tr("دعوت دوستان و کیف اعتبار درون‌اپی", "Invite friends and your in-app credit wallet"), icon: <Gift size={17} />, match: (p) => p.startsWith("/account/referral") },
+    { href: "/account/referral", group: "account", label: tr("دعوت دوستان", "Invite friends"), desc: tr("لینک دعوت و کیف اعتبار درون‌اپی", "Your invite link and in-app credit wallet"), icon: <Gift size={17} />, match: (p) => p.startsWith("/account/referral") },
     // «اعلان‌ها» طبق درخواست صریح با «تنظیمات» ادغام شد و دیگر زبانه‌ی جدا ندارد.
     { href: "/account/general", group: "preferences", label: tr("تنظیمات", "Settings"), desc: settingsDesc, icon: <SlidersHorizontal size={17} />, match: (p) => p.startsWith("/account/general") || p.startsWith("/account/notifications") },
     { href: "/account/support", group: "help", label: tr("پشتیبانی", "Support"), desc: tr("ارتباط با تیم پشتیبانی", "Contact the support team"), icon: <Headset size={17} />, match: (p) => p.startsWith("/account/support") },

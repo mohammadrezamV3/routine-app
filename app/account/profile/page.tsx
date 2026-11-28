@@ -16,6 +16,7 @@ import { getBodyMetrics, saveBodyMetrics } from "@/lib/bodyMetrics";
 import { isValidUsername, isValidPersianName } from "@/lib/validate";
 import { ImageCropModal } from "@/components/ImageCropModal";
 import { AvatarSheet } from "@/components/AvatarSheet";
+import { inviteUrl } from "@/lib/invite";
 import { CUSTOM_REFERRAL_CODE_RE, REFERRAL_DISCOUNT_PERCENT, normalizeReferralCode } from "@/lib/referral";
 import { priceText as formatPriceAmount } from "@/lib/subscriptionI18n";
 import { faNum } from "@/lib/jalali";
@@ -386,7 +387,7 @@ export default function AccountProfilePage() {
   }
   async function shareInvite() {
     if (!savedRefCode) return;
-    const url = `${window.location.origin}/subscription?ref=${savedRefCode}`;
+    const url = inviteUrl(savedRefCode);
     try {
       if (typeof (navigator as any).share === "function") await (navigator as any).share({ title: tr("کد دعوت", "Invite code"), url });
       else {

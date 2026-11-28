@@ -251,3 +251,8 @@ html[data-admin-theme="noir"] body:not([data-theme="light"]) .sleep-scope{
   html[dir="ltr"] .dnav-panel.notif-panel, html[dir="ltr"] .dnav-panel.notif-panel[data-open="true"]{
     transform:none; transition:opacity .12s ease, visibility 0s;
   } }
+
+/* صفحه‌ی خواب توی یک صفحه جا می‌شه: فاصله‌ی بالا و پایین بدنه فشرده‌ست (هدر + حدود 10px) */
+body:has(.slp-page){ padding-top:80px; padding-bottom:20px; }
+@media (min-width:1024px){ body:has(.slp-page){ padding-top:74px; padding-bottom:12px; } }
+.slp-page{ padding-bottom:0; }

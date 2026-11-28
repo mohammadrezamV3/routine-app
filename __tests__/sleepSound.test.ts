@@ -45,13 +45,19 @@ describe("صداهای خواب", () => {
   });
 
   it("فهرست صداها کامل و دسته‌بندی‌شده‌ست", () => {
-    expect(SLEEP_SOUND_KINDS.length).toBeGreaterThanOrEqual(20);
+    expect(SLEEP_SOUND_KINDS.length).toBeGreaterThanOrEqual(40);
     for (const k of ["white", "pink", "brown", "rain", "ocean", "fan"] as const) expect(SLEEP_SOUND_KINDS).toContain(k);
     const all = SLEEP_SOUND_CATEGORIES.flatMap((c) => soundsOfCategory(c));
     expect([...all].sort()).toEqual([...SLEEP_SOUND_KINDS].sort());
     for (const c of SLEEP_SOUND_CATEGORIES) expect(soundsOfCategory(c).length).toBeGreaterThan(0);
-    expect(SLEEP_SOUND_CATALOG.storm).toBe("nature");
+    expect(SLEEP_SOUND_CATALOG.storm).toBe("water");
+    expect(SLEEP_SOUND_CATEGORIES).toHaveLength(5);
+    expect(new Set(SLEEP_SOUND_KINDS).size).toBe(SLEEP_SOUND_KINDS.length);
     for (const k of SLEEP_SOUND_KINDS) expect(soundName(k).length).toBeGreaterThan(0);
+  });
+  it("نوع ناشناخته در تنظیمات ذخیره‌شده بی‌صدا حذف می‌شه", () => {
+    expect(parseSleepSoundPrefs('{"layers":[{"kind":"gone","volume":0.5},{"kind":"owls","volume":0.4}]}').layers).toEqual([{ kind: "owls", volume: 0.4 }]);
+    expect(parseSleepSoundPrefs('{"layers":[{"kind":"gone"}]}').layers).toEqual(DEFAULT_PREFS.layers);
   });
   it("ترکیب صداها: افزودن، برداشتن و سقف", () => {
     let l = normalizeLayers(undefined, [{ kind: "rain", volume: 0.8 }]);

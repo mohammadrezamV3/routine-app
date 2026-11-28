@@ -1,0 +1,143 @@
+/* آسمان رصدخانه‌ی کل صفحه‌ی /sleep: لایه‌ی ثابت پشت هدر و کارت‌ها (SleepSky).
+   فقط transform/opacity؛ ستاره‌ها سه عمق با box-shadow ثابت (هیچ‌وقت انیمیت نمی‌شه)؛
+   با reduced-motion و data-perf-weak آسمان ثابت می‌مونه. بدون JS هم کامل دیده می‌شه. */
+.slsky{
+  --sk-a:#150f36; --sk-b:#0b0a1f; --sk-c:#07060f; --sk-horizon:rgba(110,90,255,.30); --sk-star:#e6eaff;
+  --sk-aur-a:rgba(124,92,255,.42); --sk-aur-b:rgba(64,190,255,.24); --sk-aur-c:rgba(126,224,176,.2); --sk-haze:rgba(190,180,255,.16);
+  position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden;
+  background:linear-gradient(180deg,var(--sk-a) 0%,var(--sk-b) 55%,var(--sk-c) 100%);
+}
+body[data-theme="light"] .slsky{
+  --sk-a:#e9e0ff; --sk-b:#f6e4f1; --sk-c:#ffe6d2; --sk-horizon:rgba(255,184,120,.55); --sk-star:#7a62d8;
+  --sk-aur-a:rgba(150,120,255,.26); --sk-aur-b:rgba(255,170,140,.26); --sk-aur-c:rgba(255,215,160,.3); --sk-haze:rgba(255,255,255,.35);
+}
+.slsky > *{ position:absolute; pointer-events:none; }
+.slsky-glow{ inset:auto 0 0; height:46%; background:radial-gradient(ellipse 80% 100% at 50% 100%, var(--sk-horizon), transparent 70%); }
+.slsky-sun{ display:none; inset:auto auto -18vmin 50%; width:56vmin; height:56vmin; margin-inline-start:-28vmin; border-radius:50%;
+  background:radial-gradient(circle, rgba(255,214,150,.75) 0%, rgba(255,190,140,.35) 38%, transparent 70%); }
+body[data-theme="light"] .slsky-sun{ display:block; }
+.slsky-haze{ inset:-10% -20%; background:linear-gradient(115deg, transparent 32%, var(--sk-haze) 46%, var(--sk-haze) 54%, transparent 68%); filter:blur(34px); opacity:.9; }
+.slsky-aur{ inset:-6% -26% auto; height:46%; will-change:transform; filter:blur(26px);
+  background:
+    radial-gradient(closest-side at 24% 50%, var(--sk-aur-a), transparent 74%),
+    radial-gradient(closest-side at 62% 38%, var(--sk-aur-b), transparent 74%),
+    radial-gradient(closest-side at 86% 60%, var(--sk-aur-c), transparent 72%);
+  animation:skDrift 60s ease-in-out infinite; }
+@keyframes skDrift{ 0%,100%{ transform:translate3d(-6%,0,0) rotate(-3deg); } 50%{ transform:translate3d(6%,3%,0) rotate(3deg); } }
+.slsky-st{ top:0; inset-inline-start:0; width:2px; height:2px; border-radius:50%; background:transparent; }
+.slsky-st.s1{ width:1.5px; height:1.5px; --o:.8; opacity:.8; animation:skTw 7s ease-in-out infinite;
+  box-shadow:73.4vw 79.9vh 0 0 var(--sk-star),
+    60.3vw 66.8vh 0 0 var(--sk-star),
+    21.5vw 98.9vh 0 0 var(--sk-star),
+    8.7vw 0.7vh 0 0 var(--sk-star),
+    63.9vw 89.3vh 0 0 var(--sk-star),
+    72.2vw 52.2vh 0 0 var(--sk-star),
+    96.6vw 21.8vh 0 0 var(--sk-star),
+    55.1vw 60.9vh 0 0 var(--sk-star),
+    72.2vw 76.3vh 0 0 var(--sk-star),
+    65.4vw 86.6vh 0 0 var(--sk-star),
+    63.7vw 7.7vh 0 0 var(--sk-star),
+    11.0vw 73.6vh 0 0 var(--sk-star),
+    31.3vw 2.6vh 0 0 var(--sk-star),
+    41.2vw 46.6vh 0 0 var(--sk-star),
+    32.6vw 36.4vh 0 0 var(--sk-star),
+    34.2vw 55.8vh 0 0 var(--sk-star),
+    37.4vw 63.1vh 0 0 var(--sk-star),
+    56.8vw 18.7vh 0 0 var(--sk-star),
+    39.8vw 94.6vh 0 0 var(--sk-star),
+    49.5vw 27.7vh 0 0 var(--sk-star),
+    78.4vw 54.3vh 0 0 var(--sk-star),
+    11.4vw 19.0vh 0 0 var(--sk-star),
+    5.3vw 10.3vh 0 0 var(--sk-star),
+    88.0vw 23.5vh 0 0 var(--sk-star),
+    68.5vw 23.6vh 0 0 var(--sk-star),
+    88.3vw 44.5vh 0 0 var(--sk-star),
+    94.7vw 67.4vh 0 0 var(--sk-star),
+    82.0vw 32.9vh 0 0 var(--sk-star),
+    89.0vw 0.3vh 0 0 var(--sk-star),
+    54.0vw 55.0vh 0 0 var(--sk-star),
+    88.5vw 2.6vh 0 0 var(--sk-star),
+    17.6vw 73.5vh 0 0 var(--sk-star),
+    35.4vw 6.9vh 0 0 var(--sk-star),
+    12.8vw 86.6vh 0 0 var(--sk-star),
+    57.3vw 82.1vh 0 0 var(--sk-star),
+    41.9vw 95.6vh 0 0 var(--sk-star),
+    70.6vw 52.7vh 0 0 var(--sk-star),
+    17.9vw 96.7vh 0 0 var(--sk-star),
+    43.3vw 61.4vh 0 0 var(--sk-star),
+    28.0vw 17.0vh 0 0 var(--sk-star),
+    84.6vw 8.2vh 0 0 var(--sk-star),
+    38.9vw 39.7vh 0 0 var(--sk-star),
+    47.6vw 24.2vh 0 0 var(--sk-star),
+    94.9vw 89.8vh 0 0 var(--sk-star),
+    60.4vw 60.7vh 0 0 var(--sk-star),
+    85.4vw 74.4vh 0 0 var(--sk-star); }
+.slsky-st.s2{ width:2.5px; height:2.5px; --o:.9; opacity:.9; animation:skTw 5s ease-in-out -2s infinite;
+  box-shadow:24.8vw 4.7vh 0 0 var(--sk-star),
+    84.5vw 98.6vh 0 0 var(--sk-star),
+    45.8vw 51.0vh 0 0 var(--sk-star),
+    87.0vw 2.4vh 0 0 var(--sk-star),
+    82.4vw 89.6vh 0 0 var(--sk-star),
+    94.8vw 88.8vh 0 0 var(--sk-star),
+    31.9vw 91.9vh 0 0 var(--sk-star),
+    29.0vw 37.7vh 0 0 var(--sk-star),
+    88.1vw 2.0vh 0 0 var(--sk-star),
+    68.8vw 27.6vh 0 0 var(--sk-star),
+    37.5vw 67.4vh 0 0 var(--sk-star),
+    45.4vw 8.0vh 0 0 var(--sk-star),
+    81.7vw 66.3vh 0 0 var(--sk-star),
+    40.4vw 95.4vh 0 0 var(--sk-star),
+    0.4vw 13.6vh 0 0 var(--sk-star),
+    67.1vw 86.5vh 0 0 var(--sk-star),
+    94.7vw 55.0vh 0 0 var(--sk-star),
+    35.5vw 8.9vh 0 0 var(--sk-star),
+    73.9vw 80.3vh 0 0 var(--sk-star),
+    27.0vw 55.9vh 0 0 var(--sk-star),
+    75.1vw 15.4vh 0 0 var(--sk-star),
+    31.0vw 74.5vh 0 0 var(--sk-star),
+    30.3vw 74.3vh 0 0 var(--sk-star),
+    20.9vw 2.6vh 0 0 var(--sk-star),
+    18.8vw 79.3vh 0 0 var(--sk-star),
+    68.2vw 74.6vh 0 0 var(--sk-star); }
+.slsky-st.s3{ width:3.5px; height:3.5px; --o:1; opacity:1; animation:skTw 9s ease-in-out -4s infinite;
+  box-shadow:70.6vw 83.8vh 0 0 var(--sk-star),
+    25.0vw 42.9vh 0 0 var(--sk-star),
+    7.7vw 52.4vh 0 0 var(--sk-star),
+    23.5vw 83.3vh 0 0 var(--sk-star),
+    40.2vw 84.3vh 0 0 var(--sk-star),
+    69.9vw 80.5vh 0 0 var(--sk-star),
+    53.3vw 85.7vh 0 0 var(--sk-star),
+    35.5vw 15.0vh 0 0 var(--sk-star),
+    51.2vw 25.1vh 0 0 var(--sk-star),
+    69.7vw 94.5vh 0 0 var(--sk-star),
+    46.8vw 28.3vh 0 0 var(--sk-star),
+    87.7vw 3.0vh 0 0 var(--sk-star); }
+body[data-theme="light"] .slsky-st.s1{ --o:.3; opacity:.3; } body[data-theme="light"] .slsky-st.s2{ --o:.38; opacity:.38; } body[data-theme="light"] .slsky-st.s3{ --o:.45; opacity:.45; }
+@keyframes skTw{ 0%,100%{ opacity:var(--o,.9); } 50%{ opacity:calc(var(--o,.9) * .35); } }
+.slsky-shoot{ top:12%; inset-inline-start:70%; width:110px; height:1.5px; opacity:0; border-radius:2px;
+  background:linear-gradient(90deg, transparent, var(--sk-star)); transform:rotate(28deg) translate3d(0,0,0);
+  animation:skShoot 17s linear infinite; }
+.slsky-shoot.b{ top:34%; inset-inline-start:28%; animation-duration:23s; animation-delay:-9s; }
+@keyframes skShoot{ 0%,93%{ opacity:0; transform:rotate(28deg) translate3d(0,0,0); } 94%{ opacity:.8; }
+  100%{ opacity:0; transform:rotate(28deg) translate3d(-260px,0,0); } }
+body[data-theme="light"] .slsky-shoot{ display:none; }
+
+/* کارت‌ها روی آسمان: همون توکن واحد باکس‌ها، این‌جا شیشه‌ای نیمه‌شفاف */
+.slsky ~ .sleep-scope, .sleep-scope.slp-page{
+  --box-bg:rgba(18,15,44,.46); --box-line:rgba(190,180,255,.16);
+}
+body[data-theme="light"] .sleep-scope.slp-page{ --box-bg:rgba(255,255,255,.52); --box-line:rgba(99,82,200,.18); }
+.sleep-scope.slp-page .sl-card:not(.sld), .sleep-scope.slp-page button.slt-tile{ -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+.sleep-scope.slp-page .sld{ --sh-bg:linear-gradient(180deg,rgba(24,19,60,.5) 0%,rgba(11,10,26,.4) 100%); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+body[data-theme="light"] .sleep-scope.slp-page .sld{ --sh-bg:linear-gradient(180deg,rgba(236,228,255,.55) 0%,rgba(255,233,220,.5) 100%); }
+
+/* بدنه شفاف تا لایه‌ی آسمان (z-index:-1) زیرش دیده بشه؛ ذرات پس‌زمینه‌ی سایت این‌جا خاموش */
+html:has(.slsky), body:has(.slsky){ background:transparent; }
+body:has(.slsky) #bgCanvas{ display:none; }
+
+html[data-perf-weak] .slsky *, html[data-perf="low"] .slsky *{ animation:none !important; }
+html[data-perf-weak] .slsky .slsky-shoot, html[data-perf="low"] .slsky .slsky-shoot{ display:none; }
+html[data-perf-weak] .sleep-scope.slp-page *, html[data-perf="low"] .sleep-scope.slp-page *{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+@media (prefers-reduced-motion:reduce){
+  .slsky *{ animation:none !important; } .slsky .slsky-shoot{ display:none; }
+}

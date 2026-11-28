@@ -7,6 +7,7 @@ import { ICONS } from "./NavIcons";
 import { RoutineTrialBanner } from "./RoutineTrialBanner";
 import { PanelSkeleton } from "./PanelSkeleton";
 import { SleepDial } from "./SleepDial";
+import { SleepSky } from "./SleepSky";
 import { SleepWeek } from "./SleepWeek";
 import { SleepLogSheet, type SleepLogSheetProps } from "./SleepLogSheet";
 import type { PlanTab } from "./SleepPlanSheet";
@@ -151,6 +152,7 @@ export function SleepHub() {
 
   return (
     <section className="sleep-scope slp-page">
+      <SleepSky />
       <div className="trade-head-row" style={{ justifyContent: "flex-start" }}>
         <span className="page-title-icon">{ICONS.sleep}</span>
         <h1>{tr("خواب", "Sleep")}</h1>

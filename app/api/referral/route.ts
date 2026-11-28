@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildInviteUrl, requestOrigin } from "@/lib/inviteLink";
+import { SITE_URL } from "@/lib/seo";
 
 // GET /api/referral → پنل «دعوت دوستان» کاربر: کدِ خودش، لینکِ اشتراک‌گذاری،
 // موجودیِ فعلیِ کیفِ اعتبار، لیستِ دعوت‌هاش (فقط اسم/وضعیت — هیچ PII دیگه‌ای
@@ -30,7 +32,7 @@ export async function GET(req: NextRequest) {
     await prisma.referralCode.create({ data: { userId, code } }).catch(() => {});
   }
 
-  const origin = req.nextUrl.origin;
+  const origin = requestOrigin(req.headers, SITE_URL);
   const currency: "IRR" | "USD" = user.market === "IRAN" ? "IRR" : "USD";
 
   // فقط دعوت‌هایی که از کدِ خودِ همین کاربر استفاده شدن — IDOR-safe چون
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     code,
-    shareUrl: `${origin}/subscription?ref=${code}`,
+    shareUrl: buildInviteUrl(origin, code),
     walletBalance: user.walletBalance,
     currency,
     invites: usages.map((u) => ({

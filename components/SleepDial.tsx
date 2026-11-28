@@ -104,7 +104,7 @@ function hms(totalSec: number): string {
 }
 
 // بیشینه‌ی عرض متن وسط (واحد SVG): فاصله‌ی بین عددهای 06 و 18 منهای حاشیه
-const CENTER_W = 136;
+const CENTER_W = 146;
 const VB_SPAN = S - 2 * VB;
 
 /** موقعیت و اندازه‌ی یک خط متن وسط به درصد/cqw تا با اندازه‌ی ساعت مقیاس بشه */
@@ -417,10 +417,10 @@ export function SleepDial({
         </svg>
         {/* متن وسط: HTML روی ساعت (متن فارسی داخل SVG در وب‌کیت حروف رو جدا و برعکس می‌کشید) */}
         <div className="sld-center" aria-hidden="true">
-          <span className="sld-kicker" style={centerLine(cy.kicker, fitFontSize(kicker, 12.5, CENTER_W))}>{kicker}</span>
+          <span className="sld-kicker" style={centerLine(cy.kicker, fitFontSize(kicker, 14, CENTER_W))}>{kicker}</span>
           <span className={`sld-big ${bigCls}`} style={centerLine(cy.big, fitFontSize(big, baseBig, CENTER_W))}>{big}</span>
-          {caption && <span className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} style={centerLine(cy.caption, fitFontSize(caption, 13, CENTER_W))}>{caption}</span>}
-          {caption2 && <span className="sld-caption is-sub" style={centerLine(cy.caption2, fitFontSize(caption2, 12, CENTER_W))}>{caption2}</span>}
+          {caption && <span className={`sld-caption${isScore && band ? ` is-band slp-c-${band}` : ""}`} style={centerLine(cy.caption, fitFontSize(caption, 14, CENTER_W))}>{caption}</span>}
+          {caption2 && <span className="sld-caption is-sub" style={centerLine(cy.caption2, fitFontSize(caption2, 13, CENTER_W))}>{caption2}</span>}
         </div>
       </div>
 
