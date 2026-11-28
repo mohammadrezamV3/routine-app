@@ -1,7 +1,7 @@
 /* ── ابزارهای خواب (SleepToolsPanels): شبکه‌ی 2x2 کاشی با تصویرگری زنده ──
    سطح کاشی‌ها همون سطح واحد باکس‌ها (--box-bg / --box-line). تصویرگری‌ها SVG/CSS ان
    و حرکتشون فقط transform/opacity (خاموش با reduced-motion و data-perf-weak). */
-.slt-row{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; min-width:0; }
+.slt-row{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; min-width:0; }
 @media (min-width:1024px){ .slt-row{ gap:14px; grid-template-columns:repeat(2, minmax(0,1fr)); } }
 .sleep-scope .slt-row{
   --slt-a:#8b7bff; --slt-b:#7ee0b0; --slt-sound-a:#7ee0b0; --slt-sound-b:#3aa6ff; --slt-breath:#4fb8ff; --slt-nap:#ffd27a;
@@ -85,6 +85,15 @@ html[data-perf-weak] .sleep-scope button.slt-tile{ transition:none; transform:no
   .slt-label{ font-size:12.5px; }
   .slt-tile:not(.is-live) .slt-sub{ display:none; }
   .slt-sub{ font-size:12px; }
+  /* آمار: ردیف تمام‌عرض زیر سه دکمه‌ی دیگه (فشرده، با خط روند کنار متن) */
+  .slt-tile.is-stats{ grid-column:1 / -1; }
+  body[data-theme="light"] .sleep-scope button.slt-tile.is-stats, body:not([data-theme="light"]) .sleep-scope button.slt-tile.is-stats{
+    flex-direction:row-reverse; justify-content:space-between; align-items:center; text-align:start; min-height:54px; padding:8px 16px; gap:12px;
+  }
+  .slt-tile.is-stats .slt-art{ width:auto; height:28px; justify-content:flex-start; }
+  .slt-tile.is-stats .slt-txt{ align-items:flex-start; }
+  .slt-tile.is-stats .slt-label{ font-size:14px; }
+  .slt-tile.is-stats:not(.is-live) .slt-sub{ display:block; }
 }
 @media (min-width:1024px){
   .slt-art{ height:34px; }

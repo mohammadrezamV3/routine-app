@@ -1,0 +1,60 @@
+/* پوسته‌ی مشترک همه‌ی پنجره‌های خواب (ثبت، برنامه، شب، صداها، تنفس، چرت، آمار، امتیاز).
+   یک بار این‌جا؛ همه‌ی پنجره‌ها کلاس‌های `sleep-scope slg-panel` رو روی ریشه‌ی خودشون
+   دارن (پورتال، بیرون از .slp-page)، پس توکن‌ها روی خود پنل ست می‌شن.
+   سطح = شیشه‌ی آسمان رصدخانه (شب: نیلی عمیق با شفق و ستاره‌ی محو؛ روز: سحر یاسی/هلویی)،
+   اکسنت = اکسنت خواب برای دکمه‌ها، تب‌ها و تیک‌ها. همه‌چیز ثابت (بدون انیمیشن). */
+.modal-panel.sleep-scope.slg-panel{
+  --sh-line:rgba(169,155,255,.26); --sh-ink:#eceaf6; --sh-sub:#a6a2c4;
+  --sh-glass:rgba(255,255,255,.05); --sh-glass-line:rgba(255,255,255,.1);
+  --sh-cta-a:#7b6bff; --sh-cta-b:#4fa8ff; --sh-cta-fg:#0b0a1a;
+  --sh-star:rgba(230,234,255,.85);
+  --accent:#8b7bff; --accent-rgb:139,123,255; --sec-on-accent:#0b0a1a;
+  --text:var(--sh-ink); --muted:var(--sh-sub); --slp-sub:var(--sh-sub);
+  --box-bg:rgba(255,255,255,.05); --box-line:rgba(169,155,255,.2); --line:rgba(169,155,255,.2); --surface-line:rgba(169,155,255,.26);
+  color:var(--text);
+}
+body[data-theme="light"] .modal-panel.sleep-scope.slg-panel{
+  --sh-line:rgba(99,82,200,.26); --sh-ink:#241a4a; --sh-sub:#51467a;
+  --sh-glass:rgba(255,255,255,.58); --sh-glass-line:rgba(99,82,200,.18);
+  --sh-cta-a:#6a55f0; --sh-cta-b:#3f8fe8; --sh-cta-fg:#fff;
+  --sh-star:rgba(122,98,216,.55);
+  --accent:#5b49d8; --accent-rgb:91,73,216; --sec-on-accent:#fff;
+  --box-bg:rgba(255,255,255,.5); --box-line:rgba(99,82,200,.2); --line:rgba(99,82,200,.2); --surface-line:rgba(99,82,200,.26);
+}
+/* سطح پنل: آسمان شب با شفق و چند ستاره‌ی ثابت (گرادیان‌های شعاعی، بدون المنت اضافه) */
+html body[data-theme] .modal-panel.sleep-scope.slg-panel{
+  border:1px solid var(--sh-line); border-radius:28px;
+  background:
+    radial-gradient(1.5px 1.5px at 14% 9%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(1px 1px at 82% 6%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(1.5px 1.5px at 92% 21%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(1px 1px at 37% 3%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(1px 1px at 61% 14%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(ellipse 80% 38% at 25% 0%, rgba(124,92,255,.34), transparent 72%),
+    radial-gradient(ellipse 70% 32% at 85% 4%, rgba(64,180,255,.16), transparent 72%),
+    linear-gradient(180deg,#171236 0%,#0d0b22 62%,#0a0918 100%);
+  box-shadow:0 24px 70px -28px rgba(8,6,30,.8);
+}
+html body[data-theme="light"] .modal-panel.sleep-scope.slg-panel{
+  background:
+    radial-gradient(1.5px 1.5px at 14% 9%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(1px 1px at 82% 6%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(1.5px 1.5px at 92% 21%, var(--sh-star) 50%, transparent 52%),
+    radial-gradient(ellipse 80% 36% at 22% 0%, rgba(150,120,255,.3), transparent 72%),
+    radial-gradient(ellipse 80% 34% at 90% 100%, rgba(255,190,150,.4), transparent 72%),
+    linear-gradient(180deg,#ece4ff 0%,#f6e6f4 55%,#ffe9dc 100%);
+  box-shadow:0 24px 60px -30px rgba(70,50,160,.45);
+}
+/* فرزندهای شیشه‌ای/نشانه‌ها همون خط‌ها و رنگ‌های خواب رو بگیرن */
+.modal-panel.sleep-scope.slg-panel .modal-title{ color:var(--sh-ink); }
+.modal-panel.sleep-scope.slg-panel .nav-close{ color:var(--sh-sub); }
+.modal-panel.sleep-scope.slg-panel .slg-foot{ border-top-color:var(--sh-glass-line); }
+.modal-panel.sleep-scope.slg-panel .auth-tabs{ border-color:var(--sh-glass-line); background:var(--sh-glass); }
+/* دکمه‌ی اصلی پنجره‌ها: همون گرادیان دکمه‌ی اصلی صفحه‌ی خواب */
+html body .modal-panel.sleep-scope.slg-panel .btn-primary{
+  --btn-bg:linear-gradient(90deg, var(--sh-cta-a), var(--sh-cta-b)); --btn-bd:transparent; --btn-fg:var(--sh-cta-fg);
+  background-origin:border-box; background-clip:border-box;
+}
+/* پرده‌ی پشت پنجره‌ها: سرمه‌ای شب به جای مشکی خنثی (کلاس روی پرده‌ی هر پنجره) */
+.modal-overlay.sleep-ov{ background:rgba(6,5,22,.62); }
+body[data-theme="light"] .modal-overlay.sleep-ov{ background:rgba(40,28,90,.34); }

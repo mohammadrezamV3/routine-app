@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-log.css";
 import "./sleep-detail.css";
 import "./sleep-charts.css";
@@ -64,7 +65,7 @@ function Body({ onClose, entries, insights, target, todayIso, onPick }: SleepSta
 
   return (
     <>
-      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-overlay open sleep-ov" onClick={onClose} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel slg-stats" role="dialog" aria-modal="true" aria-label={tr("آمار خواب", "Sleep stats")} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("آمار خواب", "Sleep stats")}</div>

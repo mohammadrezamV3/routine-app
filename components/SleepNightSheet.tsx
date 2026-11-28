@@ -1,5 +1,6 @@
 "use client";
 
+import "./sleep-sheet.css";
 import "./sleep-log.css";
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -36,7 +37,7 @@ function Body({ rec, goalMin, targetBed, title, badge, onClose, onEdit }: Parame
   }, [onClose]);
   return (
     <>
-      <div className="modal-overlay open" onClick={onClose} />
+      <div className="modal-overlay open sleep-ov" onClick={onClose} />
       <div ref={panelRef} tabIndex={-1} className="modal-panel liquid-glass-panel open sleep-scope slg-panel" role="dialog" aria-modal="true" aria-label={title} dir={isEn() ? "ltr" : "rtl"}>
         <div className="modal-head">
           <div className="modal-title">{tr("جزئیات شب", "Night details")}</div>
