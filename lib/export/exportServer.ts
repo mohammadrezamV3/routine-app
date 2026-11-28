@@ -51,9 +51,9 @@ export async function buildTable(module: ExportModule, userId: string, q: Q): Pr
       }));
     case "exercise":
       return exerciseTable(await prisma.exerciseLog.findMany({
-        where: { userId, ...(date ? { date } : {}) }, orderBy: { date: "asc" }, take,
+        where: { userId, ...(date ? { date } : {}) }, orderBy: [{ date: "asc" }, { sessionNo: "asc" }], take,
         select: {
-          date: true, planId: true, completed: true, completedItems: true, startedAt: true, notes: true,
+          date: true, planId: true, sessionNo: true, completed: true, completedItems: true, startedAt: true, notes: true,
           plan: { select: { goal: true, level: true } },
         },
       }));

@@ -62,6 +62,10 @@ export const NUMBER_LIMITS = {
   // ── ورزش ───────────────────────────────────────────────────────────────
   /** چندمین ماه تمرین */
   trainingMonth: L(1, 600, 0, "ماه تمرین", "Training month"),
+  /** شماره‌ی جلسه‌ی تمرین در یک روز (lib/exerciseSessions.ts MAX_SESSIONS_PER_DAY) */
+  exerciseSessionNo: L(1, 10, 0, "شماره‌ی جلسه", "Session number"),
+  /** تعداد حرکت‌های برنامه‌ی یک روز تمرین */
+  exercisePlannedCount: L(0, 200, 0, "تعداد حرکت‌های برنامه", "Planned exercise count"),
   sets: L(1, 100, 0, "تعداد ست", "Number of sets"),
   reps: L(1, 1000, 0, "تعداد تکرار", "Number of reps"),
   /** مدت یک حرکت زمانی وقتی واحد ثانیه است */

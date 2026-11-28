@@ -30,8 +30,16 @@ import {
   normalizeMissedDayPref, planStartIsoOf, rebasedPref, weekdayOf,
 } from "@/lib/exerciseProgression";
 import { tr } from "@/lib/i18n";
+import { SessionEntry } from "@/lib/exerciseSessions";
 import { dayNameDisplay } from "@/lib/exerciseDay";
 import { clearWorkoutRing, publishWorkoutRing } from "@/lib/workoutRing";
+
+// پاسخ قدیمی (کش آفلاین بدون sessions) = یک جلسه‌ی 1
+function legacySessions(res: { completed?: boolean; completedItems?: string[]; started?: boolean }): SessionEntry[] {
+  const items = res.completedItems ?? [];
+  if (!res.completed && !res.started && !items.length) return [];
+  return [{ no: 1, completed: !!res.completed, completedItems: items, started: !!res.started || items.length > 0, plannedCount: null }];
+}
 
 const now = new Date();
 const todayIso = isoLocal(now);
@@ -52,7 +60,7 @@ export function ExerciseDashboard({
   const [recenterKey, setRecenterKey] = useState(0);
 
   const [logs, setLogs] = useState<ExerciseLogRange>({});
-  const [selectedLog, setSelectedLog] = useState<{ completed: boolean; completedItems: string[] } | null>(null);
+  const [selectedLog, setSelectedLog] = useState<{ completed: boolean; completedItems: string[]; sessions: SessionEntry[] } | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   // زنده: لاگ تمرین از تب دیگه/دستگاه دیگه یا برگشت به تب. نوشتن‌های همین
   // تب عمدا نادیده گرفته می‌شن — ExerciseTaskList خودش optimisticه و
@@ -137,8 +145,8 @@ export function ExerciseDashboard({
   useEffect(() => {
     fetch(`/api/exercise/log?planId=${plan.id}&date=${selectedIso}`)
       .then((r) => r.json())
-      .then((res) => setSelectedLog({ completed: !!res.completed, completedItems: res.completedItems ?? [] }))
-      .catch(() => setSelectedLog({ completed: false, completedItems: [] }));
+      .then((res) => setSelectedLog({ completed: !!res.completed, completedItems: res.completedItems ?? [], sessions: Array.isArray(res.sessions) ? res.sessions : legacySessions(res) }))
+      .catch(() => setSelectedLog({ completed: false, completedItems: [], sessions: [] }));
   }, [plan.id, selectedIso, refreshKey]);
 
   const weekPlanData = useMemo(
@@ -305,8 +313,7 @@ export function ExerciseDashboard({
             (carriedFrom ? tr(` (جامانده از ${carriedFrom})`, ` (carried over from ${dayNameDisplay(carriedFrom)})`) : "")
           }
           restDayLabel={isSelectedToday ? tr("امروز روز استراحته — چیزی برنامه‌ریزی نشده.", "Today is a rest day. Nothing is planned.") : tr("این روز، روز باشگاه برنامه نیست.", "This is not a gym day in your plan.")}
-          initialCompleted={!!selectedLog?.completed}
-          initialCompletedItems={selectedLog?.completedItems ?? []}
+          sessions={selectedLog?.sessions ?? []}
           onSubstitute={openSubstitutePicker}
           substitutingItem={subbingItem}
           onSessionEnd={() => setRefreshKey((k) => k + 1)}

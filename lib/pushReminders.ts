@@ -143,8 +143,8 @@ export async function runDueReminders(now: Date = new Date()): Promise<{ ok: tru
           const dayName = FA_WEEKDAY[new Date(`${r.dateIso}T00:00:00Z`).getUTCDay()];
           const todayPlan = asArray<{ day: string; focus: string }>(plan.planData).find((d) => d?.day === dayName);
           if (!todayPlan) continue; // امروز روز استراحته
-          const log = await prisma.exerciseLog.findFirst({ where: { planId: plan.id, userId, date: new Date(r.dateIso) }, select: { completed: true } });
-          if (log?.completed) continue;
+          const log = await prisma.exerciseLog.findFirst({ where: { planId: plan.id, userId, date: new Date(r.dateIso), completed: true }, select: { completed: true } });
+          if (log) continue; // هر جلسه‌ی پایان‌خورده یعنی امروز انجام شده
           body = runWithLocale(locale, () => tr(`برنامه‌ی ورزشی امروز (${todayPlan.focus}) هنوز ثبت نشده.`, `Today's workout (${iso(todayPlan.focus)}) has not been logged yet.`));
         }
         await claimAndSend(userId, r.key, r.deadline, { title: r.title, body, url: r.url }, stats);

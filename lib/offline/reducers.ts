@@ -10,6 +10,7 @@
 
 import { computeR } from "../tradeSymbols";
 import { sessionsAt } from "../forexSessions";
+import { SessionEntry, applySessionWrite, checkSessionWrite, foldSessions } from "../exerciseSessions";
 
 export type Method = "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -300,22 +301,30 @@ function reduceExerciseLog(m: Mutation, parsed: Parsed[], out: Out, isReal = fal
   if (typeof planId !== "string" || !planId || typeof date !== "string" || !ISO_DATE.test(date)) return null;
   const single = keyUrl("/api/exercise/log", { date, planId });
   const prev = parsed.find((c) => c.url === single)?.json ?? { completed: false, completedItems: [], started: false };
-  let next;
-  if (m.body.started === true && m.body.completed === undefined) {
-    next = { ...prev, started: true };
-  } else {
-    next = {
-      ...prev,
-      completed: !!m.body.completed,
-      completedItems: Array.isArray(m.body.completedItems)
-        ? m.body.completedItems.filter((x: unknown) => typeof x === "string")
-        : (prev.completedItems ?? []),
-    };
-  }
+  // چند جلسه در روز: کش روز = اجتماع جلسه‌ها + فهرست sessions (lib/exerciseSessions.ts)
+  const sessNo = Number.isInteger(m.body.session) && m.body.session >= 1 ? m.body.session : 1;
+  const prevSessions: SessionEntry[] = Array.isArray(prev.sessions)
+    ? prev.sessions
+    : prev.completed || prev.started || (prev.completedItems ?? []).length
+      ? [{ no: 1, completed: !!prev.completed, completedItems: prev.completedItems ?? [], started: !!prev.started, plannedCount: null }]
+      : [];
+  const write = {
+    session: sessNo,
+    started: m.body.started === true && m.body.completed === undefined ? true : undefined,
+    completed: m.body.started === true && m.body.completed === undefined ? undefined : !!m.body.completed,
+    completedItems: Array.isArray(m.body.completedItems) ? m.body.completedItems.filter((x: unknown) => typeof x === "string") : undefined,
+    plannedCount: Number.isInteger(m.body.plannedCount) ? m.body.plannedCount : undefined,
+  };
+  // جلسه‌ی کامل در سرور هم رد می‌شه (409)؛ کش دست نمی‌خوره و نوشتن صف می‌شه تا سرور جواب بده
+  const blocked = !checkSessionWrite(prevSessions, write).ok;
+  const next = blocked ? prev : foldSessions(applySessionWrite(prevSessions, write));
+  const completedChange = !(m.body.started === true && m.body.completed === undefined);
   out.set(single, next);
   if (!isReal) {
-    const completedChange = !(m.body.started === true && m.body.completed === undefined);
-    for (const c of dashEntries(parsed)) out.set(c.url, patchDashExercise(c.json, { ...m.body, date }, completedChange));
+    if (!blocked) {
+      const bodyForDash = { ...m.body, date, completed: next.completed, completedItems: next.completedItems };
+      for (const c of dashEntries(parsed)) out.set(c.url, patchDashExercise(c.json, bodyForDash, completedChange));
+    }
   }
   for (const c of parsed) {
     if (c.path === "/api/exercise/log/range" && c.params.get("planId") === planId && inRange(date, c.params.get("start"), c.params.get("end"))) {

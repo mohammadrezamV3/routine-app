@@ -5,8 +5,9 @@
 // وصل می‌شیم، بدون لایه‌ی storage.ts.
 import { startOfWeek } from "./schedule";
 import { isoLocal } from "./jalali";
+import type { SessionEntry } from "./exerciseSessions";
 
-export type ExerciseLogEntry = { completed: boolean; completedItems: string[]; started?: boolean };
+export type ExerciseLogEntry = { completed: boolean; completedItems: string[]; started?: boolean; sessions?: SessionEntry[] };
 export type ExerciseLogRange = Record<string, ExerciseLogEntry>;
 
 export async function fetchExerciseLogRange(planId: string, start: Date, end: Date): Promise<ExerciseLogRange> {

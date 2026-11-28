@@ -950,10 +950,16 @@ model ExerciseLog {
   // فقط روزی را «گذرانده» حساب می‌کند که شروع خورده باشد.
   startedAt      DateTime?
   notes          String?
+  // چند جلسه در یک روز: هر ردیف یک جلسه است و شماره‌ی جلسه 1 تا 10 (lib/exerciseSessions.ts).
+  // ردیف‌های قدیمی همگی جلسه‌ی 1 هستند.
+  sessionNo      Int       @default(1)
+  // تعداد حرکت‌های برنامه‌ی همان روز در لحظه‌ی «پایان تمرین». null = ثبت قدیمی
+  // (completed بدون این عدد یعنی کامل). جلسه‌ی کامل = completed و همه‌ی حرکت‌ها انجام شده.
+  plannedCount   Int?
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, planId, date])
+  @@unique([userId, planId, date, sessionNo])
   @@index([userId])
 }
 

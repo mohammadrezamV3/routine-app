@@ -98,8 +98,14 @@ export async function buildExercise({ userId, date }: Ctx): Promise<DashExercise
   for (const r of logsRows) {
     const iso = dbIso(r.date);
     const items = Array.isArray(r.completedItems) ? (r.completedItems as unknown[]).filter((x): x is string => typeof x === "string") : [];
-    logs[iso] = { completed: r.completed, completedItems: items, started: !!r.startedAt || items.length > 0 };
-    if (iso === date) todayStarted = !!r.startedAt;
+    // چند جلسه در روز: اجتماع جلسه‌ها (انجام‌شده = هر جلسه‌ای پایان خورده)
+    const prev = logs[iso];
+    logs[iso] = {
+      completed: !!prev?.completed || r.completed,
+      completedItems: Array.from(new Set([...(prev?.completedItems ?? []), ...items])),
+      started: !!prev?.started || !!r.startedAt || items.length > 0,
+    };
+    if (iso === date && r.startedAt) todayStarted = true;
   }
   const todayDay = days.find((d) => d?.day === dayName);
   const todayLog = logs[date];

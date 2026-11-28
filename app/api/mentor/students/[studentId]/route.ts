@@ -41,14 +41,21 @@ async function exerciseSummary(studentId: string, p: PrivacySettings, dates: str
       where: { userId: studentId, planId: plan.id, date: { gte: new Date(dates[0] + "T00:00:00.000Z"), lte: new Date(dates[dates.length - 1] + "T00:00:00.000Z") } },
       select: { date: true, completed: true, completedItems: true },
     });
-    const byDate = new Map(logs.map((l) => [isoDate(l.date), l]));
+    // چند جلسه در روز: روز انجام‌شده = هر جلسه‌ای پایان خورده، حرکت‌ها = اجتماع
+    const byDate = new Map<string, { completed: boolean; completedItems: unknown[] }>();
+    for (const l of logs) {
+      const k = isoDate(l.date);
+      const prev = byDate.get(k);
+      const items = Array.isArray(l.completedItems) ? (l.completedItems as unknown[]) : [];
+      byDate.set(k, { completed: !!prev?.completed || l.completed, completedItems: Array.from(new Set([...(prev?.completedItems ?? []), ...items])) });
+    }
     const gymSet = new Set(gymDays);
     const planned = dates.filter((d) => gymSet.has(FA_WEEKDAY[new Date(d + "T00:00:00.000Z").getUTCDay()])).length;
     const days = dates
       .filter((d) => byDate.has(d))
       .map((d) => {
         const l = byDate.get(d)!;
-        return { date: d, completed: l.completed, itemsDone: Array.isArray(l.completedItems) ? (l.completedItems as unknown[]).length : 0 };
+        return { date: d, completed: l.completed, itemsDone: l.completedItems.length };
       });
     progress = { planned, completed: days.filter((d) => d.completed).length, days };
   }

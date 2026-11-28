@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { m as motion } from "framer-motion";
 import { TickButton } from "./TickButton";
-import { Check, Dumbbell, Lock, Pencil, Play, Repeat2, RotateCw, Timer, X } from "lucide-react";
+import { Check, Dumbbell, Lock, Pencil, Play, Plus, Repeat2, RotateCw, Timer, X } from "lucide-react";
 import { DashCard } from "./DashCard";
 import type { ExerciseDay } from "@/lib/exercisePlans";
 import { isoLocal } from "@/lib/jalali";
 import { reportLiveError } from "@/lib/liveSync";
 import { parseExerciseItem } from "@/lib/exerciseSets";
+import {
+  MAX_SESSIONS_PER_DAY, SessionEntry, applySessionWrite, defaultSessionNo, isSessionFullyDone, nextSessionNo, sessionStatus,
+} from "@/lib/exerciseSessions";
+import { SegmentedTabs } from "./SegmentedTabs";
 import dynamic from "next/dynamic";
 import { EXERCISE_TUTORIAL_SEEN_KEY } from "@/lib/tutorialSeen";
 // فقط با شروع تمرین / زدن یک حرکت لازم می‌شن — کدشون توی باندل اولیه نیست
@@ -45,8 +49,7 @@ export function ExerciseTaskList({
   editable,
   title = tr("برنامه تمرینی", "Workout plan"),
   restDayLabel = tr("امروز روز استراحته — چیزی برنامه‌ریزی نشده.", "Today is a rest day. Nothing is planned."),
-  initialCompleted,
-  initialCompletedItems,
+  sessions,
   onSubstitute,
   substitutingItem,
   onSessionEnd,
@@ -62,8 +65,8 @@ export function ExerciseTaskList({
   editable: boolean;
   title?: string;
   restDayLabel?: string;
-  initialCompleted: boolean;
-  initialCompletedItems: string[];
+  /** جلسه‌های ثبت‌شده‌ی همین روز (چند جلسه در روز؛ lib/exerciseSessions.ts) */
+  sessions: SessionEntry[];
   onSubstitute: (day: string, item: string) => void;
   substitutingItem: string | null;
   onSessionEnd: () => void;
@@ -71,7 +74,7 @@ export function ExerciseTaskList({
   onActiveChange?: (active: boolean) => void;
   /** «شروع تمرین» روی سرور ثبت شد — حالت «ماندن» با همین روز را گذرانده حساب می‌کند */
   onStarted?: () => void;
-  /** تعداد آیتم‌های انجام‌شده‌ی همین روز (زنده با هر تیک) برای حلقه‌ی بالای صفحه */
+  /** تعداد حرکت‌های انجام‌شده‌ی همین روز (اجتماع جلسه‌ها، زنده با هر تیک) برای حلقه‌ی بالای صفحه */
   onProgress?: (done: number, completed: boolean, dateIso: string) => void;
   delay?: number;
 }) {
@@ -79,30 +82,42 @@ export function ExerciseTaskList({
   const todayPlan = dayPlan;
   const isFutureDay = dateIso > isoLocal(new Date());
   const isPastDay = dateIso < isoLocal(new Date());
-  const hadProgress = !initialCompleted && initialCompletedItems.length > 0;
-  const [active, setActive] = useState(hadProgress);
-  const [ended, setEnded] = useState(initialCompleted);
-  const [checked, setChecked] = useState<Set<string>>(new Set(initialCompletedItems));
+  // چند جلسه در روز: هر چیز از فهرست جلسه‌ها مشتق می‌شه. `local` نسخه‌ی خوش‌بینانه‌ی
+  // فهرست سرور است (هر نوشتن همان لحظه روش می‌نشیند و با خطا برمی‌گردد).
+  const sessionsKey = JSON.stringify(sessions.map((x) => [x.no, x.completed, x.completedItems.length, x.plannedCount, x.started]));
+  const [local, setLocal] = useState<SessionEntry[]>(sessions);
+  const [sessionNo, setSessionNo] = useState(() => defaultSessionNo(sessions));
   const [elapsed, setElapsed] = useState(0);
   const [ending, setEnding] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialFor, setTutorialFor] = useState<"start" | "new" | null>(null);
   const [setTrackerItem, setSetTrackerItem] = useState<string | null>(null);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const localRef = useRef(local);
+  localRef.current = local;
 
-  // `initialCompletedItems` از والد به‌صورت `res.completedItems ?? []` میاد،
-  // یعنی وقتی لاگی وجود نداره هر رندر یک آرایه‌ی *جدید* ساخته می‌شه. با گذاشتن
-  // خود آرایه توی وابستگی‌ها، این افکت هر رندر اجرا می‌شد و
-  // `setChecked(new Set(...))` هم هر بار یک Set جدید (پس state جدید) می‌ساخت
-  // → رندر بعدی → افکت دوباره → یک حلقه‌ی رندر بی‌پایان که CPU رو اشغال
-  // می‌کرد و گوشی رو داغ. حالا وابستگی یک کلید رشته‌ای پایدار از محتواست.
-  const completedKey = initialCompletedItems.join("|");
+  // روز یا فهرست سرور عوض شد → دوباره از سرور؛ جلسه‌ی انتخاب‌شده فقط وقتی دیگه
+  // وجود نداره (روز دیگه) به پیش‌فرض برمی‌گرده.
+  const dayKey = `${dateIso}|${todayPlan?.day ?? ""}`;
+  const lastDayKey = useRef(dayKey);
   useEffect(() => {
-    setEnded(initialCompleted);
-    setChecked(new Set(completedKey ? completedKey.split("|") : []));
-    setActive(!initialCompleted && completedKey.length > 0);
+    setLocal(sessions);
+    if (lastDayKey.current !== dayKey) {
+      lastDayKey.current = dayKey;
+      setSessionNo(defaultSessionNo(sessions));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [todayPlan?.day, initialCompleted, completedKey]);
+  }, [sessionsKey, dayKey]);
+
+  const cur = local.find((x) => x.no === sessionNo);
+  const status = sessionStatus(cur);
+  const active = status === "active" && editable;
+  const curDone = status === "done";
+  const curResumable = status === "resumable";
+  const ended = (status === "done" || status === "resumable");
+  const dayEnded = local.some((x) => x.completed);
+  const checked = useMemo(() => new Set(cur?.completedItems ?? []), [cur]);
+  const canAddSession = editable && !isFutureDay && !!todayPlan && !active && local.length > 0 && local.length < MAX_SESSIONS_PER_DAY;
 
   useEffect(() => {
     if (!active) { if (timerRef.current) clearInterval(timerRef.current); return; }
@@ -111,71 +126,81 @@ export function ExerciseTaskList({
   }, [active]);
 
   useEffect(() => { onActiveChange?.(active); }, [active, onActiveChange]);
-  useEffect(() => { onProgress?.(checked.size, ended, dateIso); }, [checked, ended, dateIso, onProgress]);
+  useEffect(() => {
+    const union = new Set<string>();
+    local.forEach((x) => x.completedItems.forEach((i) => union.add(i)));
+    onProgress?.(union.size, dayEnded, dateIso);
+  }, [local, dayEnded, dateIso, onProgress]);
 
   // true = روی سرور نشست. خطا دیگه بی‌صدا بلعیده نمی‌شه: صدازننده تغییر
   // optimistic رو برمی‌گردونه و پیام سراسری (LiveSyncToaster) نشون داده می‌شه.
-  async function persist(nextChecked: Set<string>, completed: boolean): Promise<boolean> {
+  async function post(body: Record<string, unknown>): Promise<boolean> {
     const res = await fetch("/api/exercise/log", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planId, date: dateIso, completed, completedItems: Array.from(nextChecked) }),
+      body: JSON.stringify({ planId, date: dateIso, session: sessionNoRef.current, ...body }),
     }).catch(() => null);
     if (res?.ok) return true;
-    reportLiveError(tr("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن", "Not saved. The change was reverted. Check your connection and try again"));
+    if (res && res.status === 409) {
+      // جلسه‌ی کامل دوباره شروع نمی‌شه — وضعیت واقعی رو از سرور بگیر
+      reportLiveError(tr("این جلسه کامل انجام شده و دوباره شروع نمی‌شود. برای تمرین بیشتر جلسه‌ی جدید بساز", "This session is already fully completed. Start a new session to train more"));
+      onSessionEnd();
+    } else {
+      reportLiveError(tr("ذخیره نشد — تغییر برگردانده شد. اتصال را چک کن و دوباره امتحان کن", "Not saved. The change was reverted. Check your connection and try again"));
+    }
     return false;
   }
+  const sessionNoRef = useRef(sessionNo);
+  sessionNoRef.current = sessionNo;
 
-  function startWorkout() {
+  function startWorkout(newSession = false) {
     if (!editable) return;
-    setActive(true);
-    setEnded(false);
+    const no = newSession ? nextSessionNo(localRef.current) : sessionNo;
+    if (newSession && no > MAX_SESSIONS_PER_DAY) return;
+    const before = localRef.current;
+    sessionNoRef.current = no;
+    setSessionNo(no);
     setElapsed(0);
-    // ثبت «شروع» — بدون این، حالت «ماندن» (lib/exerciseProgression.ts) همین
-    // تمرین را فردا دوباره می‌آورد. شکستش جلسه را نمی‌بندد؛ اولین تیک/پایان
-    // هم لاگ می‌سازد و لاگ دارای پیشرفت «شروع‌شده» حساب می‌شود.
-    fetch("/api/exercise/log", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ planId, date: dateIso, started: true }),
-    })
-      .then((r) => { if (r.ok) onStarted?.(); })
-      .catch(() => {});
+    setLocal(applySessionWrite(before, { session: no, started: true }));
+    // ثبت «شروع/ادامه» — بدون این، حالت «ماندن» (lib/exerciseProgression.ts) همین
+    // تمرین را فردا دوباره می‌آورد. روی جلسه‌ی ناقص پایان‌خورده یعنی «ادامه».
+    post({ started: true }).then((ok) => {
+      if (ok) onStarted?.();
+      else setLocal(before);
+    });
   }
 
-  function handleStartClick() {
+  function handleStartClick(newSession = false) {
     if (!editable) return;
     let seen = false;
     try { seen = localStorage.getItem(EXERCISE_TUTORIAL_SEEN_KEY) === "1"; } catch {}
-    if (!seen) { setShowTutorial(true); return; }
-    startWorkout();
+    if (!seen) { setTutorialFor(newSession ? "new" : "start"); return; }
+    startWorkout(newSession);
   }
 
   // optimistic: تیک همون لحظه می‌خوره؛ اگه سرور رد کرد همون حرکت برمی‌گرده.
-  // checkedRef تا چند تیک پشت‌سرهم قبل از رندر بعدی هم مجموعه‌ی کامل رو بفرستن.
-  const checkedRef = useRef(checked);
-  checkedRef.current = checked;
   function markItemDone(item: string) {
-    const prev = checkedRef.current;
-    if (prev.has(item)) return;
-    const next = new Set(prev).add(item);
-    checkedRef.current = next;
-    setChecked(next);
-    persist(next, false).then((ok) => {
+    const list = localRef.current;
+    const no = sessionNoRef.current;
+    const prevItems = list.find((x) => x.no === no)?.completedItems ?? [];
+    if (prevItems.includes(item)) return;
+    const nextItems = [...prevItems, item];
+    const optimistic = applySessionWrite(list, { session: no, completed: false, completedItems: nextItems });
+    localRef.current = optimistic;
+    setLocal(optimistic);
+    post({ completed: false, completedItems: nextItems }).then((ok) => {
       if (ok) return;
-      setChecked((cur) => {
-        if (!cur.has(item)) return cur;
-        const rolled = new Set(cur);
-        rolled.delete(item);
-        return rolled;
-      });
+      setLocal((curList) => applySessionWrite(curList, {
+        session: no, completed: false,
+        completedItems: (curList.find((x) => x.no === no)?.completedItems ?? []).filter((i) => i !== item),
+      }));
     });
   }
 
   const remainingCount = (todayPlan?.items ?? []).filter((it) => !checked.has(it)).length;
 
   // زدن «پایان تمرین» وقتی هنوز حرکتی مونده، به‌جای ثبت بی‌برگشت، اول
-  // می‌پرسه — چون بعد ثبت، اون حرکت‌ها ضربدر قرمز «انجام‌نشده» می‌گیرن.
+  // می‌پرسه. بعد از پایان ناقص همین جلسه با «ادامه‌ی تمرین» قابل ادامه‌ست.
   function requestEndWorkout() {
     if (remainingCount > 0) { setConfirmEnd(true); return; }
     endWorkout();
@@ -184,11 +209,13 @@ export function ExerciseTaskList({
   async function endWorkout() {
     setConfirmEnd(false);
     setEnding(true);
-    const ok = await persist(checked, true);
+    const before = localRef.current;
+    const items = Array.from(checked);
+    const planned = todayPlan?.items.length ?? 0;
+    const ok = await post({ completed: true, completedItems: items, plannedCount: planned });
     setEnding(false);
     if (!ok) return; // تمرین باز می‌مونه تا دوباره «پایان» بزنه
-    setActive(false);
-    setEnded(true);
+    setLocal(applySessionWrite(before, { session: sessionNoRef.current, completed: true, completedItems: items, plannedCount: planned }));
     onSessionEnd();
   }
 
@@ -222,6 +249,17 @@ export function ExerciseTaskList({
       ) : (
         <>
           <div className="mt-1 shrink-0 text-[11px] text-dash-muted sm:text-[12.5px]">{focusDisplay(todayPlan.focus)}</div>
+
+          {local.length > 1 && (
+            <SegmentedTabs
+              className="mt-3 shrink-0"
+              ariaLabel={tr("جلسه‌های تمرین این روز", "Workout sessions of this day")}
+              disabled={active}
+              active={String(sessionNo)}
+              onChange={(v) => { setSessionNo(Number(v)); setElapsed(0); }}
+              options={local.map((x) => ({ value: String(x.no), label: tr(`جلسه ${x.no}`, `Session ${x.no}`) }))}
+            />
+          )}
 
           {/* کارت با تعداد حرکت‌ها بزرگ نمی‌شه (درخواست صریح) — خود لیست
               سقف ارتفاع داره و داخلش اسکرول می‌شه. باگ قبلی: سقف روی قاب بیرونی
@@ -301,52 +339,88 @@ export function ExerciseTaskList({
               <Lock size={14} />
               {tr("هنوز وقتش نرسیده", "Not yet")}
             </div>
-          ) : ended && !active ? (
-            // تمرین این روز «تمام» ثبت شده (ExerciseLog.completed) — همون
-            // باکس وضعیت «هنوز وقتش نرسیده»، فقط با متن/رنگ خودش.
-            <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
-              <Check size={14} strokeWidth={3} />
-              {tr("انجام دادی", "Done")}
+          ) : active ? (
+            <div className="mt-5 shrink-0">
+              <button
+                type="button"
+                disabled={ending}
+                onClick={requestEndWorkout}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
+                style={{ borderColor: "#E05252", color: "#E05252" }}
+              >
+                {ending ? <Spinner size={14} /> : tr("پایان تمرین", "Finish workout")}
+              </button>
             </div>
-          ) : isPastDay && !active ? (
-            <div className="exercise-locked-box exercise-state-missed mt-5 shrink-0">
-              <X size={14} strokeWidth={3} />
-              {tr("وقتش گذشته", "Overdue")}
+          ) : curDone ? (
+            // جلسه‌ی کامل: دوباره شروع نمی‌شه؛ فقط جلسه‌ی جدید (تمرین اضافه)
+            <div className="mt-5 flex shrink-0 flex-col gap-2.5">
+              <div className="exercise-locked-box exercise-state-done">
+                <Check size={14} strokeWidth={3} />
+                {tr("انجام شد", "Completed")}
+              </div>
+              {canAddSession && (
+                <button type="button" className="btn btn-ghost btn-sm w-full" onClick={() => handleStartClick(true)}>
+                  <Plus size={14} />
+                  {tr("جلسه‌ی جدید", "New session")}
+                </button>
+              )}
             </div>
-          ) : (
-            editable && (!ended || active) && (
-              <div className="mt-5 shrink-0">
-                {!active && (
-                  <button
-                    type="button"
-                    onClick={handleStartClick}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
-                    style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-                  >
+          ) : curResumable ? (
+            // جلسه‌ی پایان‌خورده ولی ناقص: ادامه از همان‌جا که مانده
+            <div className="mt-5 flex shrink-0 flex-col gap-2.5">
+              {editable ? (
+                <>
+                  <button type="button" className="btn btn-primary w-full" onClick={() => handleStartClick(false)}>
                     <Play size={16} />
-                    {tr("شروع تمرین", "Start workout")}
+                    {tr("ادامه‌ی تمرین", "Continue workout")}
                   </button>
-                )}
-                {active && (
-                  <button
-                    type="button"
-                    disabled={ending}
-                    onClick={requestEndWorkout}
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
-                    style={{ borderColor: "#E05252", color: "#E05252" }}
-                  >
-                    {ending ? <Spinner size={14} /> : tr("پایان تمرین", "Finish workout")}
-                  </button>
-                )}
+                  {canAddSession && (
+                    <button type="button" className="btn btn-ghost btn-sm w-full" onClick={() => handleStartClick(true)}>
+                      <Plus size={14} />
+                      {tr("جلسه‌ی جدید", "New session")}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="exercise-locked-box exercise-state-missed">
+                  <X size={14} strokeWidth={3} />
+                  {tr("ناقص ماند", "Left unfinished")}
+                </div>
+              )}
+            </div>
+          ) : isPastDay ? (
+            dayEnded ? (
+              <div className="exercise-locked-box exercise-state-done mt-5 shrink-0">
+                <Check size={14} strokeWidth={3} />
+                {tr("انجام دادی", "Done")}
+              </div>
+            ) : (
+              <div className="exercise-locked-box exercise-state-missed mt-5 shrink-0">
+                <X size={14} strokeWidth={3} />
+                {tr("وقتش گذشته", "Overdue")}
+              </div>
+            )
+          ) : (
+            editable && (
+              <div className="mt-5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleStartClick(false)}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-[13px] font-bold sm:text-[15px]"
+                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
+                >
+                  <Play size={16} />
+                  {tr("شروع تمرین", "Start workout")}
+                </button>
               </div>
             )
           )}
         </>
       )}
 
-      {showTutorial && createPortal(
+      {tutorialFor && createPortal(
         <ExerciseSetTutorial
-          onDone={() => { setShowTutorial(false); startWorkout(); }}
+          onDone={() => { const nw = tutorialFor === "new"; setTutorialFor(null); startWorkout(nw); }}
         />,
         document.body
       )}
@@ -362,7 +436,7 @@ export function ExerciseTaskList({
             <div className="modal-body">
               <div className="text-[12.5px] leading-relaxed text-dash-text sm:text-[13.5px]">
                 {tr(`${remainingCount} حرکت از برنامه‌ی امروزت هنوز انجام نشده. اگه الان تمرین رو ببندی،
-                همون‌ها «انجام‌نشده» ثبت می‌شن.`, `${remainingCount} ${remainingCount === 1 ? "exercise" : "exercises"} from today's plan ${remainingCount === 1 ? "is" : "are"} still not done. If you finish now, they will be marked as not done.`)}
+                همون‌ها «انجام‌نشده» ثبت می‌شن؛ ولی بعدا می‌تونی همین جلسه رو ادامه بدی.`, `${remainingCount} ${remainingCount === 1 ? "exercise" : "exercises"} from today's plan ${remainingCount === 1 ? "is" : "are"} still not done. If you finish now, they will be marked as not done, but you can continue this session later.`)}
               </div>
               <div className="mt-4 flex flex-col gap-2.5">
                 <button
