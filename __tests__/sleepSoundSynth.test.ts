@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { SLEEP_SOUND_KINDS } from "@/lib/sleepSoundCatalog";
-import { MAX_LOOP_RATE, MIN_LOOP_PERIOD_S, NOISE_LOOP_S, buildVoice, type VoiceReport } from "@/lib/sleepSoundSynth";
+import { MAX_CONCURRENT_SOURCES, MAX_LOOP_RATE, MIN_LOOP_PERIOD_S, NOISE_LOOP_S, buildVoice, type VoiceReport } from "@/lib/sleepSoundSynth";
 
 // context ساختگی: هر گره/پارامتر یک Proxy ساده‌ست تا طرح‌ها بدون WebAudio واقعی اجرا بشن و گزارش دوره‌ها خونده بشه.
 function fakeNode(): unknown {
@@ -44,6 +44,7 @@ function incommensurate(periods: number[]): boolean {
 const METRONOME_OK: Record<string, number | null> = { clock: null, train: 30, heartbeat: 30 };
 
 function checkReport(kind: string, r: VoiceReport) {
+  expect(r.maxConcurrent, `${kind} concurrent sources`).toBeLessThanOrEqual(MAX_CONCURRENT_SOURCES);
   for (const p of r.loops) expect(p, `${kind} loop`).toBeGreaterThanOrEqual(MIN_LOOP_PERIOD_S);
   for (const m of r.mods) {
     if (m.texture) continue;

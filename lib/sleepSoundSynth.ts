@@ -8,7 +8,9 @@ import type { SleepSoundKind } from "@/lib/sleepSoundCatalog";
 export type NoiseType = "white" | "pink" | "brown";
 export type EventReport = { kind: "random" | "poisson" | "metronome"; minGap: number; maxGap: number; driftPeriodS?: number };
 export type ModReport = { periodsS: number[]; texture: boolean };
-export type VoiceReport = { loops: number[]; mods: ModReport[]; events: EventReport[] };
+export type VoiceReport = { loops: number[]; mods: ModReport[]; events: EventReport[]; maxConcurrent: number };
+/** سقف تعداد منبع‌های گذرای هم‌زمان (زمان‌بندی‌شده و پایان‌نیافته) برای هر صدا */
+export const MAX_CONCURRENT_SOURCES = 30;
 export type Voice = { out: GainNode; dispose: () => void; report: VoiceReport };
 
 /** طول دو بافر نویز حلقه‌ای (ثانیه)؛ منبع‌ها یکی در میون از این دو می‌گیرن */
@@ -65,6 +67,81 @@ export function makeNoise(c: BaseAudioContext, type: NoiseType, idx: 0 | 1): Aud
   return buf;
 }
 
+// ───── بافت‌های از پیش ساخته (قطره، جرقه، تق‌تق) ─────
+// به‌جای یک گره‌ی WebAudio برای هر قطره، یک بار در JS یک بستر 36 یا 49 ثانیه‌ای با زمان‌بندی پواسون نوشته می‌شه
+// و حلقه می‌شه. قطره‌ها دور می‌پیچن (wrap) پس درز حلقه نداره و دوره‌ی تکرارش >= 30 ثانیه‌ست.
+export type TexSpec = {
+  rate: number; // قطره در ثانیه
+  fMin: number; fMax: number; // رنگ (هرتز)
+  tauMin: number; tauMax: number; // ثابت زمانی افت (ثانیه)
+  ampMin: number; ampMax: number; skew?: number; // skew > 1 یعنی بیشتر قطره‌ها کم‌صدا و گاهی بلند
+  mode: "noise" | "ping"; chirp?: number; // ping: سینوس میرا؛ chirp: ضریب شیب فرکانس
+};
+const TEX_SR = 16000;
+const texCache = new Map<string, AudioBuffer>();
+
+export function makeTexture(c: BaseAudioContext, spec: TexSpec, idx: 0 | 1): AudioBuffer {
+  const key = `${JSON.stringify(spec)}#${idx}`;
+  const hit = texCache.get(key);
+  if (hit) return hit;
+  const len = Math.floor(TEX_SR * NOISE_LOOP_S[idx]);
+  const buf = c.createBuffer(1, len, TEX_SR);
+  const d = buf.getChannelData(0);
+  const skew = spec.skew ?? 1;
+  let t = Math.random() / spec.rate;
+  const total = len / TEX_SR;
+  while (t < total) {
+    const i0 = Math.floor(t * TEX_SR);
+    const tau = rnd(spec.tauMin, spec.tauMax), f = rnd(spec.fMin, spec.fMax);
+    const amp = spec.ampMin + (spec.ampMax - spec.ampMin) * Math.pow(Math.random(), skew);
+    const n = Math.min(len, Math.ceil(tau * 7 * TEX_SR));
+    if (spec.mode === "ping") {
+      let ph = Math.random() * 6.28;
+      const ch = spec.chirp ?? 1;
+      for (let j = 0; j < n; j++) {
+        const fi = f * (1 + (ch - 1) * Math.min(1, j / (n * 0.25)));
+        ph += (2 * Math.PI * fi) / TEX_SR;
+        d[(i0 + j) % len] += amp * Math.exp(-j / (tau * TEX_SR)) * Math.sin(ph) * Math.min(1, j / 6);
+      }
+    } else {
+      // نویز میرا با فیلتر میان‌گذر ساده (تفاضل دو تک‌قطب) حوالی f
+      const a1 = Math.min(0.95, (2 * Math.PI * f) / TEX_SR), a2 = a1 / 3;
+      let y1 = 0, y2 = 0;
+      for (let j = 0; j < n; j++) {
+        const x = Math.random() * 2 - 1;
+        y1 += a1 * (x - y1); y2 += a2 * (x - y2);
+        d[(i0 + j) % len] += amp * 2 * Math.exp(-j / (tau * TEX_SR)) * (y1 - y2) * Math.min(1, j / 3);
+      }
+    }
+    t += expGap(1 / spec.rate, 0.2 / spec.rate);
+  }
+  if (texCache.size >= 8) texCache.delete(texCache.keys().next().value as string);
+  texCache.set(key, buf);
+  return buf;
+}
+
+/** صدای تق قطار از پیش ساخته (چند نوع)، کوتاه و با نرخ 22 کیلوهرتز */
+const clackCache: AudioBuffer[] = [];
+function makeClack(c: BaseAudioContext, v: number): AudioBuffer {
+  if (clackCache[v]) return clackCache[v];
+  const sr = 22050, len = Math.floor(sr * 0.3);
+  const buf = c.createBuffer(1, len, sr);
+  const d = buf.getChannelData(0);
+  const f1 = rnd(950, 1250), f2 = rnd(2300, 2900);
+  let ph3 = 0;
+  for (let i = 0; i < len; i++) {
+    const t = i / sr;
+    ph3 += (2 * Math.PI * (45 + 25 * Math.exp(-t / 0.05))) / sr;
+    d[i] =
+      0.5 * Math.exp(-t / 0.02) * Math.sin(2 * Math.PI * f1 * t) * (Math.random() * 0.5 + 0.75) +
+      0.15 * Math.exp(-t / 0.01) * Math.sin(2 * Math.PI * f2 * t) +
+      0.3 * Math.exp(-t / 0.004) * (Math.random() * 2 - 1) +
+      0.5 * Math.exp(-t / 0.04) * Math.sin(ph3) * Math.min(1, i / 40);
+  }
+  clackCache[v] = buf;
+  return buf;
+}
+
 const rnd = (a: number, b: number) => a + Math.random() * (b - a);
 const pick = <T,>(arr: readonly T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const sign = () => (Math.random() < 0.5 ? -1 : 1);
@@ -87,7 +164,8 @@ class Kit {
   readonly final: GainNode; // خروجی صدا
   readonly nodes: AudioScheduledSourceNode[] = [];
   readonly timers: ReturnType<typeof setInterval>[] = [];
-  readonly report: VoiceReport = { loops: [], mods: [], events: [] };
+  readonly report: VoiceReport = { loops: [], mods: [], events: [], maxConcurrent: 0 };
+  private live: number[] = [];
   dead = false;
   private noiseCount = 0;
   constructor(readonly c: AudioContext, trim = 1) {
@@ -211,6 +289,37 @@ class Kit {
   }
 
   // ───── صداهای کوتاه ─────
+  /** ثبت یک منبع گذرا (از t تا t+dur) برای سقف هم‌زمانی */
+  track(t: number, dur: number, n = 1) {
+    const now = this.c.currentTime;
+    this.live = this.live.filter((e) => e > now);
+    for (let i = 0; i < n; i++) this.live.push(t + dur);
+    if (this.live.length > this.report.maxConcurrent) this.report.maxConcurrent = this.live.length;
+  }
+  /** بستر قطره/جرقه‌ی از پیش ساخته: دو منبع حلقه‌ای (چپ و راست) به‌جای صدها گره‌ی گذرا */
+  dropBed(spec: TexSpec, level: number): GainNode {
+    const m = this.gain(level);
+    ([0, 1] as const).forEach((i) => {
+      const s = this.c.createBufferSource();
+      s.buffer = makeTexture(this.c, spec, i); s.loop = true;
+      const r = i ? 0.97 : 1;
+      s.playbackRate.value = r;
+      s.start(0, Math.random() * NOISE_LOOP_S[i]);
+      this.nodes.push(s);
+      this.report.loops.push(NOISE_LOOP_S[i] / r);
+      const p = this.panner(i ? 0.85 : -0.85);
+      if (p) s.connect(p).connect(m); else s.connect(m);
+    });
+    return m;
+  }
+  /** پخش یک بافر کوتاه از پیش ساخته */
+  play(t: number, buf: AudioBuffer, peak: number, rate = 1, pan = 0) {
+    const s = this.c.createBufferSource(); s.buffer = buf; s.playbackRate.value = rate;
+    const g = this.gain(peak);
+    s.connect(g).connect(this.route(this.out, pan));
+    s.start(t);
+    this.track(t, buf.duration / rate);
+  }
   /** انفجار کوتاه نویز با پوش */
   burst(t: number, o: BurstOpts) {
     const c = this.c;
@@ -224,6 +333,7 @@ class Kit {
     g.gain.exponentialRampToValueAtTime(0.0001, t + o.atk + o.dec);
     s.connect(f).connect(g).connect(o.dest ?? this.route(this.out, o.pan ?? 0));
     s.start(t, Math.random() * (NOISE_LOOP_S[idx] - 20), o.atk + o.dec + 0.03);
+    this.track(t, o.atk + o.dec + 0.03);
   }
   /** نت کوتاه با افت تدریجی */
   tone(t: number, freq: number, peak: number, atk: number, dec: number, o: ToneOpts = {}) {
@@ -237,6 +347,7 @@ class Kit {
     g.gain.exponentialRampToValueAtTime(0.0001, t + atk + dec);
     os.connect(g).connect(o.dest ?? this.route(this.out, o.pan ?? 0));
     os.start(t); os.stop(t + atk + dec + 0.05);
+    this.track(t, atk + dec + 0.05);
   }
   /** ورودی یک فضا (reverb) ساخته‌شده از پاسخ ضربه‌ی نویز محوشونده */
   reverb(wet = 0.4, secs = 2.6): GainNode {
@@ -271,6 +382,19 @@ class Kit {
 }
 
 // ───── ابزارهای مشترک طرح‌ها ─────
+const TEX: Record<string, TexSpec> = {
+  rain: { rate: 12, fMin: 1800, fMax: 6000, tauMin: 0.004, tauMax: 0.012, ampMin: 0.05, ampMax: 0.17, mode: "noise" },
+  rainHeavy: { rate: 45, fMin: 1500, fMax: 7000, tauMin: 0.003, tauMax: 0.01, ampMin: 0.04, ampMax: 0.12, mode: "noise" },
+  rainRoof: { rate: 28, fMin: 700, fMax: 2400, tauMin: 0.008, tauMax: 0.022, ampMin: 0.06, ampMax: 0.2, mode: "noise" },
+  rainTent: { rate: 20, fMin: 300, fMax: 800, tauMin: 0.01, tauMax: 0.028, ampMin: 0.08, ampMax: 0.2, mode: "noise" },
+  rainLeaves: { rate: 25, fMin: 2500, fMax: 7000, tauMin: 0.003, tauMax: 0.012, ampMin: 0.05, ampMax: 0.14, mode: "noise" },
+  storm: { rate: 28, fMin: 1500, fMax: 6500, tauMin: 0.003, tauMax: 0.01, ampMin: 0.04, ampMax: 0.11, mode: "noise" },
+  rainCar: { rate: 22, fMin: 900, fMax: 2600, tauMin: 0.006, tauMax: 0.016, ampMin: 0.08, ampMax: 0.2, mode: "noise" },
+  fire: { rate: 6, fMin: 1200, fMax: 6500, tauMin: 0.003, tauMax: 0.016, ampMin: 0.1, ampMax: 0.45, skew: 2, mode: "noise" },
+  fireplace: { rate: 5, fMin: 800, fMax: 4200, tauMin: 0.004, tauMax: 0.016, ampMin: 0.08, ampMax: 0.3, skew: 2, mode: "noise" },
+  waterfall: { rate: 3, fMin: 500, fMax: 2500, tauMin: 0.02, tauMax: 0.07, ampMin: 0.04, ampMax: 0.1, mode: "noise" },
+  stream: { rate: 7, fMin: 500, fMax: 1400, tauMin: 0.012, tauMax: 0.022, ampMin: 0.03, ampMax: 0.08, mode: "ping", chirp: 1.5 },
+};
 function plainNoise(k: Kit, type: NoiseType, level: number) {
   k.chain(k.wide(type), k.gain(level), k.out);
 }
@@ -336,6 +460,7 @@ function thunder(k: Kit, t: number, far = false) {
   g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
   s.connect(lp).connect(g).connect(k.route(k.out, rnd(-0.6, 0.6)));
   s.start(t, Math.random() * 20, dur + 0.1);
+  k.track(t, dur + 0.1);
   if (!far) k.burst(t, { type: "brown", ft: "bandpass", f: 180, q: 0.5, peak: 0.25, atk: 0.05, dec: 1.4 });
   const rolls = far ? pick([1, 2, 3]) : Math.random() < 0.6 ? 1 : 0;
   let at = t;
@@ -360,7 +485,7 @@ function brownDeep(k: Kit) {
 // ───── طرح‌ها: باران و آب ─────
 function rain(k: Kit) {
   rainBed(k, 500, 7000, 0.5);
-  k.events(0.025, 0.135, (t) => k.burst(t, { ft: "bandpass", f: rnd(1800, 6000), q: 4, peak: rnd(0.05, 0.17), atk: 0.004, dec: 0.045 }));
+  k.chain(k.dropBed(TEX.rain, 1), k.out);
   k.poisson(5, (t) => k.burst(t, { ft: "bandpass", f: rnd(900, 1700), q: 6, peak: rnd(0.08, 0.16), atk: 0.004, dec: 0.08, pan: rnd(-0.8, 0.8) }), 1, 1.2);
 }
 
@@ -369,12 +494,12 @@ function rainHeavy(k: Kit) {
   const hiss = k.gain(0.07);
   k.chain(k.wide("white"), k.filter("highpass", 5000), hiss, k.out);
   k.drift(hiss.gain, 0.02, 23);
-  k.poisson(0.022, (t) => k.burst(t, { ft: "bandpass", f: rnd(1500, 7000), q: 3, peak: rnd(0.04, 0.12), atk: 0.003, dec: 0.04 }), 0, 0.008);
+  k.chain(k.dropBed(TEX.rainHeavy, 1), k.out);
 }
 
 function rainRoof(k: Kit) {
   rainBed(k, 250, 4500, 0.35, 0.22);
-  k.events(0.012, 0.06, (t) => k.burst(t, { ft: "bandpass", f: rnd(700, 2400), q: 7, peak: rnd(0.06, 0.2), atk: 0.003, dec: 0.07 }));
+  k.chain(k.dropBed(TEX.rainRoof, 1), k.out);
   k.poisson(1.3, (t) => k.burst(t, { ft: "bandpass", f: rnd(400, 900), q: 12, peak: rnd(0.2, 0.35), atk: 0.004, dec: rnd(0.1, 0.22), pan: rnd(-0.5, 0.5) }), 0, 0.2);
 }
 
@@ -384,7 +509,7 @@ function rainTent(k: Kit) {
   k.chain(k.wide("brown"), k.filter("lowpass", 320), rustle, k.out);
   k.drift(rustle.gain, 0.1, 21);
   // نم‌نم روی پارچه: ضربه‌ی کوچک با رزونانس نرم
-  k.poisson(0.05, (t) => k.burst(t, { ft: "bandpass", f: rnd(300, 800), q: 5, peak: rnd(0.08, 0.2), atk: 0.003, dec: rnd(0.04, 0.09), pan: rnd(-0.5, 0.5) }), 0, 0.012);
+  k.chain(k.dropBed(TEX.rainTent, 1), k.out);
   k.poisson(0.7, (t) => k.tone(t, rnd(170, 260), rnd(0.04, 0.09), 0.004, 0.07, { endFreq: rnd(120, 160), pan: rnd(-0.6, 0.6) }), 0, 0.15);
 }
 
@@ -393,14 +518,14 @@ function rainLeaves(k: Kit) {
   const canopy = k.gain(0.12);
   k.chain(k.wide("pink"), k.filter("lowpass", 420), canopy, k.out);
   k.drift(canopy.gain, 0.08, 27);
-  k.poisson(0.04, (t) => k.burst(t, { ft: "bandpass", f: rnd(2500, 7000), q: 5, peak: rnd(0.05, 0.14), atk: 0.002, dec: rnd(0.015, 0.045), pan: rnd(-0.8, 0.8) }), 0, 0.01);
+  k.chain(k.dropBed(TEX.rainLeaves, 1), k.out);
   // قطره‌های درشت که از برگ می‌چکن
   k.poisson(1.1, (t) => { const f = rnd(1300, 2400); k.tone(t, f, rnd(0.03, 0.07), 0.003, 0.05, { endFreq: f * 1.35, pan: rnd(-0.8, 0.8) }); }, 0, 0.25);
 }
 
 function storm(k: Kit) {
   rainBed(k, 400, 8000, 0.5);
-  k.events(0.012, 0.06, (t) => k.burst(t, { ft: "bandpass", f: rnd(1500, 6500), q: 3, peak: rnd(0.04, 0.11), atk: 0.003, dec: 0.04 }));
+  k.chain(k.dropBed(TEX.storm, 1), k.out);
   k.poisson(13, (t) => thunder(k, t), 5, 12);
 }
 
@@ -434,10 +559,7 @@ function stream(k: Kit) {
     k.drift(g.gain, 0.08, 1.4);
     k.drift(bp.frequency, f * 0.25, 2.1);
   }
-  k.poisson(0.14, (t) => {
-    const f = rnd(500, 1400);
-    k.tone(t, f, rnd(0.03, 0.08), 0.004, 0.05, { endFreq: f * 1.5, pan: rnd(-0.7, 0.7) });
-  }, 0, 0.04);
+  k.chain(k.dropBed(TEX.stream, 1), k.out);
 }
 
 function waterfall(k: Kit) {
@@ -450,7 +572,7 @@ function waterfall(k: Kit) {
   const rumble = k.gain(0.55);
   k.chain(k.noise("brown"), k.filter("lowpass", 200), rumble, k.out);
   k.drift(rumble.gain, 0.07, 41);
-  k.poisson(0.35, (t) => k.burst(t, { ft: "bandpass", f: rnd(500, 2500), q: 1.5, peak: rnd(0.04, 0.1), atk: 0.01, dec: rnd(0.08, 0.25), pan: rnd(-0.9, 0.9) }), 0, 0.08);
+  k.chain(k.dropBed(TEX.waterfall, 1), k.out);
 }
 
 function lake(k: Kit) {
@@ -553,6 +675,7 @@ function frogCroak(k: Kit, t: number, f0: number, pan: number, peak: number, des
   env.gain.linearRampToValueAtTime(0, t + dur);
   saw.connect(bp).connect(am).connect(env).connect(k.route(dest, pan));
   saw.start(t); lfo.start(t); saw.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+  k.track(t, dur + 0.05, 2);
 }
 
 function frogs(k: Kit) {
@@ -561,9 +684,9 @@ function frogs(k: Kit) {
   k.drift(air.gain, 0.03, 27);
   const rv = k.reverb(0.3, 2);
   // قورباغه‌های درشت: هر کدوم دسته‌ی چند قارقار و بعد سکوت
-  [[190, -0.6], [240, 0.5], [300, -0.1], [215, 0.8]].forEach(([f0, p]) => {
+  [[190, -0.6], [240, 0.5], [300, -0.1]].forEach(([f0, p]) => {
     k.events(8, 34, (t) => {
-      const n = pick([2, 3, 4, 6, 8]);
+      const n = pick([2, 2, 3, 3, 4]);
       let at = t;
       for (let i = 0; i < n; i++) {
         frogCroak(k, at, f0 * rnd(0.94, 1.06), p, rnd(0.03, 0.06), rv);
@@ -573,9 +696,9 @@ function frogs(k: Kit) {
     }, rnd(0, 8));
   });
   // قورباغه‌ی درختی: پیپ‌های تیز سریع
-  [[2300, 0.4], [2800, -0.5]].forEach(([f, p]) => {
+  [[2300, 0.4]].forEach(([f, p]) => {
     k.events(6, 26, (t) => {
-      const n = pick([4, 6, 9, 12]);
+      const n = pick([4, 5, 6]);
       let at = t;
       for (let i = 0; i < n; i++) { k.tone(at, f * rnd(0.97, 1.04), rnd(0.012, 0.022), 0.004, 0.05, { dest: k.route(rv, p) }); at += rnd(0.1, 0.17); }
       return at - t + rnd(3, 14);
@@ -611,26 +734,19 @@ function dawnBirds(k: Kit) {
   const rv = k.reverb(0.3, 2.2);
   const gate = (t: number, boost = 1) => Math.random() < Math.min(1, activity(t) * boost);
   // بلبل‌وار: عبارت چندنت با کانتور تصادفی
-  k.poisson(7, (t) => {
+  k.poisson(9, (t) => {
     if (!gate(t)) return;
     const d = k.route(rv, rnd(-0.9, 0.9));
     let f = rnd(2600, 3800), at = t;
-    const n = Math.floor(rnd(4, 9));
+    const n = Math.floor(rnd(4, 7));
     for (let i = 0; i < n; i++) {
       const nf = f * rnd(0.78, 1.3);
       birdNote(k, at, f, nf, rnd(0.05, 0.12), rnd(0.018, 0.032), d);
       f = Math.min(4800, Math.max(2200, nf)); at += rnd(0.07, 0.17);
     }
   }, 1, 1.5);
-  // تریل سریع
-  k.poisson(11, (t) => {
-    if (!gate(t, 0.9)) return;
-    const d = k.route(rv, rnd(-0.9, 0.9));
-    const base = rnd(3800, 4700), n = Math.floor(rnd(8, 16)), rate = rnd(11, 16);
-    for (let i = 0; i < n; i++) birdNote(k, t + i / rate, base * (1 + 0.02 * i), base * (1 + 0.02 * i) * 0.92, 0.035, rnd(0.012, 0.022), d);
-  }, 3, 2);
   // جیک‌جیک کوتاه
-  k.poisson(5, (t) => {
+  k.poisson(7, (t) => {
     if (!gate(t)) return;
     const d = k.route(rv, rnd(-0.9, 0.9));
     const f = rnd(4500, 6000), n = pick([2, 3, 4]);
@@ -656,7 +772,7 @@ function fire(k: Kit) {
   const breeze = k.gain(0.07);
   k.chain(k.noise("pink"), k.filter("bandpass", 500, 0.8), breeze, k.out);
   k.drift(breeze.gain, 0.06, 25);
-  k.poisson(0.16, (t) => k.burst(t, { ft: "bandpass", f: rnd(1200, 6500), q: rnd(1.5, 4), peak: rnd(0.1, 0.45), atk: 0.002, dec: rnd(0.01, 0.05), pan: rnd(-0.5, 0.5) }), 0, 0.03);
+  k.chain(k.dropBed(TEX.fire, 1), k.out);
   k.poisson(5, (t) => k.burst(t, { ft: "bandpass", f: rnd(300, 900), q: 2, peak: rnd(0.4, 0.7), atk: 0.003, dec: rnd(0.06, 0.12), pan: rnd(-0.4, 0.4) }), 1, 1.5);
 }
 
@@ -670,7 +786,7 @@ function fireplace(k: Kit) {
   const hiss = k.gain(0.025);
   k.chain(k.noise("pink"), k.filter("highpass", 2000), k.filter("lowpass", 4500), hiss, k.out);
   k.drift(hiss.gain, 0.015, 17);
-  k.poisson(0.2, (t) => k.burst(t, { ft: "bandpass", f: rnd(800, 4200), q: rnd(1.5, 3.5), peak: rnd(0.08, 0.3), atk: 0.002, dec: rnd(0.012, 0.045), pan: rnd(-0.3, 0.3) }), 0, 0.04);
+  k.chain(k.dropBed(TEX.fireplace, 1), k.out);
   k.poisson(7, (t) => {
     k.burst(t, { ft: "bandpass", f: rnd(300, 600), q: 3, peak: rnd(0.4, 0.65), atk: 0.003, dec: rnd(0.08, 0.16), pan: rnd(-0.3, 0.3) });
     k.burst(t + 0.01, { ft: "highpass", f: 3000, q: 0.7, peak: 0.15, atk: 0.001, dec: 0.02 });
@@ -734,6 +850,7 @@ function ship(k: Kit) {
     g.gain.linearRampToValueAtTime(0, t + d);
     o.connect(bp).connect(g).connect(k.route(k.out, rnd(-0.7, 0.7)));
     o.start(t); o.stop(t + d + 0.05);
+    k.track(t, d + 0.05);
   }, 3, 4);
 }
 
@@ -743,11 +860,8 @@ function train(k: Kit) {
   k.drift(r.gain, 0.1, 17);
   k.chain(k.noise("pink"), k.filter("bandpass", 400, 0.8), k.gain(0.15), k.out);
   const speed = (t: number) => 1 + 0.12 * Math.sin((2 * Math.PI * t) / 61) + 0.06 * Math.sin((2 * Math.PI * t) / 37 + 2);
-  const clack = (t: number, s: number, pan: number) => {
-    k.burst(t, { ft: "bandpass", f: rnd(950, 1250), q: 1.2, peak: 0.35 * s, atk: 0.002, dec: 0.06, pan });
-    k.burst(t, { ft: "bandpass", f: rnd(2300, 2900), q: 2, peak: 0.12 * s, atk: 0.002, dec: 0.03, pan });
-    k.tone(t, 70, 0.5 * s, 0.003, 0.1, { endFreq: 45, pan });
-  };
+  const clacks = [0, 1, 2].map((v) => makeClack(k.c, v));
+  const clack = (t: number, s: number, pan: number) => k.play(t, pick(clacks), 0.9 * s, rnd(0.95, 1.05), pan);
   k.metronome((t) => {
     const sp = speed(t), pan = rnd(-0.15, 0.15), amp = rnd(0.85, 1.1);
     clack(t, amp, pan);
@@ -783,6 +897,7 @@ function city(k: Kit) {
     eg.gain.linearRampToValueAtTime(0, t + dur);
     s.connect(bp).connect(eg).connect(k.route(k.out, rnd(-0.6, 0.6)));
     s.start(t, Math.random() * 20, dur + 0.05);
+    k.track(t, dur + 0.05);
   }, 2, 4);
 }
 
@@ -814,6 +929,7 @@ function traffic(k: Kit) {
       s.connect(bp).connect(eg).connect(p).connect(k.out);
     } else s.connect(bp).connect(eg).connect(k.out);
     s.start(t, Math.random() * 20, dur + 0.05);
+    k.track(t, dur + 0.05);
   }, 1, 2.5);
 }
 
@@ -864,6 +980,7 @@ function washer(k: Kit) {
     og.gain.setValueAtTime(0, t); og.gain.linearRampToValueAtTime(0.03, t + up);
     og.gain.setValueAtTime(0.03, t + up + hold); og.gain.linearRampToValueAtTime(0, t + tot);
     o.connect(og).connect(k.out); o.start(t); o.stop(t + tot + 0.1);
+    k.track(t, tot + 0.1, 2);
     const s = k.c.createBufferSource(); s.buffer = makeNoise(k.c, "pink", 0);
     const bp = k.filter("bandpass", 200, 0.8);
     bp.frequency.setValueAtTime(200, t); bp.frequency.linearRampToValueAtTime(800, t + up);
@@ -912,7 +1029,7 @@ function rainCar(k: Kit) {
   k.drift(roof.gain, 0.08, 21);
   rainBed(k, 700, 3800, 0.22, 0.2);
   k.chain(k.osc(46), k.gain(0.012), k.out);
-  k.poisson(0.045, (t) => k.burst(t, { ft: "bandpass", f: rnd(900, 2600), q: 6, peak: rnd(0.08, 0.2), atk: 0.002, dec: rnd(0.03, 0.07), pan: rnd(-0.6, 0.6) }), 0, 0.01);
+  k.chain(k.dropBed(TEX.rainCar, 1), k.out);
   k.poisson(0.9, (t) => k.tone(t, rnd(180, 300), rnd(0.05, 0.1), 0.003, 0.08, { endFreq: rnd(120, 180), pan: rnd(-0.6, 0.6) }), 0, 0.2);
   // ماشین گاهی از کنار رد می‌شه
   k.poisson(24, (t) => {
@@ -924,6 +1041,7 @@ function rainCar(k: Kit) {
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(rnd(0.08, 0.14), t + dur * 0.5); g.gain.linearRampToValueAtTime(0, t + dur);
     s.connect(bp).connect(g).connect(k.route(k.out, rnd(-0.7, 0.7)));
     s.start(t, Math.random() * 20, dur + 0.05);
+    k.track(t, dur + 0.05);
   }, 8, 10);
 }
 
@@ -995,7 +1113,7 @@ const CHORDS: readonly (readonly number[])[] = [
 ];
 
 function padLullaby(k: Kit) {
-  const rv = k.reverb(0.6, 3.4);
+  const rv = k.reverb(0.5, 1.6);
   const lp = k.filter("lowpass", 850, 0.4);
   lp.connect(rv);
   k.drift(lp.frequency, 260, 23);
