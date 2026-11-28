@@ -196,6 +196,8 @@ export type WeeklyAnalysis = {
   prevDays: (number | null)[]; // ۷تایی امتیاز روزهای هفته‌ی قبل، برای مقایسه‌ی روزبه‌روز
   numbers: WeekNumber[]; // «اعداد هفته»، مهم‌ترین اول، حداکثر ۱۲
   unreadLetter: LetterSummary | null; // تازه‌ترین هفته‌نامه‌ی خوانده‌نشده (بنر بالای صفحه)
+  /** جزئیات روزهای ۸ هفته‌ی اخیر (فقط داخلی برای فصل ارتباط‌ها؛ فقط با withHistory می‌مونه و به کلاینت نمی‌ره) */
+  history?: { date: string; details: DayDetails }[];
 };
 
 // ---- API ----

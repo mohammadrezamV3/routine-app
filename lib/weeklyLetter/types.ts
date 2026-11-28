@@ -10,6 +10,7 @@ import type {
 
 import type { TradeWeek } from "./tradeWeek";
 import type { FitWeek } from "./fitWeek";
+import type { ConnectionsBlock } from "./connections";
 
 export const WEEKLY_LETTER_VERSION = 1 as const;
 
@@ -72,6 +73,8 @@ export type WeeklyLetterData = {
   trade?: TradeWeek | null;
   /** فقط بخش ورزش: تحلیل تمرین و تغذیه‌ی هفته (lib/weeklyLetter/fitWeek.ts)؛ بدون داده undefined/null */
   fit?: FitWeek | null;
+  /** ارتباط‌های بین منبع‌های داده‌ی کاربر (lib/weeklyLetter/connections.ts)؛ بدون یافته‌ی کافی undefined/null */
+  connections?: ConnectionsBlock | null;
 };
 
 /**

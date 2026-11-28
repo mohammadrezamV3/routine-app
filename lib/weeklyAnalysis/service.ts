@@ -108,6 +108,8 @@ export type WeeklyAnalysisOptions = {
   now?: Date;
   /** false = کوئری هفته‌نامه‌ی خوانده‌نشده رد می‌شه (ساخت هفته‌نامه به‌اش نیاز نداره) */
   withUnreadLetter?: boolean;
+  /** true = history (جزئیات ۸ هفته) هم برمی‌گرده؛ پیش‌فرض حذف می‌شه تا به کلاینت نره */
+  withHistory?: boolean;
   /** فقط این دامنه‌ها محاسبه می‌شن (زیردامنه‌ی یک بخش)؛ undefined = همه */
   domains?: readonly AnalysisDomain[];
 };
@@ -132,8 +134,9 @@ export async function getWeeklyAnalysis(userId: string, opts: WeeklyAnalysisOpti
     opts.withUnreadLetter === false ? Promise.resolve(null) : getUnreadLetterSummary(userId).catch(() => null),
   ]);
 
+  const { history, ...baseNoHistory } = base;
   return {
-    ...base,
+    ...(opts.withHistory ? { ...baseNoHistory, history } : baseNoHistory),
     ai: aiRow ? (aiRow.data as unknown as AiCoach) : null,
     aiAvailable: isAiAvailable(),
     goals: goalRows.map(mapGoal),

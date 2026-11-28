@@ -20,6 +20,8 @@ import { loadTradeWeek } from "./tradeWeekServer";
 import type { FitWeek } from "./fitWeek";
 import { applyFitToLetter } from "./fitWeekText";
 import { gatherFitWeek } from "./fitWeekServer";
+import { gatherConnections } from "./connectionsServer";
+import type { ConnectionsBlock } from "./connections";
 
 export type LetterExtras = {
   issueNo: number;
@@ -31,6 +33,8 @@ export type LetterExtras = {
   trade?: TradeWeek | null;
   /** فقط بخش ورزش: تحلیل تمرین و تغذیه‌ی هفته (fitWeek.ts) */
   fit?: FitWeek | null;
+  /** فصل ارتباط‌ها (connections.ts) */
+  connections?: ConnectionsBlock | null;
 };
 
 /** جایگاه این هفته بین هفته‌های دارای امتیاز ترند (۱ = بهترین)؛ با کمتر از ۳ هفته null */
@@ -114,7 +118,8 @@ export function buildLetterData(a: WeeklyAnalysis, x: LetterExtras): WeeklyLette
     ? applyTradeToLetter(letter, x.trade, { isCurrent: a.isCurrentWeek, disciplineScore: a.domains.find((d) => d.domain === "trading")?.score ?? null })
     : letter;
   // بخش ورزش: تیتر، مقدمه، بینش، بردها، مدال و هفته‌ی بعد از روی تمرین و تغذیه (fitWeekText.ts)
-  return x.fit ? applyFitToLetter(withTrade, x.fit) : withTrade;
+  const withFit = x.fit ? applyFitToLetter(withTrade, x.fit) : withTrade;
+  return x.connections?.items.length ? { ...withFit, connections: x.connections } : withFit;
 }
 
 // ───────────────────────── بخش دیتابیس ─────────────────────────
@@ -179,12 +184,12 @@ async function globalAchievementsOfWeek(userId: string, tz: string, weekStartIso
 
 export async function gatherLetterExtras(
   userId: string,
-  a: Pick<WeeklyAnalysis, "weekStart" | "weekEnd"> & { domains?: { domain: string }[]; days?: WeeklyAnalysis["days"] },
+  a: Pick<WeeklyAnalysis, "weekStart" | "weekEnd"> & { domains?: { domain: string }[]; days?: WeeklyAnalysis["days"]; history?: WeeklyAnalysis["history"] },
   opts: { timezone: string; issueNo: number; now: Date; section?: SectionKey | null }
 ): Promise<LetterExtras> {
   const tz = safeTimezone(opts.timezone);
   const section = opts.section ?? null;
-  const [user, streak, globalAchievements, trade, fit] = await Promise.all([
+  const [user, streak, globalAchievements, trade, fit, connections] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
     // استریک روتین فقط مال بخش روتینه
     sectionShowsRoutineStreak(section) ? routineStreakAt(userId, a.weekEnd).catch(() => null) : Promise.resolve(null),
@@ -195,6 +200,10 @@ export async function gatherLetterExtras(
     section === "workout" && a.days && a.domains
       ? gatherFitWeek(userId, { weekStart: a.weekStart, weekEnd: a.weekEnd, days: a.days, domains: a.domains }, { timezone: tz, now: opts.now }).catch(() => null)
       : Promise.resolve(null),
+    // ارتباط‌های بین منبع‌های داده (فقط وقتی history آنالیز موجوده؛ هفته‌نامه‌ی ذخیره‌شده نمی‌خوادش)
+    a.days && a.domains && a.history
+      ? gatherConnections(userId, { weekStart: a.weekStart, weekEnd: a.weekEnd, days: a.days, domains: a.domains, history: a.history }, { timezone: tz, now: opts.now }).catch(() => null)
+      : Promise.resolve(null),
   ]);
-  return { issueNo: opts.issueNo, greetingName: greetingNameOf(user?.name), streak, globalAchievements, now: opts.now, trade, fit };
+  return { issueNo: opts.issueNo, greetingName: greetingNameOf(user?.name), streak, globalAchievements, now: opts.now, trade, fit, connections };
 }

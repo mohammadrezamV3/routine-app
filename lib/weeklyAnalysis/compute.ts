@@ -235,6 +235,11 @@ export async function computeWeeklyAnalysis(
     headline: isolateNumbers(headline),
     archetype: archetype ? { ...archetype, description: isolateNumbers(archetype.description) } : archetype,
     prevDays,
+    history: weeks.flatMap((w, wk) =>
+      w.days.filter((iso) => iso <= env.todayIso).map((iso) => {
+        const i = w.days.indexOf(iso);
+        return { date: iso, details: Object.assign({}, ...shown.map((d) => all.get(d)![wk].details[i])) as DayDetails };
+      })),
     numbers: numbers.map((n) => ({ ...n, value: isolateNumbers(n.value), hint: n.hint ? isolateNumbers(n.hint) : n.hint })),
   };
 }
