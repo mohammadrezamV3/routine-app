@@ -12,6 +12,7 @@
 import { useEffect, useState } from "react";
 import { getAccount } from "./accountCache";
 import { REFERRAL_CODE_RE } from "./referral";
+import { buildInviteUrl } from "./inviteLink";
 
 const KEY = "arion:inviteRef";
 const TTL_MS = 30 * 86_400_000;
@@ -49,8 +50,7 @@ export function readInviteRef(): string | null {
 }
 
 export function inviteUrl(code: string | null): string {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return code ? `${origin}/?ref=${encodeURIComponent(code)}` : `${origin}/`;
+  return buildInviteUrl(typeof window !== "undefined" ? window.location.origin : "", code);
 }
 
 export type MyInvite = { code: string | null; url: string };

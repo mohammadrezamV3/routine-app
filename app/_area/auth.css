@@ -420,3 +420,5 @@ body[data-theme] .auth-split .auth-box::before{ display:none; }
   .auth-split-media{ flex:0 0 50%; min-width:0; align-self:stretch; height:auto; }
 }
 /* ── auth-split end ── */
+
+.auth-invite-note{ margin:14px 0 0; font-size:12.5px; line-height:1.8; color:var(--accent); text-align:center; }
