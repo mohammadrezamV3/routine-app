@@ -8,7 +8,7 @@ import { weekdayName } from "@/lib/jalali";
 import type { AnalysisDomain } from "@/lib/weeklyAnalysis/types";
 
 // ───────────────────────── آستانه‌ها ─────────────────────────
-/** کمترین تعداد روزِ جفت‌شده برای گزارش یک رابطه */
+/** کمترین تعداد روز جفت‌شده برای گزارش یک رابطه */
 export const CONN_MIN_PAIRS = 10;
 /** کمترین تعداد روز در هر گروه (بالا/پایین) */
 export const CONN_MIN_GROUP = 3;
@@ -188,7 +188,7 @@ const PAIRS: PairDef[] = [
   { x: "routinePct", y: "planPct", lag: 0 },
   { x: "tradeCount", y: "dayWin", lag: 0 },
   { x: "tradeCount", y: "tradeR", lag: 0 },
-  // اثر فعالیت یک روز روی شبِ بعدش (ردیف خواب با روزِ بیدارشدن ثبت می‌شه)
+  // اثر فعالیت یک روز روی شب بعدش (ردیف خواب با روز بیدارشدن ثبت می‌شه)
   { x: "workout", y: "sleepHours", lag: 1 },
   { x: "workoutStart", y: "bedtime", lag: 1 },
   { x: "lastTick", y: "bedtime", lag: 1 },
@@ -334,7 +334,7 @@ export function weekdayPatterns(days: ConnDay[]): Connection[] {
       kind: "weekday",
       domains: [def.domain],
       tone,
-      title: low ? tr(`${wdName}، پایین‌ترین روزِ ${def.label()}`, `${wdName}: your lowest day for ${def.label()}`) : tr(`${wdName}، بهترین روزِ ${def.label()}`, `${wdName}: your highest day for ${def.label()}`),
+      title: low ? tr(`${wdName}، پایین‌ترین روز ${def.label()}`, `${wdName}: your lowest day for ${def.label()}`) : tr(`${wdName}، بهترین روز ${def.label()}`, `${wdName}: your highest day for ${def.label()}`),
       body: tr(
         `در ${pts.length} روز اخیر، ${def.label()} در ${wdName}ها به‌طور میانگین ${def.fmt(best.own)} بود و در بقیه‌ی روزها ${def.fmt(best.rest)}.`,
         `Over the last ${pts.length} days, ${def.label()} averaged ${def.fmt(best.own)} on ${wdName}s versus ${def.fmt(best.rest)} on other days.`,
