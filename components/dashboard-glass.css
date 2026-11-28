@@ -51,7 +51,7 @@ html[data-perf-weak] .db-page[data-lg-tier] .db-card{ -webkit-backdrop-filter:bl
 @media (prefers-reduced-transparency:reduce){
   .db-page[data-lg-tier] :is(.db-card, .db-hero){ -webkit-backdrop-filter:none; backdrop-filter:none; background:var(--box-bg); }
 }
-/* هیرو: خود .lg یک ::before رم داره که با .db-hero::before (بوردر چرخان) یکی شده؛ لبه‌ی محتوا رو نبُر */
+/* هیرو: خود .lg یک ::before رم داره که با .db-hero::before (بوردر چرخان) یکی شده؛ لبه‌ی محتوا رو نبر */
 .db-page[data-lg-tier] .db-hero.lg{ overflow:hidden; }
 /* موبایل/lite: کارت بیرون از نما رندر نمی‌شه (پس بلورش هم حساب نمی‌شه). اندازه‌ی اولیه‌ی تخمینی با auto
    بعد از اولین رندر یادش می‌مونه، پس پرش نمی‌ده */
