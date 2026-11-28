@@ -1,19 +1,24 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import {
+  DEFAULT_LAYER_VOLUME, isSleepSoundKind, normalizeLayers, setLayerVolume, toggleLayer,
+  type SleepSoundKind, type SleepSoundLayer,
+} from "@/lib/sleepSoundCatalog";
+import { buildVoice, type Voice } from "@/lib/sleepSoundSynth";
 
 // موتور صداهای خواب: همه‌چیز با WebAudio ساخته می‌شه (بدون فایل صوتی).
 // وضعیت در سطح ماژول می‌مونه تا پخش بعد از بسته‌شدن پنجره ادامه پیدا کنه.
 
-export type SleepSoundKind = "white" | "pink" | "brown" | "rain" | "ocean" | "fan";
-export const SLEEP_SOUND_KINDS: readonly SleepSoundKind[] = ["rain", "ocean", "fan", "white", "pink", "brown"];
+export { SLEEP_SOUND_KINDS, type SleepSoundKind, type SleepSoundLayer } from "@/lib/sleepSoundCatalog";
 export const SLEEP_SOUND_TIMERS: readonly number[] = [15, 30, 45, 60, 90];
 export const FADE_OUT_MS = 60_000;
 export const SLEEP_SOUND_KEY = "arion:sleepSound";
 const CROSSFADE_S = 1.5;
 
-export type SleepSoundPrefs = { kind: SleepSoundKind; volume: number; timerMin: number | null };
-export const DEFAULT_PREFS: SleepSoundPrefs = { kind: "rain", volume: 0.6, timerMin: null };
+export type SleepSoundPrefs = { layers: SleepSoundLayer[]; volume: number; timerMin: number | null };
+export const DEFAULT_PREFS: SleepSoundPrefs = { layers: [{ kind: "rain", volume: DEFAULT_LAYER_VOLUME }], volume: 0.6, timerMin: null };
+const clonePrefs = (): SleepSoundPrefs => ({ ...DEFAULT_PREFS, layers: DEFAULT_PREFS.layers.map((l) => ({ ...l })) });
 
 // ───── بخش‌های خالص ─────
 export const clampVolume = (v: unknown): number => {
@@ -22,16 +27,18 @@ export const clampVolume = (v: unknown): number => {
 };
 
 export function parseSleepSoundPrefs(raw: string | null | undefined): SleepSoundPrefs {
-  if (!raw) return { ...DEFAULT_PREFS };
+  if (!raw) return clonePrefs();
   try {
     const o = JSON.parse(raw) as Record<string, unknown> | null;
-    if (!o || typeof o !== "object") return { ...DEFAULT_PREFS };
-    const kind = SLEEP_SOUND_KINDS.includes(o.kind as SleepSoundKind) ? (o.kind as SleepSoundKind) : DEFAULT_PREFS.kind;
+    if (!o || typeof o !== "object") return clonePrefs();
+    // قالب قدیمی فقط kind داشت
+    const legacy = isSleepSoundKind(o.kind) ? [{ kind: o.kind, volume: DEFAULT_LAYER_VOLUME }] : undefined;
+    const layers = normalizeLayers(o.layers ?? legacy, DEFAULT_PREFS.layers);
     const volume = o.volume === undefined ? DEFAULT_PREFS.volume : clampVolume(o.volume);
     const timerMin = typeof o.timerMin === "number" && SLEEP_SOUND_TIMERS.includes(o.timerMin) ? o.timerMin : null;
-    return { kind, volume, timerMin };
+    return { layers, volume, timerMin };
   } catch {
-    return { ...DEFAULT_PREFS };
+    return clonePrefs();
   }
 }
 
@@ -55,25 +62,30 @@ export function formatRemaining(ms: number): string {
 
 // ───── وضعیت ─────
 export type SleepSoundSnapshot = {
-  kind: SleepSoundKind; playing: boolean; volume: number; timerMin: number | null; endsAt: number | null;
+  /** صدای اول (برای نمایش خلاصه) */
+  kind: SleepSoundKind; layers: SleepSoundLayer[];
+  playing: boolean; volume: number; timerMin: number | null; endsAt: number | null;
 };
-const SERVER_SNAPSHOT: SleepSoundSnapshot = { ...DEFAULT_PREFS, playing: false, endsAt: null };
+const mkSnap = (p: SleepSoundPrefs): SleepSoundSnapshot => ({ ...p, kind: p.layers[0].kind, playing: false, endsAt: null });
+const SERVER_SNAPSHOT: SleepSoundSnapshot = mkSnap(DEFAULT_PREFS);
 let snap: SleepSoundSnapshot | null = null;
 const listeners = new Set<() => void>();
 
 function loadPrefs(): SleepSoundPrefs {
-  try { return parseSleepSoundPrefs(window.localStorage.getItem(SLEEP_SOUND_KEY)); } catch { return { ...DEFAULT_PREFS }; }
+  try { return parseSleepSoundPrefs(window.localStorage.getItem(SLEEP_SOUND_KEY)); } catch { return clonePrefs(); }
 }
 function current(): SleepSoundSnapshot {
-  if (!snap) snap = { ...loadPrefs(), playing: false, endsAt: null };
+  if (!snap) snap = mkSnap(loadPrefs());
   return snap;
 }
 function commit(patch: Partial<SleepSoundSnapshot>, save = false) {
-  snap = { ...current(), ...patch };
+  const next = { ...current(), ...patch };
+  if (patch.layers) next.kind = patch.layers[0].kind;
+  snap = next;
   if (save) {
     try {
-      const { kind, volume, timerMin } = snap;
-      window.localStorage.setItem(SLEEP_SOUND_KEY, JSON.stringify({ kind, volume, timerMin }));
+      const { layers, volume, timerMin } = snap;
+      window.localStorage.setItem(SLEEP_SOUND_KEY, JSON.stringify({ layers, volume, timerMin }));
     } catch { /* ذخیره اختیاریه */ }
   }
   listeners.forEach((l) => l());
@@ -85,126 +97,15 @@ export function subscribeSleepSound(l: () => void): () => void {
 export const getSleepSoundSnapshot = (): SleepSoundSnapshot => (typeof window === "undefined" ? SERVER_SNAPSHOT : current());
 
 // ───── موتور صدا ─────
-type Voice = { out: GainNode; dispose: () => void };
+// هر لایه: voice.out -> layerGain (بلندی همون لایه) -> volGain (بلندی کل) -> master (فید تایمر)
+type Active = { voice: Voice; layerGain: GainNode };
 let ctx: AudioContext | null = null;
-let master: GainNode | null = null; // فید تایمر و توقف
+let master: GainNode | null = null;
 let volGain: GainNode | null = null;
-let voice: Voice | null = null;
+const active = new Map<SleepSoundKind, Active>();
 let tickId: ReturnType<typeof setInterval> | null = null;
-const noiseCache: Partial<Record<"white" | "pink" | "brown", AudioBuffer>> = {};
 
 const volCurve = (v: number) => v * v; // حس لگاریتمی‌تر
-
-function makeNoise(c: AudioContext, type: "white" | "pink" | "brown"): AudioBuffer {
-  const hit = noiseCache[type];
-  if (hit && hit.sampleRate === c.sampleRate) return hit;
-  const len = Math.floor(c.sampleRate * 6);
-  const buf = c.createBuffer(1, len, c.sampleRate);
-  const d = buf.getChannelData(0);
-  if (type === "white") {
-    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-  } else if (type === "pink") {
-    let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-    for (let i = 0; i < len; i++) {
-      const w = Math.random() * 2 - 1;
-      b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
-      b2 = 0.969 * b2 + w * 0.153852; b3 = 0.8665 * b3 + w * 0.3104856;
-      b4 = 0.55 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.016898;
-      d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11; b6 = w * 0.115926;
-    }
-  } else {
-    let last = 0;
-    for (let i = 0; i < len; i++) {
-      const w = Math.random() * 2 - 1;
-      last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5;
-    }
-  }
-  // درز حلقه: انتهای بافر رو به ابتدا محو می‌کنیم تا کلیک نیاد
-  const x = Math.floor(c.sampleRate * 0.25);
-  for (let i = 0; i < x; i++) {
-    const t = i / x;
-    d[i] = d[i] * t + d[len - x + i] * (1 - t);
-  }
-  const out = c.createBuffer(1, len - x, c.sampleRate);
-  out.getChannelData(0).set(d.subarray(0, len - x));
-  noiseCache[type] = out;
-  return out;
-}
-
-function loopSrc(c: AudioContext, type: "white" | "pink" | "brown"): AudioBufferSourceNode {
-  const s = c.createBufferSource();
-  s.buffer = makeNoise(c, type);
-  s.loop = true;
-  s.loopStart = 0;
-  s.start(0, Math.random() * 3);
-  return s;
-}
-
-function buildVoice(c: AudioContext, kind: SleepSoundKind): Voice {
-  const out = c.createGain();
-  out.gain.value = 0;
-  const nodes: AudioScheduledSourceNode[] = [];
-  const timers: ReturnType<typeof setTimeout>[] = [];
-  let dead = false;
-
-  if (kind === "white" || kind === "pink" || kind === "brown") {
-    const s = loopSrc(c, kind); nodes.push(s);
-    const g = c.createGain(); g.gain.value = kind === "white" ? 0.3 : kind === "pink" ? 0.55 : 0.6;
-    s.connect(g).connect(out);
-  } else if (kind === "rain") {
-    const s = loopSrc(c, "pink"); nodes.push(s);
-    const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 500;
-    const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 7000;
-    const g = c.createGain(); g.gain.value = 0.5;
-    const lfo = c.createOscillator(); lfo.frequency.value = 0.13;
-    const lfoG = c.createGain(); lfoG.gain.value = 0.08;
-    lfo.connect(lfoG).connect(g.gain); lfo.start(); nodes.push(lfo);
-    s.connect(hp).connect(lp).connect(g).connect(out);
-    // قطره‌های تصادفی
-    const wb = makeNoise(c, "white");
-    const drop = () => {
-      if (dead) return;
-      const src = c.createBufferSource(); src.buffer = wb;
-      const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1800 + Math.random() * 4200; bp.Q.value = 4;
-      const eg = c.createGain(); const t = c.currentTime; const peak = 0.05 + Math.random() * 0.12;
-      eg.gain.setValueAtTime(0, t); eg.gain.linearRampToValueAtTime(peak, t + 0.004); eg.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-      src.connect(bp).connect(eg).connect(out);
-      src.start(t, Math.random() * 4, 0.06);
-      timers.push(setTimeout(drop, 25 + Math.random() * 110));
-      if (timers.length > 20) timers.splice(0, timers.length - 4);
-    };
-    drop();
-  } else if (kind === "ocean") {
-    const s = loopSrc(c, "brown"); nodes.push(s);
-    const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 650; lp.Q.value = 0.5;
-    const g = c.createGain(); g.gain.value = 0.5;
-    const lfo = c.createOscillator(); lfo.frequency.value = 0.1;
-    const lfoG = c.createGain(); lfoG.gain.value = 0.38;
-    lfo.connect(lfoG).connect(g.gain); lfo.start(); nodes.push(lfo);
-    const lfo2 = c.createOscillator(); lfo2.frequency.value = 0.1;
-    const lfo2G = c.createGain(); lfo2G.gain.value = 250;
-    lfo2.connect(lfo2G).connect(lp.frequency); lfo2.start(); nodes.push(lfo2);
-    s.connect(lp).connect(g).connect(out);
-  } else {
-    const s = loopSrc(c, "pink"); nodes.push(s);
-    const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900;
-    const g = c.createGain(); g.gain.value = 0.55;
-    s.connect(lp).connect(g).connect(out);
-    const hum = c.createOscillator(); hum.type = "sine"; hum.frequency.value = 110; hum.start(); nodes.push(hum);
-    const hg = c.createGain(); hg.gain.value = 0.025;
-    hum.connect(hg).connect(out);
-  }
-
-  return {
-    out,
-    dispose() {
-      dead = true;
-      timers.forEach(clearTimeout);
-      nodes.forEach((n) => { try { n.stop(); } catch { /* قبلا متوقف شده */ } });
-      try { out.disconnect(); } catch { /* */ }
-    },
-  };
-}
 
 function ensureCtx(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -219,20 +120,32 @@ function ensureCtx(): AudioContext | null {
   return ctx;
 }
 
-function startVoice(kind: SleepSoundKind) {
-  const c = ctx; if (!c || !volGain) return;
-  const next = buildVoice(c, kind);
-  next.out.connect(volGain);
+function fadeOutAndDispose(a: Active, c: AudioContext) {
   const t = c.currentTime;
-  next.out.gain.setValueAtTime(0, t);
-  next.out.gain.linearRampToValueAtTime(1, t + CROSSFADE_S);
-  const old = voice;
-  voice = next;
-  if (old) {
-    old.out.gain.cancelScheduledValues(t);
-    old.out.gain.setValueAtTime(old.out.gain.value, t);
-    old.out.gain.linearRampToValueAtTime(0, t + CROSSFADE_S);
-    setTimeout(() => old.dispose(), CROSSFADE_S * 1000 + 100);
+  a.voice.out.gain.cancelScheduledValues(t);
+  a.voice.out.gain.setValueAtTime(a.voice.out.gain.value, t);
+  a.voice.out.gain.linearRampToValueAtTime(0, t + CROSSFADE_S);
+  setTimeout(() => { a.voice.dispose(); try { a.layerGain.disconnect(); } catch { /* */ } }, CROSSFADE_S * 1000 + 100);
+}
+
+/** صداهای در حال پخش رو با لایه‌های فعلی هم‌گام می‌کنه */
+function syncVoices() {
+  const c = ctx; if (!c || !volGain) return;
+  const layers = current().layers;
+  for (const [kind, a] of [...active]) {
+    if (!layers.some((l) => l.kind === kind)) { active.delete(kind); fadeOutAndDispose(a, c); }
+  }
+  const t = c.currentTime;
+  for (const l of layers) {
+    const have = active.get(l.kind);
+    if (have) { have.layerGain.gain.setTargetAtTime(volCurve(l.volume), t, 0.05); continue; }
+    const voice = buildVoice(c, l.kind);
+    const layerGain = c.createGain();
+    layerGain.gain.value = volCurve(l.volume);
+    voice.out.connect(layerGain).connect(volGain);
+    voice.out.gain.setValueAtTime(0, t);
+    voice.out.gain.linearRampToValueAtTime(1, t + CROSSFADE_S);
+    active.set(l.kind, { voice, layerGain });
   }
 }
 
@@ -264,29 +177,51 @@ function tick() {
 function startTick() { if (tickId == null) tickId = setInterval(tick, 500); }
 function stopTick() { if (tickId != null) { clearInterval(tickId); tickId = null; } fading = false; }
 
-export function playSleepSound(kind?: SleepSoundKind) {
+function startPlayback(layers: SleepSoundLayer[]) {
   const c = ensureCtx();
   if (!c) return;
   const s = current();
-  const k = kind ?? s.kind;
   // باید توی همون رویداد کاربر صدا زده بشه (iOS)
   if (c.state !== "running") { try { void c.resume(); } catch { /* */ } }
   const wasPlaying = s.playing;
   if (!wasPlaying) { fading = false; setMaster(1, 0.4); }
-  if (!wasPlaying || k !== s.kind) startVoice(k);
   const endsAt = s.timerMin ? (wasPlaying && s.endsAt ? s.endsAt : Date.now() + s.timerMin * 60_000) : null;
-  commit({ kind: k, playing: true, endsAt }, true);
+  commit({ layers, playing: true, endsAt }, true);
+  syncVoices();
   startTick();
+}
+
+/** بدون آرگومان: پخش لایه‌های فعلی. با kind: فقط همون صدا (جایگزین ترکیب). */
+export function playSleepSound(kind?: SleepSoundKind) {
+  const s = current();
+  startPlayback(kind ? [{ kind, volume: s.layers.find((l) => l.kind === kind)?.volume ?? DEFAULT_LAYER_VOLUME }] : s.layers);
+}
+
+/** زدن کاشی یک صدا: اضافه/برداشتن از ترکیب (تا 3 لایه). اگه پخش نمی‌شد، فقط همون صدا شروع می‌شه. */
+export function toggleSleepSoundLayer(kind: SleepSoundKind) {
+  const s = current();
+  if (s.playing && s.layers.length === 1 && s.layers[0].kind === kind) { stopSleepSound(); return; }
+  // وقتی چیزی پخش نمی‌شه، انتخاب تازه جای ترکیب قبلی رو می‌گیره
+  startPlayback(s.playing ? toggleLayer(s.layers, kind) : [{ kind, volume: s.layers.find((l) => l.kind === kind)?.volume ?? DEFAULT_LAYER_VOLUME }]);
+}
+
+export function setSleepSoundLayerVolume(kind: SleepSoundKind, v: number) {
+  const layers = setLayerVolume(current().layers, kind, v);
+  const l = layers.find((x) => x.kind === kind);
+  const a = active.get(kind);
+  if (l && a && ctx) a.layerGain.gain.setTargetAtTime(volCurve(l.volume), ctx.currentTime, 0.05);
+  commit({ layers }, true);
 }
 
 export function stopSleepSound() {
   stopTick();
-  const c = ctx, v = voice;
-  voice = null;
-  if (c && v) {
+  const c = ctx;
+  const stopping = [...active.values()];
+  active.clear();
+  if (c && stopping.length) {
     setMaster(0, 0.5);
     setTimeout(() => {
-      v.dispose();
+      stopping.forEach((a) => { a.voice.dispose(); try { a.layerGain.disconnect(); } catch { /* */ } });
       if (!current().playing && c.state === "running") void c.suspend().catch(() => {});
     }, 600);
   }
@@ -315,6 +250,8 @@ export function useSleepSound() {
   return {
     ...s,
     play: playSleepSound,
+    toggleLayer: toggleSleepSoundLayer,
+    setLayerVolume: setSleepSoundLayerVolume,
     stop: stopSleepSound,
     setVolume: setSleepSoundVolume,
     setTimer: setSleepSoundTimer,
